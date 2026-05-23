@@ -1,10 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { MapPin, Clock, Banknote, Truck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog, DialogTrigger, DialogPortal, DialogOverlay,
+  DialogContent, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 import { formatPrice, formatDuration } from '@/lib/utils';
 import type { Job } from '@/types/api';
 
@@ -14,6 +19,8 @@ interface Props {
 }
 
 export function JobCard({ job, onAccepted }: Props) {
+  const [open, setOpen] = useState(false);
+
   return (
     <Card>
       <CardContent className="flex items-center gap-6 py-4">
@@ -53,7 +60,27 @@ export function JobCard({ job, onAccepted }: Props) {
               <Banknote className="size-3" />net payout
             </p>
           </div>
-          <Button size="sm" onClick={() => onAccepted(job.id)}>Accept</Button>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger render={<Button size="sm">Accept</Button>} />
+            <DialogPortal>
+              <DialogOverlay />
+              <DialogContent className="max-w-sm">
+                <DialogTitle>Accept this job?</DialogTitle>
+                <DialogDescription className="mt-1">
+                  <span className="font-medium text-foreground">{job.title}</span>
+                  <br />
+                  {job.fromLocation} → {job.toLocation}
+                  <br />
+                  {format(new Date(job.scheduledAt), 'dd/MM/yyyy HH:mm')} · {formatPrice(job.netPriceCents)} net
+                </DialogDescription>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                  <Button onClick={() => { setOpen(false); onAccepted(job.id); }}>Confirm</Button>
+                </div>
+              </DialogContent>
+            </DialogPortal>
+          </Dialog>
         </div>
       </CardContent>
     </Card>
