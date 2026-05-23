@@ -1,4 +1,4 @@
-# nagli
+# naglity
 Crane trucks app
 
 ## Stack

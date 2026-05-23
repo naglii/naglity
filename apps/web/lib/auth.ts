@@ -6,7 +6,7 @@ export interface AuthUser {
   profileId: string | null;
 }
 
-const USER_KEY = 'nagli_user';
+const USER_KEY = 'naglity_user';
 
 export function getUser(): AuthUser | null {
   if (typeof window === 'undefined') return null;
