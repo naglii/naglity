@@ -59,9 +59,9 @@ export default function DriverFeedPage() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-52 rounded-xl" />
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-36 rounded-xl" />
         ))}
       </div>
     );
@@ -79,7 +79,7 @@ export default function DriverFeedPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Available Jobs ({jobs.length})</h1>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="space-y-3">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} onAccepted={handleAccept} />
         ))}

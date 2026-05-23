@@ -38,7 +38,18 @@ export function JobTable({ jobs, showBusiness, showDriver, actions }: Props) {
             <TableRow key={job.id}>
               <TableCell className="font-medium">{job.title}</TableCell>
               {showBusiness && <TableCell>{job.business?.name ?? '—'}</TableCell>}
-              {showDriver && <TableCell>{job.driver?.name ?? '—'}</TableCell>}
+              {showDriver && (
+                <TableCell>
+                  {job.driver ? (
+                    <div>
+                      <p>{job.driver.name}</p>
+                      {job.driver.phone && (
+                        <p className="text-xs text-muted-foreground">{job.driver.phone}</p>
+                      )}
+                    </div>
+                  ) : '—'}
+                </TableCell>
+              )}
               <TableCell className="text-sm text-muted-foreground">
                 {job.fromLocation} → {job.toLocation}
               </TableCell>

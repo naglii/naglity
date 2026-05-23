@@ -6,13 +6,14 @@ import { cn } from '@/lib/utils';
 import type { Role } from '@/types/api';
 import {
   Truck, CalendarDays, BarChart2, Briefcase, PlusCircle,
-  Users, Building2, ClipboardList, TrendingUp,
+  Users, Building2, ClipboardList, TrendingUp, History,
 } from 'lucide-react';
 
 const navByRole: Record<Role, { href: string; label: string; icon: React.ElementType }[]> = {
   DRIVER: [
     { href: '/driver/feed', label: 'Available Jobs', icon: Truck },
     { href: '/driver/schedule', label: 'My Schedule', icon: CalendarDays },
+    { href: '/driver/history', label: 'History', icon: History },
     { href: '/driver/stats', label: 'Statistics', icon: BarChart2 },
   ],
   BUSINESS: [
