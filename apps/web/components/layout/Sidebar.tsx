@@ -43,7 +43,8 @@ export function Sidebar({ role }: { role: Role }) {
     <aside className="w-56 shrink-0 border-r bg-sidebar flex flex-col">
       <div className="h-14 flex items-center px-5 border-b">
         <span className="text-lg font-black tracking-tight flex items-baseline gap-0.5">
-          <span className="italic text-primary">N</span>aglity
+          <span className="italic text-primary">N</span>
+          <span className="text-sidebar-foreground">aglity</span>
           <span className="text-primary text-xs font-semibold not-italic ml-0.5 mb-0.5 leading-none">●</span>
         </span>
       </div>

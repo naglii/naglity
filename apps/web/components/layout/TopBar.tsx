@@ -7,9 +7,12 @@ import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut } from 'lucide-react';
+import { useTheme, THEMES } from '@/hooks/useTheme';
+import { cn } from '@/lib/utils';
 
 export function TopBar({ user }: { user: AuthUser }) {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await api.post('/auth/logout').catch(() => {});
@@ -20,8 +23,23 @@ export function TopBar({ user }: { user: AuthUser }) {
   const initials = (user.username ?? user.email ?? '??').slice(0, 2).toUpperCase();
 
   return (
-    <header className="h-14 border-b bg-background flex items-center justify-between px-6 shrink-0">
-      <div />
+    <header className="h-14 border-b bg-card flex items-center justify-between px-6 shrink-0">
+      {/* Theme switcher */}
+      <div className="flex items-center gap-1.5">
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            title={t.label}
+            onClick={() => setTheme(t.id)}
+            className={cn(
+              'size-4 rounded-full transition-transform hover:scale-110',
+              t.dot,
+              theme === t.id ? 'ring-2 ring-offset-2 ring-foreground/40 scale-110' : 'opacity-60',
+            )}
+          />
+        ))}
+      </div>
+
       <div className="flex items-center gap-3">
         <Avatar className="size-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
