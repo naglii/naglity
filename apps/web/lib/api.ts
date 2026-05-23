@@ -2,7 +2,7 @@ import axios from 'axios';
 import { clearAuth } from './auth';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL + '/api',
+  baseURL: '/api',
   withCredentials: true, // send httpOnly cookie with every request
 });
 
