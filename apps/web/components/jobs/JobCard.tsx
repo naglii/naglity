@@ -2,7 +2,7 @@
 
 import { format, formatDistanceToNow } from 'date-fns';
 import { MapPin, Clock, Banknote, Truck } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatPrice, formatDuration } from '@/lib/utils';
@@ -15,42 +15,47 @@ interface Props {
 
 export function JobCard({ job, onAccepted }: Props) {
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base leading-snug">{job.title}</CardTitle>
-          <Badge variant="secondary" className="shrink-0">
-            <Truck className="size-3 mr-1" />
-            {job.business?.name ?? '—'}
-          </Badge>
+    <Card>
+      <CardContent className="flex items-center gap-6 py-4">
+        {/* Main info */}
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-base">{job.title}</span>
+            <Badge variant="secondary" className="text-xs">
+              <Truck className="size-3 mr-1" />{job.business?.name ?? '—'}
+            </Badge>
+            <span className="text-xs text-muted-foreground/70">
+              {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
+            </span>
+          </div>
+
+          {job.description && (
+            <p className="text-sm text-muted-foreground truncate">{job.description}</p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <MapPin className="size-3.5 shrink-0" />
+              {job.fromLocation} → {job.toLocation}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="size-3.5 shrink-0" />
+              {format(new Date(job.scheduledAt), 'dd/MM HH:mm')} · {formatDuration(job.scheduledAt, job.estimatedEndAt)}
+            </span>
+          </div>
         </div>
-        {job.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
-        )}
-        <p className="text-xs text-muted-foreground/70">
-          {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-2 text-sm">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <MapPin className="size-3.5 shrink-0" />
-          <span className="truncate">{job.fromLocation} → {job.toLocation}</span>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Clock className="size-3.5 shrink-0" />
-          <span>
-            {format(new Date(job.scheduledAt), 'dd/MM HH:mm')} · {formatDuration(job.scheduledAt, job.estimatedEndAt)}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 font-semibold text-foreground">
-          <Banknote className="size-3.5 shrink-0" />
-          <span>{formatPrice(job.netPriceCents)}</span>
-          <span className="text-xs text-muted-foreground font-normal">net payout</span>
+
+        {/* Price + action */}
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="text-right">
+            <p className="font-bold text-lg leading-none">{formatPrice(job.netPriceCents)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 justify-end">
+              <Banknote className="size-3" />net payout
+            </p>
+          </div>
+          <Button size="sm" onClick={() => onAccepted(job.id)}>Accept</Button>
         </div>
       </CardContent>
-      <CardFooter className="mt-auto pt-0">
-        <Button className="w-full" onClick={() => onAccepted(job.id)}>Accept Job</Button>
-      </CardFooter>
     </Card>
   );
 }

@@ -16,11 +16,12 @@ export class DriversService {
 
   async getMyJobs(userId: string) {
     const driver = await this.getMyProfile(userId);
-    return this.prisma.job.findMany({
+    const jobs = await this.prisma.job.findMany({
       where: { driverId: driver.id, status: { in: ['ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'PAID'] as any } },
       include: { business: { select: { id: true, name: true, phone: true } } },
       orderBy: { scheduledAt: 'asc' },
     });
+    return jobs.map((j) => ({ ...j, netPriceCents: Math.round(j.grossPriceCents * 0.9) }));
   }
 
   async getMyStats(userId: string) {
@@ -29,7 +30,7 @@ export class DriversService {
       where: { driverId: driver.id },
       select: { status: true, grossPriceCents: true },
     });
-    const completed = jobs.filter((j: any) => j.status === 'COMPLETED' || j.status === 'PAID');
+    const completed = jobs.filter((j: any) => j.status === 'PAID');
     const byStatus: Record<string, number> = {
       OPEN: 0, ACCEPTED: 0, IN_PROGRESS: 0, COMPLETED: 0, PAID: 0,
     };

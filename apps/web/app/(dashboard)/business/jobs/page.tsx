@@ -24,8 +24,13 @@ const SECTIONS: { label: string; statuses: JobStatus[]; emptyText: string }[] = 
   },
   {
     label: 'Completed',
-    statuses: ['COMPLETED', 'PAID'],
+    statuses: ['COMPLETED'],
     emptyText: 'No completed jobs yet.',
+  },
+  {
+    label: 'Paid',
+    statuses: ['PAID'],
+    emptyText: 'No paid jobs yet.',
   },
 ];
 
