@@ -4,6 +4,9 @@ packages:
 allowBuilds:
   '@nestjs/core': true
   '@prisma/engines': true
+  bcrypt: true
+  esbuild: true
+  msw: false
   prisma: true
   sharp: true
   unrs-resolver: false

@@ -1,10 +1,24 @@
+import 'dotenv/config';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { AuthModule } from './auth/auth.module.js';
+import { AdminModule } from './admin/admin.module.js';
+import { DriversModule } from './drivers/drivers.module.js';
+import { BusinessesModule } from './businesses/businesses.module.js';
+import { JobsModule } from './jobs/jobs.module.js';
+import { StatsModule } from './stats/stats.module.js';
+import { GatewayModule } from './gateway/gateway.module.js';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    AdminModule,
+    DriversModule,
+    BusinessesModule,
+    JobsModule,
+    StatsModule,
+    GatewayModule,
+  ],
 })
 export class AppModule {}
