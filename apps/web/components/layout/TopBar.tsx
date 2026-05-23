@@ -6,9 +6,14 @@ import type { AuthUser } from '@/lib/auth';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 
-export function TopBar({ user }: { user: AuthUser }) {
+interface Props {
+  user: AuthUser;
+  onMenuClick?: () => void;
+}
+
+export function TopBar({ user, onMenuClick }: Props) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -20,8 +25,15 @@ export function TopBar({ user }: { user: AuthUser }) {
   const initials = (user.username ?? user.email ?? '??').slice(0, 2).toUpperCase();
 
   return (
-    <header className="h-14 border-b bg-card flex items-center justify-end px-6 shrink-0">
-      <div className="flex items-center gap-3">
+    <header className="h-14 border-b bg-card flex items-center px-4 md:px-6 shrink-0">
+      <button
+        className="md:hidden p-1 rounded-md hover:bg-muted transition-colors"
+        onClick={onMenuClick}
+        aria-label="Open menu"
+      >
+        <Menu className="size-5" />
+      </button>
+      <div className="ml-auto flex items-center gap-3">
         <Avatar className="size-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>

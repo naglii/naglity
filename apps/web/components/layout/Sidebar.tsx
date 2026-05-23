@@ -29,18 +29,21 @@ const navByRole: Record<Role, { href: string; label: string; icon: React.Element
   ],
 };
 
-export function Sidebar({ role }: { role: Role }) {
+interface Props {
+  role: Role;
+  onClose?: () => void;
+}
+
+export function Sidebar({ role, onClose }: Props) {
   const pathname = usePathname();
   const items = navByRole[role];
 
-  // If the current path is an exact nav item, only that item is active.
-  // Otherwise (e.g. detail pages like /admin/drivers/abc) use startsWith so the parent stays highlighted.
   const exactMatch = items.some((i) => i.href === pathname);
   const isActive = (href: string) =>
     pathname === href || (!exactMatch && pathname.startsWith(href + '/'));
 
   return (
-    <aside className="w-56 shrink-0 border-r bg-sidebar flex flex-col">
+    <aside className="w-56 shrink-0 border-r bg-sidebar flex flex-col h-full">
       <div className="h-14 flex items-center px-5 border-b">
         <span className="text-lg font-black tracking-tight flex items-baseline gap-0.5">
           <span className="italic text-primary">N</span>
@@ -53,6 +56,7 @@ export function Sidebar({ role }: { role: Role }) {
           <Link
             key={href}
             href={href}
+            onClick={onClose}
             className={cn(
               'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
               isActive(href)
