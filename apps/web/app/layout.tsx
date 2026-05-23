@@ -7,7 +7,7 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Nagli — Crane Truck Logistics',
+  title: 'Naglity — Crane Truck Logistics',
   description: 'Real-time crane truck order management',
 };
 
