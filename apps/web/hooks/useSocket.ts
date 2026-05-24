@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { getToken } from '@/lib/auth';
 
 let _socket: Socket | null = null;
 
@@ -15,6 +16,7 @@ export function initSocket(): Socket {
   _socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
     transports: ['websocket'],
     withCredentials: true,
+    auth: { token: getToken() },
   });
   return _socket;
 }

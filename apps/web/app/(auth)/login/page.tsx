@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v3';
 import { toast } from 'sonner';
 import api from '@/lib/api';
-import { setAuth } from '@/lib/auth';
+import { setAuth, setToken } from '@/lib/auth';
 import type { LoginResponse } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ export default function LoginPage() {
     try {
       const res = await api.post<LoginResponse>('/auth/login', data);
       setAuth(res.data.user);
+      setToken(res.data.accessToken);
       switch (res.data.user.role) {
         case 'DRIVER': router.push('/driver/feed'); break;
         case 'BUSINESS': router.push('/business/jobs'); break;
