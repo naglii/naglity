@@ -168,7 +168,7 @@ export class AdminService {
       where: status ? { status: status as any } : undefined,
       include: {
         business: { select: { id: true, name: true } },
-        driver: { select: { id: true, name: true } },
+        driver: { select: { id: true, name: true, phone: true } },
       },
       orderBy: { scheduledAt: 'desc' },
     });

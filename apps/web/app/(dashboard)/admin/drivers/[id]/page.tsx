@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/utils';
-import { ArrowLeft, Banknote, CheckCircle2, Truck } from 'lucide-react';
+import { ArrowRight, Banknote, CheckCircle2, Truck } from 'lucide-react';
 
 export default function AdminDriverDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,12 +22,12 @@ export default function AdminDriverDetailPage() {
   });
 
   if (isLoading) return <Skeleton className="h-64" />;
-  if (!data) return <p>Driver not found.</p>;
+  if (!data) return <p>הנהג לא נמצא.</p>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}><ArrowLeft className="size-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => router.back()}><ArrowRight className="size-4" /></Button>
         <div>
           <h1 className="text-xl font-semibold">{data.name}</h1>
           <p className="text-sm text-muted-foreground">@{data.user.username} · {data.phone}</p>
@@ -35,13 +35,13 @@ export default function AdminDriverDetailPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatsCard title="Total Earnings (net)" value={formatPrice(data.stats.totalNetEarningsCents)} icon={Banknote} />
-        <StatsCard title="Completed" value={(data.stats.jobsByStatus.COMPLETED ?? 0) + (data.stats.jobsByStatus.PAID ?? 0)} icon={CheckCircle2} />
-        <StatsCard title="Active" value={(data.stats.jobsByStatus.ACCEPTED ?? 0) + (data.stats.jobsByStatus.IN_PROGRESS ?? 0)} icon={Truck} />
+        <StatsCard title='סה"כ הכנסות (נטו)' value={formatPrice(data.stats.totalNetEarningsCents)} icon={Banknote} />
+        <StatsCard title="הושלם" value={(data.stats.jobsByStatus.COMPLETED ?? 0) + (data.stats.jobsByStatus.PAID ?? 0)} icon={CheckCircle2} />
+        <StatsCard title="פעיל" value={(data.stats.jobsByStatus.ACCEPTED ?? 0) + (data.stats.jobsByStatus.IN_PROGRESS ?? 0)} icon={Truck} />
       </div>
 
       <Separator />
-      <h2 className="font-semibold">Job History</h2>
+      <h2 className="font-semibold">היסטוריית עבודות</h2>
       <JobTable jobs={data.jobs} showBusiness />
     </div>
   );

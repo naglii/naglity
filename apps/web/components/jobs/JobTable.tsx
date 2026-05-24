@@ -15,7 +15,7 @@ interface Props {
 
 export function JobTable({ jobs, showBusiness, showDriver, actions }: Props) {
   if (jobs.length === 0) {
-    return <p className="text-sm text-muted-foreground py-8 text-center">No jobs found.</p>;
+    return <p className="text-sm text-muted-foreground py-8 text-center">לא נמצאו עבודות.</p>;
   }
 
   return (
@@ -23,13 +23,13 @@ export function JobTable({ jobs, showBusiness, showDriver, actions }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            {showBusiness && <TableHead>Business</TableHead>}
-            {showDriver && <TableHead>Driver</TableHead>}
-            <TableHead>From → To</TableHead>
-            <TableHead>Scheduled</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Price</TableHead>
+            <TableHead>כותרת</TableHead>
+            {showBusiness && <TableHead>עסק</TableHead>}
+            {showDriver && <TableHead>נהג</TableHead>}
+            <TableHead>מוצא ← יעד</TableHead>
+            <TableHead>מתוכנן</TableHead>
+            <TableHead>סטטוס</TableHead>
+            <TableHead className="text-left">מחיר</TableHead>
             {actions && <TableHead />}
           </TableRow>
         </TableHeader>
@@ -51,16 +51,16 @@ export function JobTable({ jobs, showBusiness, showDriver, actions }: Props) {
                 </TableCell>
               )}
               <TableCell className="text-sm text-muted-foreground">
-                {job.fromLocation} → {job.toLocation}
+                <bdi>{job.fromLocation}</bdi> ← <bdi>{job.toLocation}</bdi>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                 {format(new Date(job.scheduledAt), 'dd/MM/yy HH:mm')}
               </TableCell>
               <TableCell><JobStatusBadge status={job.status} /></TableCell>
-              <TableCell className="text-right font-medium">
+              <TableCell className="text-left font-medium">
                 {formatPrice(job.grossPriceCents)}
               </TableCell>
-              {actions && <TableCell className="text-right">{actions(job)}</TableCell>}
+              {actions && <TableCell className="text-left">{actions(job)}</TableCell>}
             </TableRow>
           ))}
         </TableBody>

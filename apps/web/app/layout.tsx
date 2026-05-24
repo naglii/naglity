@@ -7,13 +7,13 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Naglity — Crane Truck Logistics',
-  description: 'Real-time crane truck order management',
+  title: 'נגלי — לוגיסטיקת מנופים',
+  description: 'ניהול הזמנות מנופים בזמן אמת',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="he" dir="rtl" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="h-full bg-background text-foreground">
         <Providers>{children}</Providers>
       </body>

@@ -11,24 +11,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const SECTIONS: { label: string; statuses: JobStatus[]; emptyText: string }[] = [
   {
-    label: 'Open',
+    label: 'פתוח',
     statuses: ['OPEN'],
-    emptyText: 'No open jobs.',
+    emptyText: 'אין עבודות פתוחות.',
   },
   {
-    label: 'Active',
+    label: 'פעיל',
     statuses: ['ACCEPTED', 'IN_PROGRESS'],
-    emptyText: 'No jobs in progress.',
+    emptyText: 'אין עבודות בביצוע.',
   },
   {
-    label: 'Awaiting Payment',
+    label: 'ממתין לתשלום',
     statuses: ['COMPLETED'],
-    emptyText: 'No jobs awaiting payment.',
+    emptyText: 'אין עבודות הממתינות לתשלום.',
   },
   {
-    label: 'Paid',
+    label: 'שולם',
     statuses: ['PAID'],
-    emptyText: 'No paid jobs yet.',
+    emptyText: 'אין עבודות ששולמו עדיין.',
   },
 ];
 
@@ -57,15 +57,15 @@ export default function AdminJobsPage() {
   const paidMutation = useMutation({
     mutationFn: (id: string) => api.patch(`/admin/jobs/${id}/paid`),
     onSuccess: () => {
-      toast.success('Job marked as paid');
+      toast.success('העבודה סומנה כשולמה');
       qc.invalidateQueries({ queryKey: ['admin-jobs'] });
     },
-    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Error'),
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'שגיאה'),
   });
 
   return (
     <div className="space-y-8">
-      <h1 className="text-xl font-semibold">All Jobs</h1>
+      <h1 className="text-xl font-semibold">כל העבודות</h1>
 
       {isLoading ? (
         <div className="space-y-6">
@@ -97,7 +97,7 @@ export default function AdminJobsPage() {
                           variant="outline"
                           onClick={() => paidMutation.mutate(job.id)}
                         >
-                          Mark Paid
+                          סמן כשולם
                         </Button>
                       ) : null
                     }

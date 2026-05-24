@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { he } from 'date-fns/locale';
 import { MapPin, Clock, Banknote, Truck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,7 @@ export function JobCard({ job, onAccepted }: Props) {
               <Truck className="size-3 mr-1" />{job.business?.name ?? '—'}
             </Badge>
             <span className="text-xs text-muted-foreground/70">
-              {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true, locale: he })}
             </span>
           </div>
 
@@ -43,7 +44,7 @@ export function JobCard({ job, onAccepted }: Props) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <MapPin className="size-3.5 shrink-0" />
-              {job.fromLocation} → {job.toLocation}
+              <bdi>{job.fromLocation}</bdi> ← <bdi>{job.toLocation}</bdi>
             </span>
             <span className="flex items-center gap-1.5">
               <Clock className="size-3.5 shrink-0" />
@@ -57,26 +58,26 @@ export function JobCard({ job, onAccepted }: Props) {
           <div className="text-right">
             <p className="font-bold text-lg leading-none">{formatPrice(job.netPriceCents)}</p>
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 justify-end">
-              <Banknote className="size-3" />net payout
+              <Banknote className="size-3" />תשלום נטו
             </p>
           </div>
 
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button size="sm">Accept</Button>} />
+            <DialogTrigger render={<Button size="sm">קבל עבודה</Button>} />
             <DialogPortal>
               <DialogOverlay />
               <DialogContent className="max-w-sm">
-                <DialogTitle>Accept this job?</DialogTitle>
+                <DialogTitle>לקבל את העבודה?</DialogTitle>
                 <DialogDescription className="mt-1">
                   <span className="font-medium text-foreground">{job.title}</span>
                   <br />
-                  {job.fromLocation} → {job.toLocation}
+                  <bdi>{job.fromLocation}</bdi> ← <bdi>{job.toLocation}</bdi>
                   <br />
-                  {format(new Date(job.scheduledAt), 'dd/MM/yyyy HH:mm')} · {formatPrice(job.netPriceCents)} net
+                  {format(new Date(job.scheduledAt), 'dd/MM/yyyy HH:mm')} · {formatPrice(job.netPriceCents)} נטו
                 </DialogDescription>
                 <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button onClick={() => { setOpen(false); onAccepted(job.id); }}>Confirm</Button>
+                  <Button variant="outline" onClick={() => setOpen(false)}>ביטול</Button>
+                  <Button onClick={() => { setOpen(false); onAccepted(job.id); }}>אישור</Button>
                 </div>
               </DialogContent>
             </DialogPortal>

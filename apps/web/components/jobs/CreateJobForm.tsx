@@ -14,13 +14,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const schema = z.object({
-  title: z.string().min(1, 'Required'),
+  title: z.string().min(1, 'שדה חובה'),
   description: z.string().optional(),
-  grossPriceShekels: z.coerce.number().min(1, 'Minimum ₪1'),
-  scheduledAt: z.string().min(1, 'Required'),
-  travelTimeHours: z.coerce.number().min(0.5, 'Minimum 30 minutes').max(24, 'Maximum 24 hours'),
-  fromLocation: z.string().min(1, 'Required'),
-  toLocation: z.string().min(1, 'Required'),
+  grossPriceShekels: z.coerce.number().min(1, 'מינימום ₪1'),
+  scheduledAt: z.string().min(1, 'שדה חובה'),
+  travelTimeHours: z.coerce.number().min(0.5, 'מינימום 30 דקות').max(24, 'מקסימום 24 שעות'),
+  fromLocation: z.string().min(1, 'שדה חובה'),
+  toLocation: z.string().min(1, 'שדה חובה'),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -43,63 +43,63 @@ export function CreateJobForm() {
         toLocation: data.toLocation,
       };
       await api.post('/jobs', dto);
-      toast.success('Job posted successfully!');
+      toast.success('העבודה פורסמה בהצלחה!');
       router.push('/business/jobs');
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Failed to post job');
+      toast.error(err.response?.data?.message ?? 'שגיאה בפרסום העבודה');
     }
   };
 
   return (
     <Card className="max-w-2xl">
       <CardHeader>
-        <CardTitle>Post a New Job</CardTitle>
+        <CardTitle>פרסם עבודה חדשה</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Title</Label>
-            <Input placeholder="e.g. Crane lift – Tel Aviv port" {...register('title')} />
+            <Label>כותרת</Label>
+            <Input placeholder="לדוגמה: הרמת מנוף – נמל תל אביב" {...register('title')} />
             {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label>Description (optional)</Label>
-            <Textarea placeholder="Additional details…" rows={3} {...register('description')} />
+            <Label>תיאור (אופציונלי)</Label>
+            <Textarea placeholder="פרטים נוספים…" rows={3} {...register('description')} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>From location</Label>
-              <Input placeholder="Origin address" {...register('fromLocation')} />
+              <Label>מיקום מוצא</Label>
+              <Input placeholder="כתובת מוצא" {...register('fromLocation')} />
               {errors.fromLocation && <p className="text-xs text-destructive">{errors.fromLocation.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>To location</Label>
-              <Input placeholder="Destination address" {...register('toLocation')} />
+              <Label>מיקום יעד</Label>
+              <Input placeholder="כתובת יעד" {...register('toLocation')} />
               {errors.toLocation && <p className="text-xs text-destructive">{errors.toLocation.message}</p>}
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Price (₪)</Label>
-            <Input type="number" min="1" step="1" placeholder="e.g. 500" {...register('grossPriceShekels')} />
+            <Label>מחיר (₪)</Label>
+            <Input type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
             {errors.grossPriceShekels && <p className="text-xs text-destructive">{errors.grossPriceShekels.message}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Start date & time</Label>
+              <Label>תאריך ושעת התחלה</Label>
               <Input type="datetime-local" {...register('scheduledAt')} />
               {errors.scheduledAt && <p className="text-xs text-destructive">{errors.scheduledAt.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Travel time (hours)</Label>
-              <Input type="number" min="0.5" max="24" step="0.5" placeholder="e.g. 2.5" {...register('travelTimeHours')} />
+              <Label>זמן נסיעה (שעות)</Label>
+              <Input type="number" min="0.5" max="24" step="0.5" placeholder="לדוגמה: 2.5" {...register('travelTimeHours')} />
               {errors.travelTimeHours && <p className="text-xs text-destructive">{errors.travelTimeHours.message}</p>}
             </div>
           </div>
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Posting…' : 'Post Job'}
+              {isSubmitting ? 'מפרסם…' : 'פרסם עבודה'}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => router.back()}>ביטול</Button>
           </div>
         </form>
       </CardContent>

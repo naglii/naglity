@@ -22,12 +22,12 @@ export default function DriverStatsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">My Statistics</h1>
+      <h1 className="text-xl font-semibold">הסטטיסטיקות שלי</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard title="Total Earnings (net)" value={formatPrice(data.totalNetEarningsCents)} icon={Banknote} />
-        <StatsCard title="Completed" value={data.jobsByStatus.COMPLETED + data.jobsByStatus.PAID} icon={CheckCircle2} />
-        <StatsCard title="In Progress" value={data.jobsByStatus.IN_PROGRESS} icon={Truck} />
-        <StatsCard title="Accepted" value={data.jobsByStatus.ACCEPTED} icon={Clock} />
+        <StatsCard title='סה"כ הכנסות (נטו)' value={formatPrice(data.totalNetEarningsCents)} icon={Banknote} />
+        <StatsCard title="הושלם" value={data.jobsByStatus.COMPLETED + data.jobsByStatus.PAID} icon={CheckCircle2} />
+        <StatsCard title="בביצוע" value={data.jobsByStatus.IN_PROGRESS} icon={Truck} />
+        <StatsCard title="מאושר" value={data.jobsByStatus.ACCEPTED} icon={Clock} />
       </div>
     </div>
   );

@@ -13,24 +13,24 @@ import { PlusCircle } from 'lucide-react';
 
 const SECTIONS: { label: string; statuses: JobStatus[]; emptyText: string }[] = [
   {
-    label: 'Open',
+    label: 'פתוח',
     statuses: ['OPEN'],
-    emptyText: 'No open jobs — post one to get started.',
+    emptyText: 'אין עבודות פתוחות — פרסם עבודה כדי להתחיל.',
   },
   {
-    label: 'Active',
+    label: 'פעיל',
     statuses: ['ACCEPTED', 'IN_PROGRESS'],
-    emptyText: 'No jobs in progress right now.',
+    emptyText: 'אין עבודות בביצוע כרגע.',
   },
   {
-    label: 'Completed',
+    label: 'הושלם',
     statuses: ['COMPLETED'],
-    emptyText: 'No completed jobs yet.',
+    emptyText: 'אין עבודות שהושלמו עדיין.',
   },
   {
-    label: 'Paid',
+    label: 'שולם',
     statuses: ['PAID'],
-    emptyText: 'No paid jobs yet.',
+    emptyText: 'אין עבודות ששולמו עדיין.',
   },
 ];
 
@@ -59,18 +59,18 @@ export default function BusinessJobsPage() {
   const completeMutation = useMutation({
     mutationFn: (id: string) => api.post(`/jobs/${id}/complete`),
     onSuccess: () => {
-      toast.success('Job marked as completed');
+      toast.success('העבודה סומנה כהושלמה');
       qc.invalidateQueries({ queryKey: ['business-jobs'] });
     },
-    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Error'),
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'שגיאה'),
   });
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">My Jobs</h1>
+        <h1 className="text-xl font-semibold">העבודות שלי</h1>
         <Button size="sm" nativeButton={false} render={<Link href="/business/jobs/new" />}>
-          <PlusCircle className="size-4 mr-2" />Post Job
+          <PlusCircle className="size-4 ml-2" />פרסם עבודה
         </Button>
       </div>
 
@@ -103,7 +103,7 @@ export default function BusinessJobsPage() {
                           variant="outline"
                           onClick={() => completeMutation.mutate(job.id)}
                         >
-                          Mark Complete
+                          סמן כהושלם
                         </Button>
                       ) : null
                     }

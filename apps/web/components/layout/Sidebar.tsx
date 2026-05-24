@@ -11,21 +11,21 @@ import {
 
 const navByRole: Record<Role, { href: string; label: string; icon: React.ElementType }[]> = {
   DRIVER: [
-    { href: '/driver/feed', label: 'Available Jobs', icon: Truck },
-    { href: '/driver/schedule', label: 'My Schedule', icon: CalendarDays },
-    { href: '/driver/history', label: 'History', icon: History },
-    { href: '/driver/stats', label: 'Statistics', icon: BarChart2 },
+    { href: '/driver/feed', label: 'עבודות זמינות', icon: Truck },
+    { href: '/driver/schedule', label: 'לוח זמנים', icon: CalendarDays },
+    { href: '/driver/history', label: 'היסטוריה', icon: History },
+    { href: '/driver/stats', label: 'סטטיסטיקות', icon: BarChart2 },
   ],
   BUSINESS: [
-    { href: '/business/jobs', label: 'My Jobs', icon: Briefcase },
-    { href: '/business/jobs/new', label: 'Post a Job', icon: PlusCircle },
-    { href: '/business/stats', label: 'Statistics', icon: BarChart2 },
+    { href: '/business/jobs', label: 'העבודות שלי', icon: Briefcase },
+    { href: '/business/jobs/new', label: 'פרסם עבודה', icon: PlusCircle },
+    { href: '/business/stats', label: 'סטטיסטיקות', icon: BarChart2 },
   ],
   ADMIN: [
-    { href: '/admin/drivers', label: 'Drivers', icon: Truck },
-    { href: '/admin/businesses', label: 'Businesses', icon: Building2 },
-    { href: '/admin/jobs', label: 'All Jobs', icon: ClipboardList },
-    { href: '/admin/revenue', label: 'Revenue', icon: TrendingUp },
+    { href: '/admin/drivers', label: 'נהגים', icon: Truck },
+    { href: '/admin/businesses', label: 'עסקים', icon: Building2 },
+    { href: '/admin/jobs', label: 'כל העבודות', icon: ClipboardList },
+    { href: '/admin/revenue', label: 'הכנסות', icon: TrendingUp },
   ],
 };
 
@@ -45,7 +45,7 @@ export function Sidebar({ role, onClose }: Props) {
   return (
     <aside className="w-56 shrink-0 border-r bg-sidebar flex flex-col h-full">
       <div className="h-14 flex items-center px-5 border-b">
-        <span className="text-lg font-black tracking-tight flex items-baseline gap-0.5">
+        <span dir="ltr" className="text-lg font-black tracking-tight flex items-baseline gap-0.5">
           <span className="italic text-primary">N</span>
           <span className="text-sidebar-foreground">aglity</span>
           <span className="text-primary text-xs font-semibold not-italic ml-0.5 mb-0.5 leading-none">●</span>

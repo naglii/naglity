@@ -27,20 +27,20 @@ export default function AdminDriversPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/admin/drivers/${id}`),
-    onSuccess: () => { toast.success('Driver deleted'); qc.invalidateQueries({ queryKey: ['admin-drivers'] }); },
-    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Error'),
+    onSuccess: () => { toast.success('הנהג נמחק'); qc.invalidateQueries({ queryKey: ['admin-drivers'] }); },
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'שגיאה'),
   });
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Drivers</h1>
+        <h1 className="text-xl font-semibold">נהגים</h1>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger render={<Button size="sm" />}>
-            <PlusCircle className="size-4 mr-2" />New Driver
+            <PlusCircle className="size-4 ml-2" />נהג חדש
           </SheetTrigger>
           <SheetContent className="sm:max-w-lg overflow-y-auto">
-            <SheetHeader className="px-6"><SheetTitle>Create Driver</SheetTitle></SheetHeader>
+            <SheetHeader className="px-6"><SheetTitle>יצירת נהג</SheetTitle></SheetHeader>
             <div className="px-6 pb-8">
               <CreateDriverForm onSuccess={() => { setOpen(false); qc.invalidateQueries({ queryKey: ['admin-drivers'] }); }} />
             </div>
@@ -53,11 +53,11 @@ export default function AdminDriversPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Vehicle</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead>שם</TableHead>
+                <TableHead>שם משתמש</TableHead>
+                <TableHead>טלפון</TableHead>
+                <TableHead>רכב</TableHead>
+                <TableHead>הצטרף</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -74,7 +74,7 @@ export default function AdminDriversPage() {
                       <ExternalLink className="size-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => {
-                      if (confirm('Delete this driver?')) deleteMutation.mutate(d.id);
+                      if (confirm('למחוק את הנהג?')) deleteMutation.mutate(d.id);
                     }}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>

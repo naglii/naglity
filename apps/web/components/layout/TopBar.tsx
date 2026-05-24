@@ -8,6 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, Menu } from 'lucide-react';
 
+const roleLabel: Record<string, string> = {
+  DRIVER: 'נהג',
+  BUSINESS: 'עסק',
+  ADMIN: 'מנהל',
+};
+
 interface Props {
   user: AuthUser;
   onMenuClick?: () => void;
@@ -33,15 +39,15 @@ export function TopBar({ user, onMenuClick }: Props) {
       >
         <Menu className="size-5" />
       </button>
-      <div className="ml-auto flex items-center gap-3">
+      <div className="mr-auto flex items-center gap-3">
         <Avatar className="size-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
         <div className="text-sm">
           <p className="font-medium leading-none">{user.username}</p>
-          <p className="text-xs text-muted-foreground">{user.role}</p>
+          <p className="text-xs text-muted-foreground">{roleLabel[user.role] ?? user.role}</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+        <Button variant="ghost" size="icon" onClick={handleLogout} title="יציאה">
           <LogOut className="size-4" />
         </Button>
       </div>
