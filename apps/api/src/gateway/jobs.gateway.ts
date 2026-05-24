@@ -23,12 +23,14 @@ export class JobsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket) {
     try {
+      const authToken = (client.handshake.auth as any)?.token as string | undefined;
       const cookieHeader = client.handshake.headers.cookie ?? '';
-      const token = cookieHeader
+      const cookieToken = cookieHeader
         .split(';')
         .map((c) => c.trim())
         .find((c) => c.startsWith('access_token='))
         ?.slice('access_token='.length);
+      const token = authToken || cookieToken;
 
       if (!token) { client.disconnect(); return; }
 

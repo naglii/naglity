@@ -23,7 +23,7 @@ export class AuthController {
   ) {
     const { accessToken, user } = await this.authService.login(dto.identifier, dto.password);
     res.cookie('access_token', accessToken, COOKIE_OPTS);
-    return { user };
+    return { accessToken, user };
   }
 
   @Post('logout')
