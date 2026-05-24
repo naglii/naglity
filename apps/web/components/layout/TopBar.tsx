@@ -7,6 +7,8 @@ import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, Menu } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
+import { disconnectSocket } from '@/hooks/useSocket';
 
 const roleLabel: Record<string, string> = {
   DRIVER: 'נהג',
@@ -24,6 +26,7 @@ export function TopBar({ user, onMenuClick }: Props) {
 
   const handleLogout = async () => {
     await api.post('/auth/logout').catch(() => {});
+    disconnectSocket();
     clearAuth();
     router.push('/login');
   };
@@ -39,7 +42,8 @@ export function TopBar({ user, onMenuClick }: Props) {
       >
         <Menu className="size-5" />
       </button>
-      <div className="mr-auto flex items-center gap-3">
+      <div className="mr-auto flex items-center gap-2">
+        <NotificationBell />
         <Avatar className="size-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>

@@ -1,5 +1,17 @@
 export type Role = 'ADMIN' | 'DRIVER' | 'BUSINESS';
-export type JobStatus = 'OPEN' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAID';
+export type JobStatus = 'OPEN' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAID' | 'DELETED';
+export type NotificationType = 'JOB_ACCEPTED_BY_DRIVER' | 'JOB_CANCELLED_BY_DRIVER' | 'JOB_DELETED_BY_BUSINESS';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  read: boolean;
+  jobId: string | null;
+  createdAt: string;
+}
 
 export interface AuthUser {
   id: string;

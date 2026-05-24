@@ -15,12 +15,10 @@ export function DashboardShell({ user, children }: Props) {
 
   return (
     <div className="flex h-full">
-      {/* Desktop: always visible */}
       <div className="hidden md:flex">
         <Sidebar role={user.role} />
       </div>
 
-      {/* Mobile: slide-in drawer */}
       {sidebarOpen && (
         <>
           <div

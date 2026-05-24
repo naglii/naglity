@@ -38,6 +38,7 @@ export class JobsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       else if (payload.role === 'BUSINESS') client.join(`business:${payload.sub}`);
       else if (payload.role === 'ADMIN') client.join('admin');
 
+      client.join(`user:${payload.sub}`);
       (client as any).userId = payload.sub;
       (client as any).userRole = payload.role;
     } catch {
@@ -61,5 +62,9 @@ export class JobsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitJobUpdated(jobId: string, status: string, businessOwnerId: string) {
     this.server.to(`business:${businessOwnerId}`).emit('job:updated', { jobId, status });
     this.server.to('admin').emit('job:updated', { jobId, status });
+  }
+
+  emitNotification(userId: string, notification: any) {
+    this.server.to(`user:${userId}`).emit('notification:new', { notification });
   }
 }

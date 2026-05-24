@@ -7,6 +7,7 @@ const config: Record<JobStatus, { label: string; variant: 'default' | 'secondary
   IN_PROGRESS: { label: 'בביצוע', variant: 'secondary' },
   COMPLETED: { label: 'הושלם', variant: 'outline' },
   PAID: { label: 'שולם', variant: 'outline' },
+  DELETED: { label: 'מחוק', variant: 'destructive' },
 };
 
 export function JobStatusBadge({ status }: { status: JobStatus }) {
