@@ -45,7 +45,11 @@ export interface Job {
   scheduledAt: string;
   estimatedEndAt: string;
   fromLocation: string;
+  fromLat: number | null;
+  fromLng: number | null;
   toLocation: string;
+  toLat: number | null;
+  toLng: number | null;
   createdAt: string;
   updatedAt: string;
   business?: { id: string; name: string; phone?: string };
@@ -91,7 +95,11 @@ export interface CreateJobDto {
   scheduledAt: string;
   estimatedEndAt: string;
   fromLocation: string;
+  fromLat?: number | null;
+  fromLng?: number | null;
   toLocation: string;
+  toLat?: number | null;
+  toLng?: number | null;
 }
 
 export interface CreateDriverDto {
