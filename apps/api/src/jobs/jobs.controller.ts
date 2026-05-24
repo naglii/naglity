@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { JobsService } from './jobs.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/roles.guard.js';
@@ -37,10 +37,24 @@ export class JobsController {
     return this.jobsService.startJob(id, user.id);
   }
 
+  @Post(':id/cancel')
+  @UseGuards(RolesGuard)
+  @Roles('DRIVER')
+  cancelJob(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.jobsService.cancelJob(id, user.id);
+  }
+
   @Post(':id/complete')
   @UseGuards(RolesGuard)
   @Roles('BUSINESS')
   completeJob(@Param('id') id: string, @CurrentUser() user: any) {
     return this.jobsService.completeJob(id, user.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('BUSINESS')
+  deleteJob(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.jobsService.deleteJob(id, user.id);
   }
 }

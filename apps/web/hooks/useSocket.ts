@@ -14,9 +14,16 @@ export function initSocket(): Socket {
 
   _socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
     transports: ['websocket'],
-    withCredentials: true, // sends the httpOnly cookie with the WS handshake
+    withCredentials: true,
   });
   return _socket;
+}
+
+export function disconnectSocket() {
+  if (_socket) {
+    _socket.disconnect();
+    _socket = null;
+  }
 }
 
 export function useSocket() {

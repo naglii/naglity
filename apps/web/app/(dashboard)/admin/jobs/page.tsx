@@ -30,6 +30,11 @@ const SECTIONS: { label: string; statuses: JobStatus[]; emptyText: string }[] = 
     statuses: ['PAID'],
     emptyText: 'אין עבודות ששולמו עדיין.',
   },
+  {
+    label: 'מחוק',
+    statuses: ['DELETED'],
+    emptyText: 'אין עבודות שנמחקו.',
+  },
 ];
 
 function SectionHeader({ label, count }: { label: string; count: number }) {

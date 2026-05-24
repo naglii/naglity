@@ -9,14 +9,11 @@ import { useSocket } from '@/hooks/useSocket';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
-  useSocket(); // init socket connection once for entire dashboard
+  useSocket(); // ensures socket is initialized for the session
 
   useEffect(() => {
     const u = getUser();
-    if (!u) {
-      router.replace('/login');
-      return;
-    }
+    if (!u) { router.replace('/login'); return; }
     setUser(u);
   }, [router]);
 
