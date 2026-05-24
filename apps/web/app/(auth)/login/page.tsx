@@ -15,8 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const schema = z.object({
-  identifier: z.string().min(1, 'Required'),
-  password: z.string().min(1, 'Required'),
+  identifier: z.string().min(1, 'שדה חובה'),
+  password: z.string().min(1, 'שדה חובה'),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -42,8 +42,8 @@ export default function LoginPage() {
       const status = err.response?.status;
       toast.error(
         status === 401
-          ? 'Incorrect username or password'
-          : (err.response?.data?.message ?? 'Something went wrong, please try again'),
+          ? 'שם משתמש או סיסמה שגויים'
+          : (err.response?.data?.message ?? 'משהו השתבש, נסה שנית'),
       );
     } finally {
       setLoading(false);
@@ -53,26 +53,26 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-black tracking-tight flex items-baseline justify-center gap-0.5">
+        <CardTitle className="text-3xl font-black tracking-tight flex items-baseline justify-center gap-0.5" dir="ltr">
             <span className="italic text-primary">N</span>aglity
             <span className="text-primary text-sm font-semibold not-italic ml-0.5 leading-none">●</span>
           </CardTitle>
-        <CardDescription>Crane Truck Logistics</CardDescription>
+        <CardDescription>לוגיסטיקת מנופים</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="identifier">Username or Email</Label>
-            <Input id="identifier" placeholder="username or email" {...register('identifier')} />
+            <Label htmlFor="identifier">שם משתמש או אימייל</Label>
+            <Input id="identifier" placeholder="שם משתמש או אימייל" {...register('identifier')} />
             {errors.identifier && <p className="text-xs text-destructive">{errors.identifier.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">סיסמה</Label>
             <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
             {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? 'מתחבר…' : 'כניסה'}
           </Button>
         </form>
       </CardContent>

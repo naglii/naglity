@@ -28,19 +28,19 @@ export default function AdminRevenuePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Platform Revenue</h1>
+      <h1 className="text-xl font-semibold">הכנסות פלטפורמה</h1>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatsCard title="Platform Revenue (10%)" value={formatPrice(data.totalPlatformRevenueCents)} icon={TrendingUp} />
-        <StatsCard title="Driver Payouts (90%)" value={formatPrice(data.totalDriverPayoutsCents)} icon={Banknote} />
-        <StatsCard title="Gross Volume" value={formatPrice(data.totalGrossCents)} icon={DollarSign} />
-        <StatsCard title="Total Drivers" value={data.driversCount} icon={Truck} />
-        <StatsCard title="Total Businesses" value={data.businessesCount} icon={Building2} />
-        <StatsCard title="Total Jobs" value={data.totalJobs} icon={Users} />
+        <StatsCard title="הכנסות פלטפורמה (10%)" value={formatPrice(data.totalPlatformRevenueCents)} icon={TrendingUp} />
+        <StatsCard title="תשלומי נהגים (90%)" value={formatPrice(data.totalDriverPayoutsCents)} icon={Banknote} />
+        <StatsCard title="מחזור גולמי" value={formatPrice(data.totalGrossCents)} icon={DollarSign} />
+        <StatsCard title='סה"כ נהגים' value={data.driversCount} icon={Truck} />
+        <StatsCard title='סה"כ עסקים' value={data.businessesCount} icon={Building2} />
+        <StatsCard title='סה"כ עבודות' value={data.totalJobs} icon={Users} />
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-sm font-medium">Jobs by Status</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-sm font-medium">עבודות לפי סטטוס</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             {Object.entries(data.jobsByStatus).map(([status, count]) => (

@@ -15,17 +15,17 @@ import { Separator } from '@/components/ui/separator';
 import { CheckCircle2 } from 'lucide-react';
 
 const VEHICLE_TYPES = [
-  { value: 'crane_truck', label: 'Crane Truck' },
+  { value: 'crane_truck', label: 'משאית מנוף' },
 ];
 
 const schema = z.object({
-  name: z.string().min(1, 'Required'),
-  phone: z.string().min(1, 'Required'),
-  vehicleType: z.string().min(1, 'Required'),
-  vehicleNumber: z.string().min(1, 'Required'),
-  username: z.string().min(3, 'Min 3 characters'),
-  password: z.string().min(6, 'Min 6 characters'),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
+  name: z.string().min(1, 'שדה חובה'),
+  phone: z.string().min(1, 'שדה חובה'),
+  vehicleType: z.string().min(1, 'שדה חובה'),
+  vehicleNumber: z.string().min(1, 'שדה חובה'),
+  username: z.string().min(3, 'מינימום 3 תווים'),
+  password: z.string().min(6, 'מינימום 6 תווים'),
+  email: z.string().email('אימייל לא תקין').optional().or(z.literal('')),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -47,7 +47,7 @@ export function CreateDriverForm({ onSuccess }: Props) {
       reset();
       onSuccess();
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Failed to create driver');
+      toast.error(err.response?.data?.message ?? 'שגיאה ביצירת הנהג');
     }
   };
 
@@ -56,15 +56,15 @@ export function CreateDriverForm({ onSuccess }: Props) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Personal info */}
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Personal Details</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">פרטים אישיים</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Full Name</Label>
-              <Input placeholder="Yossi Cohen" {...register('name')} />
+              <Label>שם מלא</Label>
+              <Input placeholder="יוסי כהן" {...register('name')} />
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
+              <Label>טלפון</Label>
               <Input placeholder="050-0000000" {...register('phone')} />
               {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
             </div>
@@ -75,17 +75,17 @@ export function CreateDriverForm({ onSuccess }: Props) {
 
         {/* Vehicle info */}
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vehicle Details</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">פרטי רכב</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Vehicle Type</Label>
+              <Label>סוג רכב</Label>
               <Controller
                 name="vehicleType"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="בחר סוג" />
                     </SelectTrigger>
                     <SelectContent>
                       {VEHICLE_TYPES.map(t => (
@@ -98,7 +98,7 @@ export function CreateDriverForm({ onSuccess }: Props) {
               {errors.vehicleType && <p className="text-xs text-destructive">{errors.vehicleType.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Vehicle Number</Label>
+              <Label>מספר רכב</Label>
               <Input placeholder="12-345-67" {...register('vehicleNumber')} />
               {errors.vehicleNumber && <p className="text-xs text-destructive">{errors.vehicleNumber.message}</p>}
             </div>
@@ -109,27 +109,27 @@ export function CreateDriverForm({ onSuccess }: Props) {
 
         {/* Account info */}
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Account Credentials</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">פרטי חשבון</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Username</Label>
+              <Label>שם משתמש</Label>
               <Input placeholder="yossi_driver" {...register('username')} />
               {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Password</Label>
-              <Input type="password" placeholder="Min 6 characters" {...register('password')} />
+              <Label>סיסמה</Label>
+              <Input type="password" placeholder="מינימום 6 תווים" {...register('password')} />
               {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Email <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label>אימייל <span className="text-muted-foreground font-normal">(אופציונלי)</span></Label>
               <Input type="email" placeholder="driver@example.com" {...register('email')} />
             </div>
           </div>
         </div>
 
         <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account…' : 'Create Driver Account'}
+          {isSubmitting ? 'יוצר חשבון…' : 'צור חשבון נהג'}
         </Button>
       </form>
 
@@ -138,14 +138,14 @@ export function CreateDriverForm({ onSuccess }: Props) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CheckCircle2 className="size-5 text-green-600" />
-              Driver account created
+              חשבון הנהג נוצר
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">The driver can now log in with:</p>
+          <p className="text-sm text-muted-foreground">הנהג יכול להתחבר עם:</p>
           <div className="rounded-lg border bg-muted/50 p-4 font-mono text-sm">
-            <p><span className="text-muted-foreground">Username: </span><strong>{createdUsername}</strong></p>
+            <p><span className="text-muted-foreground">שם משתמש: </span><strong>{createdUsername}</strong></p>
           </div>
-          <Button className="w-full" onClick={() => setCreatedUsername(null)}>Done</Button>
+          <Button className="w-full" onClick={() => setCreatedUsername(null)}>סגור</Button>
         </DialogContent>
       </Dialog>
     </>

@@ -31,7 +31,7 @@ function JobItem({ job }: { job: Job }) {
       <CardContent className="space-y-1.5 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="size-3.5 shrink-0" />
-          {job.fromLocation} → {job.toLocation}
+          <bdi>{job.fromLocation}</bdi> ← <bdi>{job.toLocation}</bdi>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="size-3.5 shrink-0" />
@@ -39,7 +39,7 @@ function JobItem({ job }: { job: Job }) {
         </div>
         <p className="font-semibold">
           {formatPrice(job.netPriceCents)}{' '}
-          <span className="text-xs font-normal text-muted-foreground">net</span>
+          <span className="text-xs font-normal text-muted-foreground">נטו</span>
         </p>
       </CardContent>
     </Card>
@@ -60,23 +60,23 @@ export default function DriverHistoryPage() {
   const paid = (jobs ?? []).filter((j) => j.status === 'PAID');
 
   if (completed.length === 0 && paid.length === 0) {
-    return <p className="text-muted-foreground py-16 text-center">No completed jobs yet.</p>;
+    return <p className="text-muted-foreground py-16 text-center">אין עבודות שהושלמו עדיין.</p>;
   }
 
   return (
     <div className="space-y-8">
-      <h1 className="text-xl font-semibold">History</h1>
+      <h1 className="text-xl font-semibold">היסטוריה</h1>
 
       {completed.length > 0 && (
         <div className="space-y-3">
-          <SectionHeader label="Completed" count={completed.length} />
+          <SectionHeader label="הושלם" count={completed.length} />
           {completed.map((j) => <JobItem key={j.id} job={j} />)}
         </div>
       )}
 
       {paid.length > 0 && (
         <div className="space-y-3">
-          <SectionHeader label="Paid" count={paid.length} />
+          <SectionHeader label="שולם" count={paid.length} />
           {paid.map((j) => <JobItem key={j.id} job={j} />)}
         </div>
       )}

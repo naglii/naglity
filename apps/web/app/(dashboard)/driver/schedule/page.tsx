@@ -22,8 +22,8 @@ export default function DriverSchedulePage() {
 
   const startMutation = useMutation({
     mutationFn: (id: string) => api.post(`/jobs/${id}/start`),
-    onSuccess: () => { toast.success('Job started'); qc.invalidateQueries({ queryKey: ['driver-jobs'] }); },
-    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Error'),
+    onSuccess: () => { toast.success('העבודה החלה'); qc.invalidateQueries({ queryKey: ['driver-jobs'] }); },
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'שגיאה'),
   });
 
   if (isLoading) {
@@ -33,12 +33,12 @@ export default function DriverSchedulePage() {
   const active = (jobs ?? []).filter((j) => ['ACCEPTED', 'IN_PROGRESS'].includes(j.status));
 
   if (active.length === 0) {
-    return <p className="text-muted-foreground py-16 text-center">No active jobs in your schedule.</p>;
+    return <p className="text-muted-foreground py-16 text-center">אין עבודות פעילות בלוח הזמנים.</p>;
   }
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">My Schedule ({active.length})</h1>
+      <h1 className="text-xl font-semibold">לוח הזמנים שלי ({active.length})</h1>
       <div className="space-y-3">
         {active.map((job) => (
           <Card key={job.id}>
@@ -49,7 +49,7 @@ export default function DriverSchedulePage() {
             <CardContent className="space-y-1.5 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="size-3.5 shrink-0" />
-                {job.fromLocation} → {job.toLocation}
+                <bdi>{job.fromLocation}</bdi> ← <bdi>{job.toLocation}</bdi>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="size-3.5 shrink-0" />
@@ -57,11 +57,11 @@ export default function DriverSchedulePage() {
               </div>
               <p className="font-semibold">
                 {formatPrice(job.netPriceCents)}{' '}
-                <span className="text-xs font-normal text-muted-foreground">net</span>
+                <span className="text-xs font-normal text-muted-foreground">נטו</span>
               </p>
               {job.status === 'ACCEPTED' && (
                 <Button size="sm" className="mt-1" onClick={() => startMutation.mutate(job.id)}>
-                  Start Job
+                  התחל עבודה
                 </Button>
               )}
             </CardContent>

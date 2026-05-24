@@ -49,9 +49,9 @@ export default function DriverFeedPage() {
     qc.setQueryData<Job[]>(FEED_KEY, (old = []) => old.filter((j) => j.id !== jobId));
     try {
       await api.post(`/jobs/${jobId}/accept`);
-      toast.success('Job accepted!');
+      toast.success('העבודה התקבלה!');
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Could not accept job');
+      toast.error(err.response?.data?.message ?? 'לא ניתן לקבל את העבודה');
       // Refetch to restore the job if the accept failed
       qc.invalidateQueries({ queryKey: FEED_KEY });
     }
@@ -70,15 +70,15 @@ export default function DriverFeedPage() {
   if (jobs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-xl font-semibold">No open jobs right now</p>
-        <p className="text-muted-foreground text-sm mt-1">New jobs will appear here in real time</p>
+        <p className="text-xl font-semibold">אין עבודות פתוחות כרגע</p>
+        <p className="text-muted-foreground text-sm mt-1">עבודות חדשות יופיעו כאן בזמן אמת</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Available Jobs ({jobs.length})</h1>
+      <h1 className="text-xl font-semibold">עבודות זמינות ({jobs.length})</h1>
       <div className="space-y-3">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} onAccepted={handleAccept} />
