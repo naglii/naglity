@@ -120,3 +120,135 @@ body {
 [data-slot="card"] {
   box-shadow: 0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04);
 }
+
+/* ─── Driver theme: Night (Midnight Blue) ────────────────────────────────── */
+[data-theme="night"] {
+  --topbar: oklch(0.16 0.018 265);
+  --topbar-foreground: oklch(0.92 0.01 265);
+  --background: oklch(0.13 0.016 265);
+  --foreground: oklch(0.95 0.008 265);
+  --card: oklch(0.17 0.018 265);
+  --card-foreground: oklch(0.95 0.008 265);
+  --popover: oklch(0.17 0.018 265);
+  --popover-foreground: oklch(0.95 0.008 265);
+  --primary: oklch(0.62 0.22 250);
+  --primary-foreground: oklch(0.10 0.015 260);
+  --secondary: oklch(0.22 0.025 265);
+  --secondary-foreground: oklch(0.85 0.01 265);
+  --muted: oklch(0.20 0.022 265);
+  --muted-foreground: oklch(0.58 0.02 265);
+  --accent: oklch(0.22 0.025 265);
+  --accent-foreground: oklch(0.92 0.01 265);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.26 0.025 265);
+  --input: oklch(0.26 0.025 265);
+  --ring: oklch(0.62 0.22 250);
+  --sidebar: oklch(0.10 0.018 265);
+  --sidebar-foreground: oklch(0.90 0.01 265);
+  --sidebar-primary: oklch(0.62 0.22 250);
+  --sidebar-primary-foreground: oklch(0.98 0.005 265);
+  --sidebar-accent: oklch(0.20 0.022 265);
+  --sidebar-accent-foreground: oklch(0.90 0.01 265);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.62 0.22 250);
+}
+
+/* ─── Driver theme: Desert (Warm Amber) ──────────────────────────────────── */
+[data-theme="desert"] {
+  --topbar: oklch(0.99 0.008 80);
+  --topbar-foreground: oklch(0.22 0.04 55);
+  --background: oklch(0.96 0.018 82);
+  --foreground: oklch(0.22 0.04 55);
+  --card: oklch(0.99 0.008 80);
+  --card-foreground: oklch(0.22 0.04 55);
+  --popover: oklch(0.99 0.008 80);
+  --popover-foreground: oklch(0.22 0.04 55);
+  --primary: oklch(0.56 0.18 50);
+  --primary-foreground: oklch(0.98 0.005 80);
+  --secondary: oklch(0.90 0.025 82);
+  --secondary-foreground: oklch(0.35 0.05 60);
+  --muted: oklch(0.90 0.025 82);
+  --muted-foreground: oklch(0.52 0.05 65);
+  --accent: oklch(0.90 0.025 82);
+  --accent-foreground: oklch(0.22 0.04 55);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.85 0.03 80);
+  --input: oklch(0.85 0.03 80);
+  --ring: oklch(0.56 0.18 50);
+  --sidebar: oklch(0.26 0.055 52);
+  --sidebar-foreground: oklch(0.93 0.015 80);
+  --sidebar-primary: oklch(0.70 0.14 78);
+  --sidebar-primary-foreground: oklch(0.20 0.04 55);
+  --sidebar-accent: oklch(0.33 0.055 52);
+  --sidebar-accent-foreground: oklch(0.93 0.015 80);
+  --sidebar-border: oklch(0 0 0 / 15%);
+  --sidebar-ring: oklch(0.70 0.14 78);
+}
+
+/* ─── Driver theme: Ocean (Mediterranean Teal) ───────────────────────────── */
+[data-theme="ocean"] {
+  --topbar: oklch(0.99 0.005 190);
+  --topbar-foreground: oklch(0.18 0.05 200);
+  --background: oklch(0.96 0.016 192);
+  --foreground: oklch(0.18 0.05 200);
+  --card: oklch(0.99 0.005 190);
+  --card-foreground: oklch(0.18 0.05 200);
+  --popover: oklch(0.99 0.005 190);
+  --popover-foreground: oklch(0.18 0.05 200);
+  --primary: oklch(0.44 0.16 200);
+  --primary-foreground: oklch(0.97 0.005 190);
+  --secondary: oklch(0.89 0.025 192);
+  --secondary-foreground: oklch(0.30 0.07 200);
+  --muted: oklch(0.89 0.025 192);
+  --muted-foreground: oklch(0.50 0.06 200);
+  --accent: oklch(0.89 0.025 192);
+  --accent-foreground: oklch(0.18 0.05 200);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.84 0.03 192);
+  --input: oklch(0.84 0.03 192);
+  --ring: oklch(0.44 0.16 200);
+  --sidebar: oklch(0.21 0.075 200);
+  --sidebar-foreground: oklch(0.93 0.015 192);
+  --sidebar-primary: oklch(0.56 0.14 192);
+  --sidebar-primary-foreground: oklch(0.97 0.005 190);
+  --sidebar-accent: oklch(0.29 0.075 200);
+  --sidebar-accent-foreground: oklch(0.93 0.015 192);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.14 192);
+}
+
+/* ─── Driver theme: Sunset (Violet / Purple) ─────────────────────────────── */
+[data-theme="sunset"] {
+  --topbar: oklch(0.99 0.005 295);
+  --topbar-foreground: oklch(0.20 0.05 285);
+  --background: oklch(0.97 0.013 295);
+  --foreground: oklch(0.20 0.05 285);
+  --card: oklch(0.99 0.005 295);
+  --card-foreground: oklch(0.20 0.05 285);
+  --popover: oklch(0.99 0.005 295);
+  --popover-foreground: oklch(0.20 0.05 285);
+  --primary: oklch(0.47 0.23 295);
+  --primary-foreground: oklch(0.97 0.005 295);
+  --secondary: oklch(0.91 0.022 295);
+  --secondary-foreground: oklch(0.32 0.07 285);
+  --muted: oklch(0.91 0.022 295);
+  --muted-foreground: oklch(0.52 0.06 285);
+  --accent: oklch(0.91 0.022 295);
+  --accent-foreground: oklch(0.20 0.05 285);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.87 0.026 292);
+  --input: oklch(0.87 0.026 292);
+  --ring: oklch(0.47 0.23 295);
+  --sidebar: oklch(0.23 0.09 285);
+  --sidebar-foreground: oklch(0.94 0.01 295);
+  --sidebar-primary: oklch(0.60 0.21 295);
+  --sidebar-primary-foreground: oklch(0.97 0.005 295);
+  --sidebar-accent: oklch(0.31 0.09 285);
+  --sidebar-accent-foreground: oklch(0.94 0.01 295);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.60 0.21 295);
+}

@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, Menu } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { disconnectSocket } from '@/hooks/useSocket';
+import { ThemePicker } from '@/components/theme/ThemePicker';
 
 const roleLabel: Record<string, string> = {
   DRIVER: 'נהג',
@@ -43,6 +44,7 @@ export function TopBar({ user, onMenuClick }: Props) {
         <Menu className="size-5" />
       </button>
       <div className="mr-auto flex items-center gap-2">
+        {user.role === 'DRIVER' && <ThemePicker />}
         <NotificationBell />
         <Avatar className="size-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
