@@ -10,7 +10,7 @@ import {
   Dialog, DialogTrigger, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { formatPrice, formatDuration } from '@/lib/utils';
+import { formatPrice, formatHoursLabel, durationMins } from '@/lib/utils';
 import type { Job } from '@/types/api';
 
 interface Props {
@@ -55,11 +55,12 @@ export function JobCard({ job, onAccepted }: Props) {
           <div className="rounded-xl bg-accent p-3">
             <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
               <CalendarClock className="size-3.5 text-brand-strong" />
-              מועד עבודה
+              <span className="truncate">{format(scheduled, 'EEEE, d בMMM', { locale: he })}</span>
             </div>
             <p className="mt-1.5 text-2xl font-black leading-none tracking-tight">{format(scheduled, 'HH:mm')}</p>
-            <p className="mt-1.5 truncate text-xs font-medium text-foreground/80">
-              {format(scheduled, 'EEEE, d בMMM', { locale: he })}
+            <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+              <Timer className="size-3" />
+              נסיעה ≈ {formatHoursLabel(durationMins(job.scheduledAt, job.estimatedEndAt))}
             </p>
           </div>
 
@@ -69,10 +70,7 @@ export function JobCard({ job, onAccepted }: Props) {
               תשלום נטו
             </div>
             <p className="mt-1.5 text-2xl font-black leading-none tracking-tight">{formatPrice(job.netPriceCents)}</p>
-            <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
-              <Timer className="size-3" />
-              {formatDuration(job.scheduledAt, job.estimatedEndAt)} משך
-            </p>
+            <p className="mt-1.5 text-xs text-muted-foreground">ישירות אליך</p>
           </div>
         </div>
 
