@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v3';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import type { CreateJobDto } from '@/types/api';
@@ -13,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatPrice, netCents, platformCents } from '@/lib/utils';
+import { FileText, CalendarClock, Send, type LucideIcon } from 'lucide-react';
 
 const schema = z.object({
   title: z.string().min(1, 'שדה חובה'),
@@ -25,6 +27,21 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
+const inputCls = 'h-9';
+
+function GroupTitle({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <Icon className="size-4 text-brand-strong" />
+      <h3 className="text-sm font-bold">{children}</h3>
+    </div>
+  );
+}
+
+function Err({ msg }: { msg?: string }) {
+  return msg ? <p className="mt-1 text-xs text-destructive">{msg}</p> : null;
+}
+
 export function CreateJobForm() {
   const router = useRouter();
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -33,6 +50,7 @@ export function CreateJobForm() {
 
   const grossShekels = Number(watch('grossPriceShekels')) || 0;
   const grossC = Math.round(grossShekels * 100);
+  const minDateTime = format(new Date(), "yyyy-MM-dd'T'HH:mm");
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -55,65 +73,90 @@ export function CreateJobForm() {
   };
 
   return (
-    <Card className="max-w-2xl">
-      <CardHeader>
-        <CardTitle>פרסם עבודה חדשה</CardTitle>
-        <CardDescription>העבודה תופץ לנהגים זמינים בזמן אמת</CardDescription>
+    <Card className="mx-auto w-full max-w-3xl">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">פרסם עבודה חדשה</CardTitle>
+        <CardDescription>מלא את הפרטים — העבודה תופץ לנהגים זמינים בזמן אמת</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>כותרת</Label>
-            <Input placeholder="לדוגמה: הרמת מנוף – נמל תל אביב" {...register('title')} />
-            {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>תיאור (אופציונלי)</Label>
-            <Textarea placeholder="פרטים נוספים…" rows={3} {...register('description')} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>מיקום מוצא</Label>
-              <Input placeholder="כתובת מוצא" {...register('fromLocation')} />
-              {errors.fromLocation && <p className="text-xs text-destructive">{errors.fromLocation.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label>מיקום יעד</Label>
-              <Input placeholder="כתובת יעד" {...register('toLocation')} />
-              {errors.toLocation && <p className="text-xs text-destructive">{errors.toLocation.message}</p>}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>מחיר (₪)</Label>
-            <Input type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
-            {errors.grossPriceShekels && <p className="text-xs text-destructive">{errors.grossPriceShekels.message}</p>}
-            {grossC > 0 && (
-              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-muted/60 px-3 py-2 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <span className="size-1.5 rounded-full bg-success" />
-                  הנהג מקבל <span className="font-semibold text-foreground">{formatPrice(netCents(grossC))}</span>
-                </span>
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="size-1.5 rounded-full bg-brand-strong" />
-                  עמלת פלטפורמה (10%) {formatPrice(platformCents(grossC))}
-                </span>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="grid gap-x-8 gap-y-5 md:grid-cols-2">
+            {/* ── Details + route ── */}
+            <div>
+              <GroupTitle icon={FileText}>פרטים ומסלול</GroupTitle>
+              <div className="space-y-3">
+                <div>
+                  <Label className="mb-1.5 block">כותרת</Label>
+                  <Input className={inputCls} placeholder="לדוגמה: הרמת מנוף – נמל ת״א" {...register('title')} />
+                  <Err msg={errors.title?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">תיאור (אופציונלי)</Label>
+                  <Textarea rows={2} placeholder="ציוד נדרש, הערות גישה…" {...register('description')} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">מיקום מוצא</Label>
+                  <div className="relative">
+                    <span className="absolute top-1/2 size-2 -translate-y-1/2 start-3 rounded-full bg-success" />
+                    <Input className={`${inputCls} ps-8`} placeholder="כתובת מוצא" {...register('fromLocation')} />
+                  </div>
+                  <Err msg={errors.fromLocation?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">מיקום יעד</Label>
+                  <div className="relative">
+                    <span className="absolute top-1/2 size-2 -translate-y-1/2 start-3 rounded-full bg-brand-strong" />
+                    <Input className={`${inputCls} ps-8`} placeholder="כתובת יעד" {...register('toLocation')} />
+                  </div>
+                  <Err msg={errors.toLocation?.message} />
+                </div>
               </div>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>תאריך ושעת התחלה</Label>
-              <Input type="datetime-local" {...register('scheduledAt')} />
-              {errors.scheduledAt && <p className="text-xs text-destructive">{errors.scheduledAt.message}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label>זמן נסיעה (שעות)</Label>
-              <Input type="number" min="0.5" max="24" step="0.5" placeholder="לדוגמה: 2.5" {...register('travelTimeHours')} />
-              {errors.travelTimeHours && <p className="text-xs text-destructive">{errors.travelTimeHours.message}</p>}
+
+            {/* ── Schedule + pricing ── */}
+            <div>
+              <GroupTitle icon={CalendarClock}>תזמון ותמחור</GroupTitle>
+              <div className="space-y-3">
+                <div>
+                  <Label className="mb-1.5 block">תאריך ושעת התחלה</Label>
+                  <Input className={inputCls} type="datetime-local" min={minDateTime} {...register('scheduledAt')} />
+                  <Err msg={errors.scheduledAt?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">זמן נסיעה (שעות)</Label>
+                  <Input className={inputCls} type="number" min="0.5" max="24" step="0.5" placeholder="לדוגמה: 2.5" {...register('travelTimeHours')} />
+                  <Err msg={errors.travelTimeHours?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">מחיר (₪)</Label>
+                  <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
+                  <Err msg={errors.grossPriceShekels?.message} />
+                </div>
+
+                {/* live payout breakdown */}
+                <div className="rounded-xl border bg-muted/50 px-4 py-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span className="size-2 rounded-full bg-success" />
+                      הנהג מקבל
+                    </span>
+                    <span className="font-bold">{grossC > 0 ? formatPrice(netCents(grossC)) : '—'}</span>
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <span className="size-2 rounded-full bg-brand-strong" />
+                      עמלת פלטפורמה (10%)
+                    </span>
+                    <span className="font-semibold">{grossC > 0 ? formatPrice(platformCents(grossC)) : '—'}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex gap-3 pt-2">
-            <Button type="submit" size="lg" className="font-semibold" disabled={isSubmitting}>
+
+          <div className="flex gap-3 border-t pt-4">
+            <Button type="submit" size="lg" className="flex-1 gap-1.5 font-semibold sm:flex-none" disabled={isSubmitting}>
+              <Send className="size-4" />
               {isSubmitting ? 'מפרסם…' : 'פרסם עבודה'}
             </Button>
             <Button type="button" size="lg" variant="outline" onClick={() => router.back()}>ביטול</Button>

@@ -7,14 +7,13 @@ import type { Role } from '@/types/api';
 import { Logo } from './Logo';
 import {
   Truck, CalendarDays, BarChart2, Briefcase, PlusCircle,
-  Building2, ClipboardList, TrendingUp, History, LifeBuoy,
+  Building2, ClipboardList, TrendingUp, LifeBuoy,
 } from 'lucide-react';
 
 const navByRole: Record<Role, { href: string; label: string; icon: React.ElementType }[]> = {
   DRIVER: [
     { href: '/driver/feed', label: 'עבודות זמינות', icon: Truck },
     { href: '/driver/schedule', label: 'לוח זמנים', icon: CalendarDays },
-    { href: '/driver/history', label: 'היסטוריה', icon: History },
     { href: '/driver/stats', label: 'סטטיסטיקות', icon: BarChart2 },
   ],
   BUSINESS: [

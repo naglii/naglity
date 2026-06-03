@@ -2,17 +2,17 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, isSameDay, isToday, isTomorrow } from 'date-fns';
+import { format, isSameDay, isToday, isTomorrow, isBefore, startOfDay } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import type { Job } from '@/types/api';
 import { JobStatusBadge } from '@/components/jobs/JobStatusBadge';
-import { formatPrice, formatDuration, cn } from '@/lib/utils';
+import { formatPrice, formatHoursLabel, durationMins, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Play, CalendarX2, CalendarDays } from 'lucide-react';
+import { MapPin, Play, CalendarX2, CalendarDays, Clock } from 'lucide-react';
 import {
   Dialog, DialogTrigger, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -61,8 +61,12 @@ export default function DriverSchedulePage() {
     return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>;
   }
 
+  // Only upcoming work: active jobs whose scheduled day is today or later.
+  // Any job whose date has already passed is hidden from the schedule.
+  const today = startOfDay(new Date());
   const active = (jobs ?? [])
     .filter((j) => ['ACCEPTED', 'IN_PROGRESS'].includes(j.status))
+    .filter((j) => !isBefore(new Date(j.scheduledAt), today))
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
 
   if (active.length === 0) {
@@ -118,7 +122,7 @@ export default function DriverSchedulePage() {
                     {/* time rail */}
                     <div className="flex shrink-0 items-center gap-3 bg-accent/50 px-4 py-3 sm:w-24 sm:flex-col sm:justify-center sm:gap-0.5 sm:py-4">
                       <span className="text-xl font-bold leading-none">{format(new Date(job.scheduledAt), 'HH:mm')}</span>
-                      <span className="text-[11px] text-muted-foreground">{formatDuration(job.scheduledAt, job.estimatedEndAt)}</span>
+                      <span className="text-[11px] text-muted-foreground">התחלה</span>
                     </div>
 
                     {/* body */}
@@ -133,6 +137,11 @@ export default function DriverSchedulePage() {
                         <bdi>{job.fromLocation}</bdi>
                         <span className="text-muted-foreground/50">←</span>
                         <bdi>{job.toLocation}</bdi>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Clock className="size-3.5 shrink-0" />
+                        זמן נסיעה משוער · {formatHoursLabel(durationMins(job.scheduledAt, job.estimatedEndAt))}
                       </div>
 
                       <div className="flex items-center justify-between gap-2 pt-1">
