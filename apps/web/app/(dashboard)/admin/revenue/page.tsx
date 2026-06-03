@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, startOfMonth } from 'date-fns';
 import { he } from 'date-fns/locale';
 import api from '@/lib/api';
+import { initSocket } from '@/hooks/useSocket';
 import type { AdminStats, Job } from '@/types/api';
 import { StatsCard } from '@/components/stats/StatsCard';
 import { StatHero, HeroPill } from '@/components/stats/StatHero';
@@ -17,6 +18,7 @@ import { TrendingUp, Users, Building2, Banknote, Truck, DollarSign, Briefcase } 
 const sum = (jobs: Job[], pick: (j: Job) => number) => jobs.reduce((t, j) => t + pick(j), 0);
 
 export default function AdminRevenuePage() {
+  const qc = useQueryClient();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
 
   const { data, isLoading } = useQuery<AdminStats>({
@@ -28,6 +30,23 @@ export default function AdminRevenuePage() {
     queryKey: ['admin-jobs'],
     queryFn: () => api.get('/admin/jobs').then((r) => r.data),
   });
+
+  // Live: job changes affect revenue figures.
+  useEffect(() => {
+    const socket = initSocket();
+    const refresh = () => {
+      qc.invalidateQueries({ queryKey: ['admin-jobs'] });
+      qc.invalidateQueries({ queryKey: ['admin-stats'] });
+    };
+    socket.on('job:new', refresh);
+    socket.on('job:accepted', refresh);
+    socket.on('job:updated', refresh);
+    return () => {
+      socket.off('job:new', refresh);
+      socket.off('job:accepted', refresh);
+      socket.off('job:updated', refresh);
+    };
+  }, [qc]);
 
   const m = useMemo(() => {
     const inMonth = jobs.filter((j) => isInMonth(j.scheduledAt, month));
@@ -77,9 +96,9 @@ export default function AdminRevenuePage() {
           <StatsCard title="הכנסות פלטפורמה (10%)" value={formatPrice(data.totalPlatformRevenueCents)} icon={TrendingUp} tone="success" />
           <StatsCard title="תשלומי נהגים (90%)" value={formatPrice(data.totalDriverPayoutsCents)} icon={Banknote} tone="brand" />
           <StatsCard title="מחזור גולמי" value={formatPrice(data.totalGrossCents)} icon={DollarSign} tone="info" />
-          <StatsCard title='סה"כ נהגים' value={data.driversCount} icon={Truck} tone="info" />
-          <StatsCard title='סה"כ עסקים' value={data.businessesCount} icon={Building2} tone="warning" />
-          <StatsCard title='סה"כ עבודות' value={data.totalJobs} icon={Users} tone="brand" />
+          <StatsCard title='סה"כ נהגים' value={data.driversCount} icon={Truck} tone="info" href="/admin/drivers" />
+          <StatsCard title='סה"כ עסקים' value={data.businessesCount} icon={Building2} tone="warning" href="/admin/businesses" />
+          <StatsCard title='סה"כ עבודות' value={data.totalJobs} icon={Users} tone="brand" href="/admin/jobs" />
         </div>
       </div>
 
