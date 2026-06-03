@@ -60,7 +60,7 @@ export default function DriverStatsPage() {
   const chips: { key: Filter; label: string; count: number }[] = [
     { key: 'all', label: 'הכל', count: m.inMonth.length },
     { key: 'PAID', label: 'שולמו', count: m.paid.length },
-    { key: 'COMPLETED', label: 'ממתינות', count: m.completed.length },
+    { key: 'COMPLETED', label: 'ממתין לתשלום', count: m.completed.length },
     { key: 'upcoming', label: 'מתוכננות', count: m.upcoming.length },
   ];
 
@@ -90,7 +90,7 @@ export default function DriverStatsPage() {
             amount={formatPrice(m.earnedNet)}
           >
             <HeroPill icon={CheckCircle2} tone="success">{m.paid.length} שולמו · {formatPrice(m.paidNet)}</HeroPill>
-            <HeroPill icon={Clock} tone="warning">{m.completed.length} ממתינות · {formatPrice(m.pendingNet)}</HeroPill>
+            <HeroPill icon={Clock} tone="info">{m.completed.length} ממתינות לתשלום · {formatPrice(m.pendingNet)}</HeroPill>
           </StatHero>
 
           {/* ── Secondary stats ── */}

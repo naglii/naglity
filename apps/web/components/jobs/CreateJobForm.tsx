@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v3';
 import { format } from 'date-fns';
@@ -12,16 +12,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatPrice, netCents, platformCents } from '@/lib/utils';
 import { FileText, CalendarClock, Send, type LucideIcon } from 'lucide-react';
+
+// Half-hour increments from 0.5 up to 12 hours.
+const TRAVEL_OPTIONS = Array.from({ length: 24 }, (_, i) => {
+  const hours = (i + 1) * 0.5;
+  return { value: String(hours), label: String(hours) };
+});
+
+// Half-hour time slots 05:00 → 23:30.
+const TIME_OPTIONS = Array.from({ length: 38 }, (_, i) => {
+  const half = i + 10; // 10 half-hours = 05:00
+  const v = `${String(Math.floor(half / 2)).padStart(2, '0')}:${half % 2 === 0 ? '00' : '30'}`;
+  return { value: v, label: v };
+});
 
 const schema = z.object({
   title: z.string().min(1, 'שדה חובה'),
   description: z.string().optional(),
   grossPriceShekels: z.coerce.number().min(1, 'מינימום ₪1'),
-  scheduledAt: z.string().min(1, 'שדה חובה'),
-  travelTimeHours: z.coerce.number().min(0.5, 'מינימום 30 דקות').max(24, 'מקסימום 24 שעות'),
+  scheduledDate: z.string().min(1, 'שדה חובה'),
+  scheduledTime: z.string().min(1, 'שדה חובה'),
+  travelTimeHours: z.coerce.number().min(0.5, 'מינימום 30 דקות').max(12, 'מקסימום 12 שעות'),
   fromLocation: z.string().min(1, 'שדה חובה'),
   toLocation: z.string().min(1, 'שדה חובה'),
 });
@@ -44,17 +59,21 @@ function Err({ msg }: { msg?: string }) {
 
 export function CreateJobForm() {
   const router = useRouter();
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   const grossShekels = Number(watch('grossPriceShekels')) || 0;
   const grossC = Math.round(grossShekels * 100);
-  const minDateTime = format(new Date(), "yyyy-MM-dd'T'HH:mm");
+  const minDate = format(new Date(), 'yyyy-MM-dd');
 
   const onSubmit = async (data: FormData) => {
     try {
-      const scheduledAt = new Date(data.scheduledAt);
+      const scheduledAt = new Date(`${data.scheduledDate}T${data.scheduledTime}`);
+      if (Number.isNaN(scheduledAt.getTime())) {
+        toast.error('תאריך או שעה לא תקינים');
+        return;
+      }
       const dto: CreateJobDto = {
         title: data.title,
         description: data.description,
@@ -117,14 +136,54 @@ export function CreateJobForm() {
             <div>
               <GroupTitle icon={CalendarClock}>תזמון ותמחור</GroupTitle>
               <div className="space-y-3">
-                <div>
-                  <Label className="mb-1.5 block">תאריך ושעת התחלה</Label>
-                  <Input className={inputCls} type="datetime-local" min={minDateTime} {...register('scheduledAt')} />
-                  <Err msg={errors.scheduledAt?.message} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="mb-1.5 block">תאריך התחלה</Label>
+                    <Input className={inputCls} type="date" min={minDate} {...register('scheduledDate')} />
+                    <Err msg={errors.scheduledDate?.message} />
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block">שעת התחלה</Label>
+                    <Controller
+                      control={control}
+                      name="scheduledTime"
+                      render={({ field }) => (
+                        <Select value={field.value || undefined} onValueChange={field.onChange}>
+                          <SelectTrigger className={`${inputCls} w-full`}>
+                            <SelectValue placeholder="בחר שעה" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIME_OPTIONS.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <Err msg={errors.scheduledTime?.message} />
+                  </div>
                 </div>
                 <div>
-                  <Label className="mb-1.5 block">זמן נסיעה (שעות)</Label>
-                  <Input className={inputCls} type="number" min="0.5" max="24" step="0.5" placeholder="לדוגמה: 2.5" {...register('travelTimeHours')} />
+                  <Label className="mb-1.5 block">זמן נסיעה משוער (שעות)</Label>
+                  <Controller
+                    control={control}
+                    name="travelTimeHours"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value != null ? String(field.value) : undefined}
+                        onValueChange={(v) => field.onChange(Number(v))}
+                      >
+                        <SelectTrigger className={`${inputCls} w-full`}>
+                          <SelectValue placeholder="בחר משך" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TRAVEL_OPTIONS.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   <Err msg={errors.travelTimeHours?.message} />
                 </div>
                 <div>

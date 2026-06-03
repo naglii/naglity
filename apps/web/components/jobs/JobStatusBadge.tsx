@@ -1,11 +1,16 @@
 import { cn } from '@/lib/utils';
 import type { JobStatus } from '@/types/api';
 
+// Colour language (consistent everywhere):
+//   orange = waiting / approved (OPEN, ACCEPTED)
+//   blue   = in motion / done-awaiting-payment (IN_PROGRESS, COMPLETED)
+//   green  = settled (PAID)
+//   red    = removed (DELETED)
 const config: Record<JobStatus, { label: string; className: string; dot: string; pulse?: boolean }> = {
-  OPEN:        { label: 'פתוח',  className: 'bg-info-soft text-info',               dot: 'bg-info' },
+  OPEN:        { label: 'פתוח',  className: 'bg-warning-soft text-warning',         dot: 'bg-warning' },
   ACCEPTED:    { label: 'מאושר', className: 'bg-warning-soft text-warning',         dot: 'bg-warning' },
   IN_PROGRESS: { label: 'בביצוע', className: 'bg-info-soft text-info',              dot: 'bg-info', pulse: true },
-  COMPLETED:   { label: 'הושלם', className: 'bg-success-soft text-success',         dot: 'bg-success' },
+  COMPLETED:   { label: 'הושלם', className: 'bg-info-soft text-info',               dot: 'bg-info' },
   PAID:        { label: 'שולם',  className: 'bg-success-soft text-success',         dot: 'bg-success' },
   DELETED:     { label: 'מחוק',  className: 'bg-destructive/10 text-destructive',   dot: 'bg-destructive' },
 };

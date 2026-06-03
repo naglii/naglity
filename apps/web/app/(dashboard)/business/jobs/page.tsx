@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { isSameDay } from 'date-fns';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { initSocket } from '@/hooks/useSocket';
 import type { Job, JobStatus } from '@/types/api';
 import { JobTable } from '@/components/jobs/JobTable';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,18 @@ export default function BusinessJobsPage() {
     queryKey: ['business-jobs'],
     queryFn: () => api.get('/businesses/me/jobs').then((r) => r.data),
   });
+
+  // Live: refresh when a driver accepts one of our jobs, or any status changes.
+  useEffect(() => {
+    const socket = initSocket();
+    const refresh = () => qc.invalidateQueries({ queryKey: ['business-jobs'] });
+    socket.on('job:accepted', refresh);
+    socket.on('job:updated', refresh);
+    return () => {
+      socket.off('job:accepted', refresh);
+      socket.off('job:updated', refresh);
+    };
+  }, [qc]);
 
   const completeMutation = useMutation({
     mutationFn: (id: string) => api.post(`/jobs/${id}/complete`),
