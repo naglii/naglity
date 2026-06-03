@@ -25,7 +25,7 @@ export function DashboardShell({ user, children }: Props) {
             className="fixed inset-0 z-40 bg-black/40 md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 z-50 md:hidden">
+          <div className="fixed inset-y-0 right-0 z-50 md:hidden animate-in slide-in-from-right duration-200">
             <Sidebar role={user.role} onClose={() => setSidebarOpen(false)} />
           </div>
         </>

@@ -18,7 +18,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   }, [router]);
 
   return (
-    <div className="min-h-full flex items-center justify-center bg-muted/40 p-4">
+    <div className="relative min-h-full flex items-center justify-center overflow-hidden p-4">
+      {/* warm branded backdrop */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-background" />
+      <div className="pointer-events-none absolute -top-24 -start-24 -z-10 size-96 rounded-full bg-brand/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -end-24 -z-10 size-96 rounded-full bg-brand-strong/15 blur-3xl" />
       {children}
     </div>
   );

@@ -8,6 +8,7 @@ import type { Job } from '@/types/api';
 import { initSocket } from '@/hooks/useSocket';
 import { JobCard } from '@/components/jobs/JobCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Truck, Radio } from 'lucide-react';
 
 const FEED_KEY = ['driver-feed'];
 
@@ -59,9 +60,9 @@ export default function DriverFeedPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-36 rounded-xl" />
+          <Skeleton key={i} className="h-52 rounded-xl" />
         ))}
       </div>
     );
@@ -70,16 +71,31 @@ export default function DriverFeedPage() {
   if (jobs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-xl font-semibold">אין עבודות פתוחות כרגע</p>
-        <p className="text-muted-foreground text-sm mt-1">עבודות חדשות יופיעו כאן בזמן אמת</p>
+        <span className="icon-chip size-16 bg-accent text-brand-strong">
+          <Truck className="size-7" />
+        </span>
+        <p className="mt-4 text-xl font-semibold">אין עבודות פתוחות כרגע</p>
+        <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Radio className="size-3.5 live-dot" />
+          עבודות חדשות יופיעו כאן בזמן אמת
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">עבודות זמינות ({jobs.length})</h1>
-      <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">עבודות זמינות</h1>
+          <p className="text-sm text-muted-foreground">בחר עבודה וקבל אותה בלחיצה אחת</p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success">
+          <span className="live-dot size-2 rounded-full bg-success" />
+          {jobs.length} פתוחות
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} onAccepted={handleAccept} />
         ))}

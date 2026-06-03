@@ -6,7 +6,6 @@ import api from '@/lib/api';
 import type { Job, JobStatus } from '@/types/api';
 import { JobTable } from '@/components/jobs/JobTable';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SECTIONS: { label: string; statuses: JobStatus[]; emptyText: string }[] = [
@@ -40,12 +39,8 @@ const SECTIONS: { label: string; statuses: JobStatus[]; emptyText: string }[] = 
 function SectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="flex items-center gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </h2>
-      <Badge variant="secondary" className="rounded-full px-2 py-0 text-xs">
-        {count}
-      </Badge>
+      <h2 className="text-sm font-bold text-foreground">{label}</h2>
+      <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand-strong">{count}</span>
       <div className="flex-1 h-px bg-border" />
     </div>
   );
@@ -70,7 +65,10 @@ export default function AdminJobsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-xl font-semibold">כל העבודות</h1>
+      <div>
+        <h1 className="text-xl font-bold">כל העבודות</h1>
+        <p className="text-sm text-muted-foreground">סקירת כל העבודות בפלטפורמה לפי שלב</p>
+      </div>
 
       {isLoading ? (
         <div className="space-y-6">

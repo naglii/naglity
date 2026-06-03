@@ -12,13 +12,21 @@ import type { LoginResponse } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { BrandMark, CraneGlyph } from '@/components/layout/Logo';
+import { Zap, ShieldCheck, CalendarClock } from 'lucide-react';
 
 const schema = z.object({
   identifier: z.string().min(1, 'שדה חובה'),
   password: z.string().min(1, 'שדה חובה'),
 });
 type FormData = z.infer<typeof schema>;
+
+const features = [
+  { icon: Zap, title: 'עבודות בזמן אמת', desc: 'התראות מיידיות על עבודות חדשות' },
+  { icon: CalendarClock, title: 'לוח זמנים מסודר', desc: 'כל העבודות שלך לפי יום ושעה' },
+  { icon: ShieldCheck, title: 'תשלום שקוף ובטוח', desc: 'יודעים בדיוק כמה מרוויחים' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,31 +60,76 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-black tracking-tight flex items-baseline justify-center gap-0.5" dir="ltr">
-            <span className="italic text-primary">N</span>aglity
-            <span className="text-primary text-sm font-semibold not-italic ml-0.5 leading-none">●</span>
-          </CardTitle>
-        <CardDescription>לוגיסטיקת מנופים</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="identifier">שם משתמש או אימייל</Label>
-            <Input id="identifier" placeholder="שם משתמש או אימייל" {...register('identifier')} />
-            {errors.identifier && <p className="text-xs text-destructive">{errors.identifier.message}</p>}
+    <Card className="w-full max-w-4xl overflow-hidden p-0 shadow-2xl">
+      <div className="grid md:grid-cols-2">
+        {/* ── Brand panel (desktop) — light brand wash ── */}
+        <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-bl from-brand-soft via-card to-card p-8 md:flex md:border-e">
+          {/* soft glow */}
+          <div className="pointer-events-none absolute -top-20 -end-12 size-56 rounded-full bg-brand/15 blur-3xl" />
+
+          <div className="relative flex items-center gap-2.5" dir="ltr">
+            <span className="grid size-9 place-items-center rounded-xl bg-brand-soft ring-1 ring-brand/15">
+              <CraneGlyph className="size-5 text-brand-strong" />
+            </span>
+            <span className="text-lg font-black tracking-tight text-foreground">Naglity.</span>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password">סיסמה</Label>
-            <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
-            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+
+          <div className="relative space-y-1.5">
+            <h2 className="text-2xl font-bold leading-snug text-foreground">
+              הזירה החכמה<br />ללוגיסטיקת מנופים
+            </h2>
+            <p className="text-sm text-muted-foreground">מחברים בין עסקים לנהגי מנופים — מהר, פשוט ובשקיפות מלאה.</p>
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'מתחבר…' : 'כניסה'}
-          </Button>
-        </form>
-      </CardContent>
+
+          <ul className="relative space-y-3">
+            {features.map(({ icon: Icon, title, desc }) => (
+              <li key={title} className="flex items-start gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-strong ring-1 ring-brand/10">
+                  <Icon className="size-4.5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold leading-tight text-foreground">{title}</p>
+                  <p className="text-xs text-muted-foreground leading-tight">{desc}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* ── Form panel ── */}
+        <div className="flex flex-col justify-center p-8 sm:p-10">
+          {/* mobile logo */}
+          <div className="mb-6 flex flex-col items-center text-center md:hidden">
+            <BrandMark className="size-12 mb-2" iconClassName="size-6" />
+            <span className="text-xl font-black tracking-tight" dir="ltr">Naglity.</span>
+          </div>
+
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">ברוך הבא 👋</h1>
+            <p className="mt-1 text-sm text-muted-foreground">התחבר לחשבון שלך כדי להמשיך</p>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="identifier">שם משתמש או אימייל</Label>
+              <Input id="identifier" placeholder="שם משתמש או אימייל" autoComplete="username" {...register('identifier')} />
+              {errors.identifier && <p className="text-xs text-destructive">{errors.identifier.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">סיסמה</Label>
+              <Input id="password" type="password" placeholder="••••••••" autoComplete="current-password" {...register('password')} />
+              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+            </div>
+            <Button type="submit" size="lg" className="w-full font-semibold" disabled={loading}>
+              {loading ? 'מתחבר…' : 'כניסה'}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            אין לך חשבון? פנה למנהל המערכת לפתיחת חשבון.
+          </p>
+        </div>
+      </div>
     </Card>
   );
 }
