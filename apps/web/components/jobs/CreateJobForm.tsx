@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { formatPrice, netCents, platformCents } from '@/lib/utils';
 
 const schema = z.object({
   title: z.string().min(1, 'שדה חובה'),
@@ -26,9 +27,12 @@ type FormData = z.infer<typeof schema>;
 
 export function CreateJobForm() {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+
+  const grossShekels = Number(watch('grossPriceShekels')) || 0;
+  const grossC = Math.round(grossShekels * 100);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -54,6 +58,7 @@ export function CreateJobForm() {
     <Card className="max-w-2xl">
       <CardHeader>
         <CardTitle>פרסם עבודה חדשה</CardTitle>
+        <CardDescription>העבודה תופץ לנהגים זמינים בזמן אמת</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -82,6 +87,18 @@ export function CreateJobForm() {
             <Label>מחיר (₪)</Label>
             <Input type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
             {errors.grossPriceShekels && <p className="text-xs text-destructive">{errors.grossPriceShekels.message}</p>}
+            {grossC > 0 && (
+              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-muted/60 px-3 py-2 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-success" />
+                  הנהג מקבל <span className="font-semibold text-foreground">{formatPrice(netCents(grossC))}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-brand-strong" />
+                  עמלת פלטפורמה (10%) {formatPrice(platformCents(grossC))}
+                </span>
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -96,10 +113,10 @@ export function CreateJobForm() {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" size="lg" className="font-semibold" disabled={isSubmitting}>
               {isSubmitting ? 'מפרסם…' : 'פרסם עבודה'}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>ביטול</Button>
+            <Button type="button" size="lg" variant="outline" onClick={() => router.back()}>ביטול</Button>
           </div>
         </form>
       </CardContent>

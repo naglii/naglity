@@ -33,11 +33,14 @@ export default function AdminDriversPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">נהגים</h1>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold">נהגים</h1>
+          <p className="text-sm text-muted-foreground">{data?.length ?? 0} נהגים רשומים</p>
+        </div>
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger render={<Button size="sm" />}>
-            <PlusCircle className="size-4 ml-2" />נהג חדש
+          <SheetTrigger render={<Button size="lg" className="gap-1.5 font-semibold" />}>
+            <PlusCircle className="size-4" />נהג חדש
           </SheetTrigger>
           <SheetContent className="sm:max-w-lg overflow-y-auto">
             <SheetHeader className="px-6"><SheetTitle>יצירת נהג</SheetTitle></SheetHeader>
@@ -48,23 +51,30 @@ export default function AdminDriversPage() {
         </Sheet>
       </div>
 
-      {isLoading ? <Skeleton className="h-64" /> : (
-        <div className="rounded-md border">
+      {isLoading ? <Skeleton className="h-64 rounded-xl" /> : (
+        <div className="rounded-xl border bg-card overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>שם</TableHead>
-                <TableHead>שם משתמש</TableHead>
-                <TableHead>טלפון</TableHead>
-                <TableHead>רכב</TableHead>
-                <TableHead>הצטרף</TableHead>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="font-semibold">שם</TableHead>
+                <TableHead className="font-semibold">שם משתמש</TableHead>
+                <TableHead className="font-semibold">טלפון</TableHead>
+                <TableHead className="font-semibold">רכב</TableHead>
+                <TableHead className="font-semibold">הצטרף</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
               {(data ?? []).map((d) => (
-                <TableRow key={d.id}>
-                  <TableCell className="font-medium">{d.name}</TableCell>
+                <TableRow key={d.id} className="transition-colors hover:bg-accent/40">
+                  <TableCell className="font-medium">
+                    <span className="flex items-center gap-2">
+                      <span className="bg-brand-gradient grid size-7 shrink-0 place-items-center rounded-lg text-[11px] font-bold text-white select-none">
+                        {d.name.trim().charAt(0) || '?'}
+                      </span>
+                      {d.name}
+                    </span>
+                  </TableCell>
                   <TableCell>{d.user.username}</TableCell>
                   <TableCell>{d.phone}</TableCell>
                   <TableCell>{d.vehicleNumber} · {d.vehicleType}</TableCell>

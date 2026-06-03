@@ -21,12 +21,15 @@ export default function BusinessStatsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">סטטיסטיקות</h1>
+      <div>
+        <h1 className="text-xl font-bold">סטטיסטיקות</h1>
+        <p className="text-sm text-muted-foreground">סקירת הפעילות וההוצאות של העסק</p>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard title='סה"כ הוצאות' value={formatPrice(data.totalGrossSpendCents)} icon={Banknote} />
-        <StatsCard title="פתוח" value={data.jobsByStatus.OPEN} icon={Briefcase} />
-        <StatsCard title="בביצוע" value={data.jobsByStatus.ACCEPTED + data.jobsByStatus.IN_PROGRESS} icon={Clock} />
-        <StatsCard title="הושלם" value={data.jobsByStatus.COMPLETED + data.jobsByStatus.PAID} icon={CheckCircle2} />
+        <StatsCard title='סה"כ הוצאות' value={formatPrice(data.totalGrossSpendCents)} icon={Banknote} tone="brand" />
+        <StatsCard title="פתוח" value={data.jobsByStatus.OPEN} icon={Briefcase} tone="info" />
+        <StatsCard title="בביצוע" value={data.jobsByStatus.ACCEPTED + data.jobsByStatus.IN_PROGRESS} icon={Clock} tone="warning" />
+        <StatsCard title="הושלם" value={data.jobsByStatus.COMPLETED + data.jobsByStatus.PAID} icon={CheckCircle2} tone="success" />
       </div>
     </div>
   );

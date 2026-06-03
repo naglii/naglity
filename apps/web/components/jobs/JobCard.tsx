@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, differenceInMinutes } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { MapPin, Clock, Banknote, Truck } from 'lucide-react';
+import { Clock, CalendarClock, ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogTrigger, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -19,51 +18,97 @@ interface Props {
   onAccepted: (jobId: string) => void;
 }
 
+/** Vertical from → to route, delivery-app style. */
+function Route({ from, to }: { from: string; to: string }) {
+  return (
+    <div className="relative ps-5">
+      {/* connecting line */}
+      <span className="absolute start-[5px] top-2 bottom-2 w-px bg-border" />
+      <div className="relative space-y-2.5">
+        <div className="flex items-center gap-2">
+          <span className="absolute -start-5 size-2.5 rounded-full bg-success ring-4 ring-success-soft" />
+          <bdi className="text-sm font-medium text-foreground">{from}</bdi>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="absolute -start-5 size-2.5 rounded-full bg-brand-strong ring-4 ring-brand-soft" />
+          <bdi className="text-sm font-medium text-foreground">{to}</bdi>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function JobCard({ job, onAccepted }: Props) {
   const [open, setOpen] = useState(false);
 
+  const isNew = differenceInMinutes(new Date(), new Date(job.createdAt)) < 3;
+  const bizName = job.business?.name ?? '—';
+  const bizInitial = bizName.trim().charAt(0) || '?';
+
   return (
-    <Card>
-      <CardContent className="flex items-center gap-6 py-4">
-        {/* Main info */}
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-base">{job.title}</span>
-            <Badge variant="secondary" className="text-xs">
-              <Truck className="size-3 mr-1" />{job.business?.name ?? '—'}
-            </Badge>
-            <span className="text-xs text-muted-foreground/70">
-              {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true, locale: he })}
-            </span>
+    <Card className="card-interactive overflow-hidden p-0">
+      <CardContent className="p-0">
+        {/* ── Header ── */}
+        <div className="flex items-start gap-3 p-4 pb-3">
+          <span className="bg-brand-gradient grid size-10 shrink-0 place-items-center rounded-xl text-base font-bold text-white shadow-sm shadow-brand/30 select-none">
+            {bizInitial}
+          </span>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate font-semibold text-[15px] leading-tight">{job.title}</h3>
+              {isNew && (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-bold text-success">
+                  <span className="live-dot size-1.5 rounded-full bg-success" />
+                  חדש
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {bizName} · {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true, locale: he })}
+            </p>
           </div>
 
-          {job.description && (
-            <p className="text-sm text-muted-foreground truncate">{job.description}</p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <MapPin className="size-3.5 shrink-0" />
-              <bdi>{job.fromLocation}</bdi> ← <bdi>{job.toLocation}</bdi>
+          {/* scheduled time pill */}
+          <div className="flex shrink-0 flex-col items-center rounded-xl bg-accent px-3 py-1.5 text-center">
+            <CalendarClock className="size-3.5 text-brand-strong" />
+            <span className="mt-0.5 text-xs font-semibold leading-none">
+              {format(new Date(job.scheduledAt), 'dd/MM')}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="size-3.5 shrink-0" />
-              {format(new Date(job.scheduledAt), 'dd/MM HH:mm')} · {formatDuration(job.scheduledAt, job.estimatedEndAt)}
+            <span className="text-[11px] text-muted-foreground leading-none mt-0.5">
+              {format(new Date(job.scheduledAt), 'HH:mm')}
             </span>
           </div>
         </div>
 
-        {/* Price + action */}
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <div className="text-right">
-            <p className="font-bold text-lg leading-none">{formatPrice(job.netPriceCents)}</p>
-            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 justify-end">
-              <Banknote className="size-3" />תשלום נטו
-            </p>
+        {/* ── Route + meta ── */}
+        <div className="space-y-3 px-4">
+          <Route from={job.fromLocation} to={job.toLocation} />
+
+          {job.description && (
+            <p className="line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
+          )}
+
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="size-3.5" />
+            משך משוער · {formatDuration(job.scheduledAt, job.estimatedEndAt)}
+          </div>
+        </div>
+
+        {/* ── Action bar ── */}
+        <div className="mt-3 flex items-center justify-between gap-3 border-t bg-muted/40 px-4 py-3">
+          <div>
+            <p className="text-lg font-bold leading-none text-foreground">{formatPrice(job.netPriceCents)}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">תשלום נטו אליך</p>
           </div>
 
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button size="sm">קבל עבודה</Button>} />
+            <DialogTrigger render={
+              <Button size="lg" className="gap-1.5 px-5 font-semibold">
+                קבל עבודה
+                <ArrowLeft className="size-4" />
+              </Button>
+            } />
             <DialogPortal>
               <DialogOverlay />
               <DialogContent className="max-w-sm">
@@ -75,9 +120,9 @@ export function JobCard({ job, onAccepted }: Props) {
                   <br />
                   {format(new Date(job.scheduledAt), 'dd/MM/yyyy HH:mm')} · {formatPrice(job.netPriceCents)} נטו
                 </DialogDescription>
-                <div className="flex justify-end gap-2 mt-4">
+                <div className="mt-4 flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setOpen(false)}>ביטול</Button>
-                  <Button onClick={() => { setOpen(false); onAccepted(job.id); }}>אישור</Button>
+                  <Button onClick={() => { setOpen(false); onAccepted(job.id); }}>אישור וקבלה</Button>
                 </div>
               </DialogContent>
             </DialogPortal>
