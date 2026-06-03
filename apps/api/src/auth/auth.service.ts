@@ -11,12 +11,12 @@ export class AuthService {
   ) {}
 
   async login(identifier: string, password: string) {
-    // Allow login by username or email
+    // Allow login by username or email, case-insensitively
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [
-          { username: identifier },
-          { email: identifier },
+          { username: { equals: identifier, mode: 'insensitive' } },
+          { email: { equals: identifier, mode: 'insensitive' } },
         ],
       },
     });
