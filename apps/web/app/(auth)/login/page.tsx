@@ -62,35 +62,34 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-4xl overflow-hidden p-0 shadow-2xl">
       <div className="grid md:grid-cols-2">
-        {/* ── Brand panel (desktop) ── */}
-        <div className="bg-brand-gradient relative hidden flex-col justify-between p-8 text-white md:flex">
-          {/* decorative glow */}
-          <div className="pointer-events-none absolute -top-16 -end-16 size-56 rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-20 -start-10 size-56 rounded-full bg-black/10 blur-2xl" />
+        {/* ── Brand panel (desktop) — light brand wash ── */}
+        <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-bl from-brand-soft via-card to-card p-8 md:flex md:border-e">
+          {/* soft glow */}
+          <div className="pointer-events-none absolute -top-20 -end-12 size-56 rounded-full bg-brand/15 blur-3xl" />
 
           <div className="relative flex items-center gap-2.5" dir="ltr">
-            <span className="grid size-9 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25">
-              <CraneGlyph className="size-5 text-white" />
+            <span className="grid size-9 place-items-center rounded-xl bg-brand-soft ring-1 ring-brand/15">
+              <CraneGlyph className="size-5 text-brand-strong" />
             </span>
-            <span className="text-lg font-black tracking-tight">Naglity.</span>
+            <span className="text-lg font-black tracking-tight text-foreground">Naglity.</span>
           </div>
 
           <div className="relative space-y-1.5">
-            <h2 className="text-2xl font-bold leading-snug">
+            <h2 className="text-2xl font-bold leading-snug text-foreground">
               הזירה החכמה<br />ללוגיסטיקת מנופים
             </h2>
-            <p className="text-sm text-white/80">מחברים בין עסקים לנהגי מנופים — מהר, פשוט ובשקיפות מלאה.</p>
+            <p className="text-sm text-muted-foreground">מחברים בין עסקים לנהגי מנופים — מהר, פשוט ובשקיפות מלאה.</p>
           </div>
 
           <ul className="relative space-y-3">
             {features.map(({ icon: Icon, title, desc }) => (
               <li key={title} className="flex items-start gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/15 ring-1 ring-white/20">
-                  <Icon className="size-4.5 text-white" />
+                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-strong ring-1 ring-brand/10">
+                  <Icon className="size-4.5" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold leading-tight">{title}</p>
-                  <p className="text-xs text-white/75 leading-tight">{desc}</p>
+                  <p className="text-sm font-semibold leading-tight text-foreground">{title}</p>
+                  <p className="text-xs text-muted-foreground leading-tight">{desc}</p>
                 </div>
               </li>
             ))}
