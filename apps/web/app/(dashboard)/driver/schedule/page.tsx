@@ -12,7 +12,8 @@ import { formatPrice, formatHoursLabel, durationMins, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Play, CalendarX2, CalendarDays, Clock } from 'lucide-react';
+import { MapPin, Play, CalendarX2, CalendarDays, Clock, Weight, Box } from 'lucide-react';
+import { loadTypeLabel } from '@/lib/jobAttributes';
 import {
   Dialog, DialogTrigger, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -143,6 +144,21 @@ export default function DriverSchedulePage() {
                         <Clock className="size-3.5 shrink-0" />
                         זמן נסיעה משוער · {formatHoursLabel(durationMins(job.scheduledAt, job.estimatedEndAt))}
                       </div>
+
+                      {(job.craneCapacityTons != null || job.loadType) && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {job.craneCapacityTons != null && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-strong">
+                              <Weight className="size-3.5" />{job.craneCapacityTons} טון
+                            </span>
+                          )}
+                          {job.loadType && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                              <Box className="size-3.5" />{loadTypeLabel(job.loadType)}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-between gap-2 pt-1">
                         <p className="text-sm font-bold">

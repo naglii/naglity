@@ -88,7 +88,11 @@ export default function AdminDriversPage() {
                   </TableCell>
                   <TableCell>{d.user.username}</TableCell>
                   <TableCell>{d.phone}</TableCell>
-                  <TableCell>{d.vehicleNumber} · {d.vehicleType}</TableCell>
+                  <TableCell>
+                    {d.vehicleNumber}
+                    {d.craneCapacityTons != null && <span className="text-muted-foreground"> · {d.craneCapacityTons} טון</span>}
+                    {d.liftHeightMeters != null && <span className="text-muted-foreground"> · {d.liftHeightMeters} מ׳</span>}
+                  </TableCell>
                   <TableCell>{format(new Date(d.createdAt), 'dd/MM/yy')}</TableCell>
                   <TableCell className="flex gap-2 justify-end">
                     <Button variant="ghost" size="icon" nativeButton={false} render={<Link href={`/admin/drivers/${d.id}`} />}>

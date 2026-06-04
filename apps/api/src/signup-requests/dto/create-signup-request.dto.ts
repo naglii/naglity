@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEmail, IsIn, MinLength } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsIn, MinLength, IsInt, Min } from 'class-validator';
 
 export class CreateSignupRequestDto {
   @IsIn(['DRIVER', 'BUSINESS'])
@@ -23,4 +23,14 @@ export class CreateSignupRequestDto {
   @IsString()
   @IsOptional()
   details?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  craneCapacityTons?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  liftHeightMeters?: number;
 }

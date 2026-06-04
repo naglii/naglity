@@ -1,4 +1,4 @@
-import { IsString, MinLength, IsOptional, IsEmail } from 'class-validator';
+import { IsString, MinLength, IsOptional, IsEmail, IsInt, Min } from 'class-validator';
 
 export class CreateDriverDto {
   @IsString()
@@ -25,4 +25,14 @@ export class CreateDriverDto {
   @IsString()
   @IsOptional()
   vehicleType?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  craneCapacityTons?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  liftHeightMeters?: number;
 }

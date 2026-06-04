@@ -23,4 +23,22 @@ export class CreateJobDto {
 
   @IsString()
   toLocation: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  craneCapacityTons?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  liftHeightMeters?: number;
+
+  @IsString()
+  @IsOptional()
+  loadType?: string;
+
+  @IsString()
+  @IsOptional()
+  accessNotes?: string;
 }

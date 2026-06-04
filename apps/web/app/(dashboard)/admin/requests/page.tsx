@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Inbox, Phone, Mail, Truck, Building2, UserPlus, Check, RotateCcw, Trash2 } from 'lucide-react';
+import { Inbox, Phone, Mail, Truck, Building2, UserPlus, Check, RotateCcw, Trash2, Weight } from 'lucide-react';
 
 type Filter = 'ALL' | SignupRequestType;
 
@@ -40,7 +40,13 @@ export default function AdminRequestsPage() {
   });
 
   const createAccount = (r: SignupRequest) => {
-    const prefill = { name: r.type === 'BUSINESS' ? (r.businessName ?? r.name) : r.name, phone: r.phone, email: r.email ?? undefined };
+    const prefill = {
+      name: r.type === 'BUSINESS' ? (r.businessName ?? r.name) : r.name,
+      phone: r.phone,
+      email: r.email ?? undefined,
+      craneCapacityTons: r.craneCapacityTons ?? undefined,
+      liftHeightMeters: r.liftHeightMeters ?? undefined,
+    };
     if (r.type === 'DRIVER') {
       sessionStorage.setItem('prefill-driver', JSON.stringify(prefill));
       router.push('/admin/drivers');
@@ -92,6 +98,16 @@ export default function AdminRequestsPage() {
                 <Mail className="size-3.5 shrink-0 text-muted-foreground" />
                 <bdi dir="ltr" className="truncate">{r.email}</bdi>
               </a>
+            )}
+            {isDriver && (r.craneCapacityTons != null || r.liftHeightMeters != null) && (
+              <div className="flex items-center gap-2 text-foreground">
+                <Weight className="size-3.5 shrink-0 text-muted-foreground" />
+                <span>
+                  {r.craneCapacityTons != null && <>קיבולת <span className="font-semibold">{r.craneCapacityTons} טון</span></>}
+                  {r.craneCapacityTons != null && r.liftHeightMeters != null && ' · '}
+                  {r.liftHeightMeters != null && <>גובה <span className="font-semibold">{r.liftHeightMeters} מ׳</span></>}
+                </span>
+              </div>
             )}
           </div>
 
