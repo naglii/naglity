@@ -17,6 +17,15 @@ import { TrendingUp, Users, Building2, Banknote, Truck, DollarSign, Briefcase } 
 
 const sum = (jobs: Job[], pick: (j: Job) => number) => jobs.reduce((t, j) => t + pick(j), 0);
 
+const STATUS_HE: Record<string, string> = {
+  OPEN: 'פתוח',
+  ACCEPTED: 'מאושר',
+  IN_PROGRESS: 'בביצוע',
+  COMPLETED: 'הושלם',
+  PAID: 'שולם',
+  DELETED: 'מחוק',
+};
+
 export default function AdminRevenuePage() {
   const qc = useQueryClient();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
@@ -109,7 +118,7 @@ export default function AdminRevenuePage() {
             {Object.entries(data.jobsByStatus).map(([status, count]) => (
               <div key={status} className="rounded-xl bg-muted/50 p-3 text-center">
                 <p className="text-2xl font-bold">{count}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{status.replace('_', ' ')}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{STATUS_HE[status] ?? status}</p>
               </div>
             ))}
           </div>

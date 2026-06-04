@@ -34,6 +34,27 @@ enum NotificationType {
   JOB_ACCEPTED_BY_DRIVER
   JOB_CANCELLED_BY_DRIVER
   JOB_DELETED_BY_BUSINESS
+  SIGNUP_REQUEST
+}
+
+enum SignupRequestType {
+  DRIVER
+  BUSINESS
+}
+
+model SignupRequest {
+  id           String            @id @default(cuid())
+  type         SignupRequestType
+  name         String
+  businessName String?
+  phone        String
+  email        String?
+  details      String?
+  handled      Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+
+  @@index([handled])
+  @@index([createdAt])
 }
 
 model User {

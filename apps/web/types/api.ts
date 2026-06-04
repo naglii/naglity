@@ -1,6 +1,6 @@
 export type Role = 'ADMIN' | 'DRIVER' | 'BUSINESS';
 export type JobStatus = 'OPEN' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAID' | 'DELETED';
-export type NotificationType = 'JOB_ACCEPTED_BY_DRIVER' | 'JOB_CANCELLED_BY_DRIVER' | 'JOB_DELETED_BY_BUSINESS';
+export type NotificationType = 'JOB_ACCEPTED_BY_DRIVER' | 'JOB_CANCELLED_BY_DRIVER' | 'JOB_DELETED_BY_BUSINESS' | 'SIGNUP_REQUEST';
 
 export interface Notification {
   id: string;
@@ -123,4 +123,27 @@ export interface CreateBusinessDto {
   password: string;
   name: string;
   phone: string;
+}
+
+export type SignupRequestType = 'DRIVER' | 'BUSINESS';
+
+export interface SignupRequest {
+  id: string;
+  type: SignupRequestType;
+  name: string;
+  businessName: string | null;
+  phone: string;
+  email: string | null;
+  details: string | null;
+  handled: boolean;
+  createdAt: string;
+}
+
+export interface CreateSignupRequestDto {
+  type: SignupRequestType;
+  name: string;
+  businessName?: string;
+  phone: string;
+  email?: string;
+  details?: string;
 }

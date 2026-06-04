@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import type { Driver } from '@/types/api';
-import { CreateDriverForm } from '@/components/admin/CreateDriverForm';
+import { CreateDriverForm, type Prefill } from '@/components/admin/CreateDriverForm';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -19,6 +19,17 @@ interface DriverWithUser extends Driver { user: { username: string; email?: stri
 export default function AdminDriversPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [prefill, setPrefill] = useState<Prefill | undefined>();
+
+  // Opened from a signup request? Pull the prefilled details and open the form.
+  useEffect(() => {
+    const raw = sessionStorage.getItem('prefill-driver');
+    if (raw) {
+      try { setPrefill(JSON.parse(raw)); } catch { /* ignore */ }
+      sessionStorage.removeItem('prefill-driver');
+      setOpen(true);
+    }
+  }, []);
 
   const { data, isLoading } = useQuery<DriverWithUser[]>({
     queryKey: ['admin-drivers'],
@@ -45,7 +56,7 @@ export default function AdminDriversPage() {
           <SheetContent className="sm:max-w-lg overflow-y-auto">
             <SheetHeader className="px-6"><SheetTitle>יצירת נהג</SheetTitle></SheetHeader>
             <div className="px-6 pb-8">
-              <CreateDriverForm onSuccess={() => { setOpen(false); qc.invalidateQueries({ queryKey: ['admin-drivers'] }); }} />
+              <CreateDriverForm prefill={prefill} onSuccess={() => { setOpen(false); qc.invalidateQueries({ queryKey: ['admin-drivers'] }); }} />
             </div>
           </SheetContent>
         </Sheet>
