@@ -9,6 +9,7 @@ import { JobsModule } from './jobs/jobs.module.js';
 import { StatsModule } from './stats/stats.module.js';
 import { GatewayModule } from './gateway/gateway.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
+import { SignupRequestsModule } from './signup-requests/signup-requests.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationsModule } from './notifications/notifications.module.js';
     StatsModule,
     GatewayModule,
     NotificationsModule,
+    SignupRequestsModule,
   ],
 })
 export class AppModule {}

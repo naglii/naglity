@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
 import { initSocket } from '@/hooks/useSocket';
@@ -17,6 +18,13 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  // Always-current mirrors so the once-registered listeners read fresh state.
+  const notifRef = useRef<Notification[]>([]);
+  notifRef.current = notifications;
+  const openRef = useRef(open);
+  openRef.current = open;
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const preview = notifications.slice(0, PREVIEW_COUNT);
@@ -44,21 +52,37 @@ export function NotificationBell() {
     return () => { socket.off('notification:new', handler); };
   }, []);
 
-  // Close on outside click
+  // Mark everything read — reads latest via ref so it's safe in listeners.
+  const markAllRead = useCallback(() => {
+    if (notifRef.current.some((n) => !n.read)) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      api.patch('/notifications/read').catch(() => {});
+    }
+  }, []);
+
+  // Closing the panel is what marks read — NOT opening it. So the unread
+  // highlight stays visible the whole time the panel is open.
+  const closePanel = useCallback(() => {
+    setOpen(false);
+    markAllRead();
+  }, [markAllRead]);
+
+  // Close on outside click (and mark read on the way out)
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (openRef.current && ref.current && !ref.current.contains(e.target as Node)) {
+        closePanel();
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  }, [closePanel]);
 
-  const markAllRead = async () => {
-    if (notifications.some((n) => !n.read)) {
-      await api.patch('/notifications/read');
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    }
-  };
+  // Navigating to another page also closes + marks read.
+  useEffect(() => {
+    if (openRef.current) closePanel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const handleMarkRead = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -68,7 +92,7 @@ export function NotificationBell() {
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => { setOpen((v) => { if (!v) markAllRead(); return !v; }); }}
+        onClick={() => { if (open) closePanel(); else setOpen(true); }}
         className={cn(
           'relative flex size-8 items-center justify-center rounded-full transition-colors',
           open ? 'bg-muted' : 'hover:bg-muted',
@@ -111,14 +135,14 @@ export function NotificationBell() {
             </div>
           ) : (
             <>
-              {preview.map((n) => (
-                <div
-                  key={n.id}
-                  className={cn(
-                    'px-3.5 py-3 border-b last:border-0',
-                    !n.read ? 'bg-primary/5' : '',
-                  )}
-                >
+              {preview.map((n) => {
+                const href = n.type === 'SIGNUP_REQUEST' ? '/admin/requests' : undefined;
+                const className = cn(
+                  'block px-3.5 py-3 border-b last:border-0',
+                  !n.read ? 'bg-primary/5' : '',
+                  href && 'hover:bg-accent',
+                );
+                const inner = (
                   <div className="flex items-start gap-2.5">
                     <span className={cn(
                       'mt-1.5 size-1.5 rounded-full shrink-0',
@@ -132,11 +156,14 @@ export function NotificationBell() {
                       </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+                return href
+                  ? <Link key={n.id} href={href} onClick={closePanel} className={className}>{inner}</Link>
+                  : <div key={n.id} className={className}>{inner}</div>;
+              })}
               <Link
                 href="/notifications"
-                onClick={() => setOpen(false)}
+                onClick={closePanel}
                 className="flex w-full items-center justify-center py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors border-t"
               >
                 {hasMore ? `ראה את כל ההתראות (${notifications.length})` : 'ראה את כל ההתראות'}

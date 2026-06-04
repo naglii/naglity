@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v3';
@@ -29,15 +29,28 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-interface Props { onSuccess: () => void }
+export interface Prefill { name?: string; phone?: string; email?: string }
+interface Props { onSuccess: () => void; prefill?: Prefill }
 
-export function CreateDriverForm({ onSuccess }: Props) {
+export function CreateDriverForm({ onSuccess, prefill }: Props) {
   const [createdUsername, setCreatedUsername] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { vehicleType: 'crane_truck' },
+    defaultValues: {
+      vehicleType: 'crane_truck',
+      name: prefill?.name ?? '',
+      phone: prefill?.phone ?? '',
+      email: prefill?.email ?? '',
+    },
   });
+
+  // If a prefill arrives after mount (e.g. opened from a signup request), apply it.
+  useEffect(() => {
+    if (prefill) {
+      reset({ vehicleType: 'crane_truck', name: prefill.name ?? '', phone: prefill.phone ?? '', email: prefill.email ?? '' });
+    }
+  }, [prefill, reset]);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -83,7 +96,7 @@ export function CreateDriverForm({ onSuccess }: Props) {
                 name="vehicleType"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={field.onChange} items={VEHICLE_TYPES}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="בחר סוג" />
                     </SelectTrigger>

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import type { Business } from '@/types/api';
-import { CreateBusinessForm } from '@/components/admin/CreateBusinessForm';
+import { CreateBusinessForm, type Prefill } from '@/components/admin/CreateBusinessForm';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -19,6 +19,17 @@ interface BusinessWithUser extends Business { user: { username: string; email?: 
 export default function AdminBusinessesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [prefill, setPrefill] = useState<Prefill | undefined>();
+
+  // Opened from a signup request? Pull the prefilled details and open the form.
+  useEffect(() => {
+    const raw = sessionStorage.getItem('prefill-business');
+    if (raw) {
+      try { setPrefill(JSON.parse(raw)); } catch { /* ignore */ }
+      sessionStorage.removeItem('prefill-business');
+      setOpen(true);
+    }
+  }, []);
 
   const { data, isLoading } = useQuery<BusinessWithUser[]>({
     queryKey: ['admin-businesses'],
@@ -45,7 +56,7 @@ export default function AdminBusinessesPage() {
           <SheetContent className="sm:max-w-lg overflow-y-auto">
             <SheetHeader className="px-6"><SheetTitle>יצירת עסק</SheetTitle></SheetHeader>
             <div className="px-6 pb-8">
-              <CreateBusinessForm onSuccess={() => { setOpen(false); qc.invalidateQueries({ queryKey: ['admin-businesses'] }); }} />
+              <CreateBusinessForm prefill={prefill} onSuccess={() => { setOpen(false); qc.invalidateQueries({ queryKey: ['admin-businesses'] }); }} />
             </div>
           </SheetContent>
         </Sheet>

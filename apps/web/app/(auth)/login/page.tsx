@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -125,8 +126,11 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            אין לך חשבון? פנה למנהל המערכת לפתיחת חשבון.
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            אין לך חשבון?{' '}
+            <Link href="/request-access" className="font-semibold text-brand-strong hover:underline">
+              בקשת הצטרפות
+            </Link>
           </p>
         </div>
       </div>

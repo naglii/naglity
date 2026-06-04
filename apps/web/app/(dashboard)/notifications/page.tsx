@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { Bell } from 'lucide-react';
@@ -64,14 +65,14 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div className="rounded-xl border overflow-hidden shadow-sm">
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              className={cn(
-                'px-4 py-4 border-b last:border-0 transition-colors',
-                !n.read ? 'bg-primary/8' : 'bg-card',
-              )}
-            >
+          {notifications.map((n) => {
+            const href = n.type === 'SIGNUP_REQUEST' ? '/admin/requests' : undefined;
+            const className = cn(
+              'block px-4 py-4 border-b last:border-0 transition-colors',
+              !n.read ? 'bg-primary/8' : 'bg-card',
+              href && 'hover:bg-accent',
+            );
+            const inner = (
               <div className="flex items-start gap-3">
                 <span className={cn(
                   'mt-1.5 size-2 rounded-full shrink-0',
@@ -89,8 +90,11 @@ export default function NotificationsPage() {
                   <p className="text-sm text-muted-foreground mt-0.5 leading-snug">{n.body}</p>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+            return href
+              ? <Link key={n.id} href={href} className={className}>{inner}</Link>
+              : <div key={n.id} className={className}>{inner}</div>;
+          })}
         </div>
       )}
     </div>

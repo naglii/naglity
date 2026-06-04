@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v3';
@@ -22,14 +22,23 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-interface Props { onSuccess: () => void }
+export interface Prefill { name?: string; phone?: string; email?: string }
+interface Props { onSuccess: () => void; prefill?: Prefill }
 
-export function CreateBusinessForm({ onSuccess }: Props) {
+export function CreateBusinessForm({ onSuccess, prefill }: Props) {
   const [createdUsername, setCreatedUsername] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { name: prefill?.name ?? '', phone: prefill?.phone ?? '', email: prefill?.email ?? '' },
   });
+
+  // Apply a prefill (from a signup request) that arrives after mount.
+  useEffect(() => {
+    if (prefill) {
+      reset({ name: prefill.name ?? '', phone: prefill.phone ?? '', email: prefill.email ?? '' });
+    }
+  }, [prefill, reset]);
 
   const onSubmit = async (data: FormData) => {
     try {
