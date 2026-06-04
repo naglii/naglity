@@ -21,7 +21,7 @@ type Filter = 'ALL' | JobStatus;
 const STATUS_FILTERS: { key: Filter; label: string }[] = [
   { key: 'ALL', label: 'הכל' },
   { key: 'OPEN', label: 'פתוח' },
-  { key: 'ACCEPTED', label: 'מאושר' },
+  { key: 'ACCEPTED', label: 'שובץ נהג' },
   { key: 'IN_PROGRESS', label: 'בביצוע' },
   { key: 'COMPLETED', label: 'ממתין לתשלום' },
   { key: 'PAID', label: 'שולם' },
