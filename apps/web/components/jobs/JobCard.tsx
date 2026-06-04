@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { format, formatDistanceToNow, differenceInMinutes } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { CalendarClock, Banknote, ArrowLeft, Timer } from 'lucide-react';
+import { CalendarClock, Banknote, ArrowLeft, Timer, Weight, Ruler, Box } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,7 @@ import {
   DialogContent, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { formatPrice, formatHoursLabel, durationMins } from '@/lib/utils';
+import { loadTypeLabel } from '@/lib/jobAttributes';
 import type { Job } from '@/types/api';
 
 interface Props {
@@ -88,8 +89,32 @@ export function JobCard({ job, onAccepted }: Props) {
             </span>
           </div>
 
+          {/* crane attributes */}
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {job.craneCapacityTons != null && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-brand-soft px-2 py-1 text-xs font-bold text-brand-strong">
+                <Weight className="size-3.5" />{job.craneCapacityTons} טון
+              </span>
+            )}
+            {job.liftHeightMeters != null && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                <Ruler className="size-3.5" />גובה {job.liftHeightMeters} מ׳
+              </span>
+            )}
+            {job.loadType && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                <Box className="size-3.5" />{loadTypeLabel(job.loadType)}
+              </span>
+            )}
+          </div>
+
           {job.description && (
             <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
+          )}
+          {job.accessNotes && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground/70">גישה: </span>{job.accessNotes}
+            </p>
           )}
         </div>
 

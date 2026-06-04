@@ -15,7 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatPrice, netCents, platformCents } from '@/lib/utils';
-import { FileText, CalendarClock, Send, type LucideIcon } from 'lucide-react';
+import { CRANE_CAPACITIES, LOAD_TYPES } from '@/lib/jobAttributes';
+import { FileText, CalendarClock, Send, Construction, type LucideIcon } from 'lucide-react';
 
 // Half-hour increments from 0.5 up to 12 hours.
 const TRAVEL_OPTIONS = Array.from({ length: 24 }, (_, i) => {
@@ -39,6 +40,10 @@ const schema = z.object({
   travelTimeHours: z.coerce.number().min(0.5, 'מינימום 30 דקות').max(12, 'מקסימום 12 שעות'),
   fromLocation: z.string().min(1, 'שדה חובה'),
   toLocation: z.string().min(1, 'שדה חובה'),
+  craneCapacityTons: z.string().min(1, 'בחר קיבולת מנוף'),
+  liftHeightMeters: z.string().optional(),
+  loadType: z.string().optional(),
+  accessNotes: z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -82,6 +87,10 @@ export function CreateJobForm() {
         estimatedEndAt: new Date(scheduledAt.getTime() + data.travelTimeHours * 60 * 60 * 1000).toISOString(),
         fromLocation: data.fromLocation,
         toLocation: data.toLocation,
+        craneCapacityTons: Number(data.craneCapacityTons),
+        liftHeightMeters: data.liftHeightMeters ? Number(data.liftHeightMeters) : undefined,
+        loadType: data.loadType || undefined,
+        accessNotes: data.accessNotes || undefined,
       };
       await api.post('/jobs', dto);
       toast.success('העבודה פורסמה בהצלחה!');
@@ -111,7 +120,7 @@ export function CreateJobForm() {
                 </div>
                 <div>
                   <Label className="mb-1.5 block">תיאור (אופציונלי)</Label>
-                  <Textarea rows={2} placeholder="ציוד נדרש, הערות גישה…" {...register('description')} />
+                  <Textarea rows={2} placeholder="פרטים נוספים על העבודה…" {...register('description')} />
                 </div>
                 <div>
                   <Label className="mb-1.5 block">מיקום מוצא</Label>
@@ -210,6 +219,60 @@ export function CreateJobForm() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* ── Crane details ── */}
+          <div className="border-t pt-5">
+            <GroupTitle icon={Construction}>פרטי המנוף</GroupTitle>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div>
+                <Label className="mb-1.5 block">קיבולת מנוף נדרשת (טון)</Label>
+                <Controller
+                  control={control}
+                  name="craneCapacityTons"
+                  render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger className={`${inputCls} w-full`}>
+                        <SelectValue placeholder="בחר קיבולת" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CRANE_CAPACITIES.map((t) => (
+                          <SelectItem key={t} value={String(t)}>{t} טון</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <Err msg={errors.craneCapacityTons?.message} />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">גובה הרמה (מ׳) <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+                <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 12" {...register('liftHeightMeters')} />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">סוג מטען <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+                <Controller
+                  control={control}
+                  name="loadType"
+                  render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange} items={LOAD_TYPES}>
+                      <SelectTrigger className={`${inputCls} w-full`}>
+                        <SelectValue placeholder="בחר סוג" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LOAD_TYPES.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+            <div className="mt-3">
+              <Label className="mb-1.5 block">הערות גישה לאתר <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+              <Textarea rows={2} placeholder="מגבלות גישה, חנייה, מכשולים, חוטי חשמל…" {...register('accessNotes')} />
             </div>
           </div>
 

@@ -19,6 +19,8 @@ export class SignupRequestsService {
         phone: dto.phone.trim(),
         email: dto.email?.trim() || null,
         details: dto.details?.trim() || null,
+        craneCapacityTons: dto.type === 'DRIVER' ? (dto.craneCapacityTons ?? null) : null,
+        liftHeightMeters: dto.type === 'DRIVER' ? (dto.liftHeightMeters ?? null) : null,
       },
     });
 

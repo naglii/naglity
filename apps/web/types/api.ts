@@ -33,6 +33,8 @@ export interface Driver {
   phone: string;
   vehicleNumber: string;
   vehicleType: string;
+  craneCapacityTons?: number | null;
+  liftHeightMeters?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +61,10 @@ export interface Job {
   estimatedEndAt: string;
   fromLocation: string;
   toLocation: string;
+  craneCapacityTons?: number | null;
+  liftHeightMeters?: number | null;
+  loadType?: string | null;
+  accessNotes?: string | null;
   createdAt: string;
   updatedAt: string;
   business?: { id: string; name: string; phone?: string };
@@ -105,6 +111,10 @@ export interface CreateJobDto {
   estimatedEndAt: string;
   fromLocation: string;
   toLocation: string;
+  craneCapacityTons?: number;
+  liftHeightMeters?: number;
+  loadType?: string;
+  accessNotes?: string;
 }
 
 export interface CreateDriverDto {
@@ -115,6 +125,8 @@ export interface CreateDriverDto {
   phone: string;
   vehicleNumber: string;
   vehicleType?: string;
+  craneCapacityTons?: number;
+  liftHeightMeters?: number;
 }
 
 export interface CreateBusinessDto {
@@ -135,6 +147,8 @@ export interface SignupRequest {
   phone: string;
   email: string | null;
   details: string | null;
+  craneCapacityTons: number | null;
+  liftHeightMeters: number | null;
   handled: boolean;
   createdAt: string;
 }
@@ -146,4 +160,6 @@ export interface CreateSignupRequestDto {
   phone: string;
   email?: string;
   details?: string;
+  craneCapacityTons?: number;
+  liftHeightMeters?: number;
 }

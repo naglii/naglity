@@ -29,6 +29,8 @@ export class AdminService {
             phone: dto.phone,
             vehicleNumber: dto.vehicleNumber,
             vehicleType: dto.vehicleType ?? 'crane_truck',
+            craneCapacityTons: dto.craneCapacityTons ?? null,
+            liftHeightMeters: dto.liftHeightMeters ?? null,
           },
         },
       },

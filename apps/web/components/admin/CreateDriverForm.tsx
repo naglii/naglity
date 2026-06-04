@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { CRANE_CAPACITIES } from '@/lib/jobAttributes';
 import { CheckCircle2 } from 'lucide-react';
 
 const VEHICLE_TYPES = [
@@ -23,13 +24,15 @@ const schema = z.object({
   phone: z.string().min(1, 'שדה חובה'),
   vehicleType: z.string().min(1, 'שדה חובה'),
   vehicleNumber: z.string().min(1, 'שדה חובה'),
+  craneCapacityTons: z.string().min(1, 'בחר קיבולת'),
+  liftHeightMeters: z.string().optional(),
   username: z.string().min(3, 'מינימום 3 תווים'),
   password: z.string().min(6, 'מינימום 6 תווים'),
   email: z.string().email('אימייל לא תקין').optional().or(z.literal('')),
 });
 type FormData = z.infer<typeof schema>;
 
-export interface Prefill { name?: string; phone?: string; email?: string }
+export interface Prefill { name?: string; phone?: string; email?: string; craneCapacityTons?: number; liftHeightMeters?: number }
 interface Props { onSuccess: () => void; prefill?: Prefill }
 
 export function CreateDriverForm({ onSuccess, prefill }: Props) {
@@ -42,19 +45,33 @@ export function CreateDriverForm({ onSuccess, prefill }: Props) {
       name: prefill?.name ?? '',
       phone: prefill?.phone ?? '',
       email: prefill?.email ?? '',
+      craneCapacityTons: prefill?.craneCapacityTons ? String(prefill.craneCapacityTons) : '',
+      liftHeightMeters: prefill?.liftHeightMeters ? String(prefill.liftHeightMeters) : '',
     },
   });
 
   // If a prefill arrives after mount (e.g. opened from a signup request), apply it.
   useEffect(() => {
     if (prefill) {
-      reset({ vehicleType: 'crane_truck', name: prefill.name ?? '', phone: prefill.phone ?? '', email: prefill.email ?? '' });
+      reset({
+        vehicleType: 'crane_truck',
+        name: prefill.name ?? '',
+        phone: prefill.phone ?? '',
+        email: prefill.email ?? '',
+        craneCapacityTons: prefill.craneCapacityTons ? String(prefill.craneCapacityTons) : '',
+        liftHeightMeters: prefill.liftHeightMeters ? String(prefill.liftHeightMeters) : '',
+      });
     }
   }, [prefill, reset]);
 
   const onSubmit = async (data: FormData) => {
     try {
-      const payload = { ...data, email: data.email || undefined };
+      const payload = {
+        ...data,
+        email: data.email || undefined,
+        craneCapacityTons: data.craneCapacityTons ? Number(data.craneCapacityTons) : undefined,
+        liftHeightMeters: data.liftHeightMeters ? Number(data.liftHeightMeters) : undefined,
+      };
       await api.post('/admin/drivers', payload);
       setCreatedUsername(data.username);
       reset();
@@ -114,6 +131,26 @@ export function CreateDriverForm({ onSuccess, prefill }: Props) {
               <Label>מספר רכב</Label>
               <Input placeholder="12-345-67" {...register('vehicleNumber')} />
               {errors.vehicleNumber && <p className="text-xs text-destructive">{errors.vehicleNumber.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>קיבולת מנוף (טון)</Label>
+              <Controller
+                name="craneCapacityTons"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder="בחר קיבולת" /></SelectTrigger>
+                    <SelectContent>
+                      {CRANE_CAPACITIES.map((t) => <SelectItem key={t} value={String(t)}>{t} טון</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.craneCapacityTons && <p className="text-xs text-destructive">{errors.craneCapacityTons.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>גובה הרמה (מ׳) <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+              <Input type="number" min="1" step="1" placeholder="לדוגמה: 25" {...register('liftHeightMeters')} />
             </div>
           </div>
         </div>

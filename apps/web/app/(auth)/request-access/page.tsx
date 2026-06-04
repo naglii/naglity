@@ -12,8 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BrandMark } from '@/components/layout/Logo';
+import { CRANE_CAPACITIES } from '@/lib/jobAttributes';
 import { Truck, Building2, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +27,8 @@ const schema = z
     phone: z.string().min(5, 'מספר טלפון לא תקין'),
     email: z.string().email('אימייל לא תקין').optional().or(z.literal('')),
     details: z.string().optional(),
+    craneCapacityTons: z.string().optional(),
+    liftHeightMeters: z.string().optional(),
   })
   .refine((d) => d.type !== 'BUSINESS' || !!d.businessName?.trim(), {
     message: 'שם העסק נדרש',
@@ -50,6 +54,8 @@ export default function RequestAccessPage() {
         phone: data.phone,
         email: data.email || undefined,
         details: data.details || undefined,
+        craneCapacityTons: data.type === 'DRIVER' && data.craneCapacityTons ? Number(data.craneCapacityTons) : undefined,
+        liftHeightMeters: data.type === 'DRIVER' && data.liftHeightMeters ? Number(data.liftHeightMeters) : undefined,
       };
       await api.post('/signup-requests', payload);
       setDone(true);
@@ -127,6 +133,30 @@ export default function RequestAccessPage() {
               <Label>שם העסק</Label>
               <Input placeholder="שם החברה" {...register('businessName')} />
               {errors.businessName && <p className="text-xs text-destructive">{errors.businessName.message}</p>}
+            </div>
+          )}
+
+          {type === 'DRIVER' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>קיבולת המנוף (טון) <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+                <Controller
+                  control={control}
+                  name="craneCapacityTons"
+                  render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="בחר קיבולת" /></SelectTrigger>
+                      <SelectContent>
+                        {CRANE_CAPACITIES.map((t) => <SelectItem key={t} value={String(t)}>{t} טון</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>גובה הרמה (מ׳) <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+                <Input type="number" min="1" step="1" inputMode="numeric" placeholder="לדוגמה: 25" {...register('liftHeightMeters')} />
+              </div>
             </div>
           )}
 
