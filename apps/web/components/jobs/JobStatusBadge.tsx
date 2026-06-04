@@ -8,7 +8,7 @@ import type { JobStatus } from '@/types/api';
 //   red    = removed (DELETED)
 const config: Record<JobStatus, { label: string; className: string; dot: string; pulse?: boolean }> = {
   OPEN:        { label: 'פתוח',  className: 'bg-warning-soft text-warning',         dot: 'bg-warning' },
-  ACCEPTED:    { label: 'מאושר', className: 'bg-warning-soft text-warning',         dot: 'bg-warning' },
+  ACCEPTED:    { label: 'שובץ נהג', className: 'bg-warning-soft text-warning',       dot: 'bg-warning' },
   IN_PROGRESS: { label: 'בביצוע', className: 'bg-info-soft text-info',              dot: 'bg-info', pulse: true },
   COMPLETED:   { label: 'הושלם', className: 'bg-info-soft text-info',               dot: 'bg-info' },
   PAID:        { label: 'שולם',  className: 'bg-success-soft text-success',         dot: 'bg-success' },

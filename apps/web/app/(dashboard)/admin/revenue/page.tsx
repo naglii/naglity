@@ -19,12 +19,14 @@ const sum = (jobs: Job[], pick: (j: Job) => number) => jobs.reduce((t, j) => t +
 
 const STATUS_HE: Record<string, string> = {
   OPEN: 'פתוח',
-  ACCEPTED: 'מאושר',
+  ACCEPTED: 'שובץ נהג',
   IN_PROGRESS: 'בביצוע',
   COMPLETED: 'הושלם',
   PAID: 'שולם',
   DELETED: 'מחוק',
 };
+
+const STATUS_ORDER = ['OPEN', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'PAID', 'DELETED'] as const;
 
 export default function AdminRevenuePage() {
   const qc = useQueryClient();
@@ -62,7 +64,9 @@ export default function AdminRevenuePage() {
     const done = inMonth.filter((j) => j.status === 'PAID' || j.status === 'COMPLETED');
     const gross = sum(done, (j) => j.grossPriceCents);
     const payouts = sum(done, (j) => j.netPriceCents);
-    return { inMonth, done, gross, payouts, platform: gross - payouts };
+    const byStatus: Record<string, number> = { OPEN: 0, ACCEPTED: 0, IN_PROGRESS: 0, COMPLETED: 0, PAID: 0, DELETED: 0 };
+    for (const j of inMonth) byStatus[j.status] = (byStatus[j.status] ?? 0) + 1;
+    return { inMonth, done, gross, payouts, platform: gross - payouts, byStatus };
   }, [jobs, month]);
 
   if (isLoading) {
@@ -98,7 +102,26 @@ export default function AdminRevenuePage() {
         <HeroPill icon={Briefcase} tone="muted">{m.done.length} עבודות</HeroPill>
       </StatHero>
 
-      {/* ── All-time totals ── */}
+      {/* ── Jobs by status — for the selected month ── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">
+            עבודות לפי סטטוס · <span className="capitalize font-medium text-muted-foreground">{format(month, 'MMMM yyyy', { locale: he })}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {STATUS_ORDER.map((status) => (
+              <div key={status} className="rounded-xl bg-muted/50 p-3 text-center">
+                <p className="text-2xl font-bold">{m.byStatus[status] ?? 0}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{STATUS_HE[status]}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── All-time totals (last) ── */}
       <div className="space-y-3">
         <h2 className="text-sm font-bold text-foreground">סך הכל (מאז ומתמיד)</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -110,20 +133,6 @@ export default function AdminRevenuePage() {
           <StatsCard title='סה"כ עבודות' value={data.totalJobs} icon={Users} tone="brand" href="/admin/jobs" />
         </div>
       </div>
-
-      <Card>
-        <CardHeader><CardTitle className="text-sm font-semibold">עבודות לפי סטטוס</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {Object.entries(data.jobsByStatus).map(([status, count]) => (
-              <div key={status} className="rounded-xl bg-muted/50 p-3 text-center">
-                <p className="text-2xl font-bold">{count}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{STATUS_HE[status] ?? status}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

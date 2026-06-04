@@ -152,7 +152,13 @@ export default function DriverSchedulePage() {
 
                         <div className="flex items-center gap-2">
                           {job.status === 'ACCEPTED' && (
-                            <Button size="sm" className="gap-1.5" onClick={() => startMutation.mutate(job.id)}>
+                            <Button
+                              size="sm"
+                              className="gap-1.5"
+                              disabled={!isJobToday}
+                              title={!isJobToday ? 'ניתן להתחיל ביום העבודה' : undefined}
+                              onClick={() => startMutation.mutate(job.id)}
+                            >
                               <Play className="size-3.5" />
                               התחל עבודה
                             </Button>

@@ -13,7 +13,7 @@ import { JobStatusBadge } from '@/components/jobs/JobStatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatPrice, formatHoursLabel, durationMins, isInMonth, cn } from '@/lib/utils';
-import { CheckCircle2, Clock, Timer, Wallet, CalendarClock, MapPin, Inbox } from 'lucide-react';
+import { CheckCircle2, Clock, Timer, Wallet, CalendarClock, MapPin, Inbox, Banknote } from 'lucide-react';
 
 const sum = (jobs: Job[], pick: (j: Job) => number) => jobs.reduce((t, j) => t + pick(j), 0);
 
@@ -94,8 +94,9 @@ export default function DriverStatsPage() {
           </StatHero>
 
           {/* ── Secondary stats ── */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatsCard title="עבודות שבוצעו" value={m.done.length} icon={CheckCircle2} tone="success" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard title="עבודות שהושלמו" value={m.done.length} icon={CheckCircle2} tone="success" />
+            <StatsCard title="עבודות ששולמו" value={m.paid.length} icon={Banknote} tone="brand" />
             <StatsCard title="שעות עבודה" value={formatHoursLabel(m.totalMins)} icon={Timer} tone="info" />
             <StatsCard title="מתוכננות החודש" value={m.upcoming.length} icon={CalendarClock} tone="warning" />
           </div>

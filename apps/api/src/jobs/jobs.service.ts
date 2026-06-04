@@ -229,6 +229,9 @@ export class JobsService {
     if (!job) throw new NotFoundException('Job not found');
     if ((job as any).driverId !== driver.id) throw new ForbiddenException('Not your job');
     if ((job as any).status !== 'ACCEPTED') throw new ConflictException('Job must be ACCEPTED to start');
+    if (!isSameCalendarDay(new Date(), new Date((job as any).scheduledAt))) {
+      throw new BadRequestException('ניתן להתחיל עבודה רק ביום שבו היא מתוכננת');
+    }
 
     await this.prisma.job.update({ where: { id: jobId }, data: { status: 'IN_PROGRESS' as any } });
     await this.prisma.jobEvent.create({ data: { jobId, actorId: userId, type: 'STARTED' as any } });
