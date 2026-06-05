@@ -57,6 +57,58 @@ jobs:
       - name: Test API
         run: pnpm --filter api run test
 
+  e2e:
+    name: E2E (API + Postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: naglity
+          POSTGRES_PASSWORD: naglity
+          POSTGRES_DB: naglity_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U naglity -d naglity_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      # The E2E harness forces DATABASE_URL from this (kept local → safety guard passes).
+      TEST_DATABASE_URL: postgresql://naglity:naglity@localhost:5433/naglity_test
+      JWT_SECRET: ci-e2e-secret-ci-e2e-secret
+      PAYMENTS_PROVIDER: fake
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter api exec prisma generate
+
+      # Applies the schema (global-setup runs `prisma migrate deploy`) then runs the suite.
+      - name: Run E2E tests
+        run: pnpm --filter api run test:e2e
+
   # NOTE: linting is intentionally NOT a gate yet — the codebase has pre-existing
   # lint debt (prettier formatting + `any` usage + React 19 compiler rules).
   # Plan: land a dedicated lint-cleanup PR, then add a `lint` job here and mark it
