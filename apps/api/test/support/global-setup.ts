@@ -12,7 +12,7 @@ import './test-env'; // forces a safe, local DATABASE_URL before we touch the DB
  * service container in CI).
  */
 export default function globalSetup() {
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
+  execSync('npx prisma db push --accept-data-loss', {
     stdio: 'inherit',
     env: process.env,
     cwd: process.cwd(), // apps/api when run via `pnpm --filter api test:e2e`
