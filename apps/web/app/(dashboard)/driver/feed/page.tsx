@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import api from '@/lib/api';
-import type { Job } from '@/types/api';
+import type { Job, PayoutAccountStatus } from '@/types/api';
 import { initSocket } from '@/hooks/useSocket';
 import { JobCard } from '@/components/jobs/JobCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CAPACITY_BUCKETS } from '@/lib/jobAttributes';
-import { Truck, Radio, Search, X } from 'lucide-react';
+import { Truck, Radio, Search, X, Landmark, ArrowLeft } from 'lucide-react';
 
 const FEED_KEY = ['driver-feed'];
 
@@ -37,6 +38,12 @@ export default function DriverFeedPage() {
     queryKey: FEED_KEY,
     queryFn: () => api.get('/drivers/me/feed').then((r) => r.data),
   });
+
+  const { data: account } = useQuery<PayoutAccountStatus>({
+    queryKey: ['payout-account'],
+    queryFn: () => api.get('/drivers/me/payout-account').then((r) => r.data),
+  });
+  const needsPayout = account && !account.payoutsEnabled;
 
   useEffect(() => {
     const socket = initSocket();
@@ -113,6 +120,20 @@ export default function DriverFeedPage() {
 
   return (
     <div className="space-y-4">
+      {needsPayout && (
+        <Link
+          href="/driver/payouts"
+          className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning-soft/50 p-3.5 transition-colors hover:bg-warning-soft"
+        >
+          <span className="icon-chip size-9 shrink-0 bg-warning-soft text-warning"><Landmark className="size-4.5" /></span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-warning">הגדר אמצעי לקבלת תשלום</p>
+            <p className="text-xs text-muted-foreground">חובה להגדיר חשבון לקבלת כספים כדי לקבל עבודות</p>
+          </div>
+          <ArrowLeft className="size-4 shrink-0 text-warning" />
+        </Link>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">עבודות זמינות</h1>

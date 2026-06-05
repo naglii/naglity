@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { PaymentsService } from '../payments/payments.service.js';
 import bcrypt from 'bcrypt';
 import type { CreateDriverDto } from './dto/create-driver.dto.js';
 import type { CreateBusinessDto } from './dto/create-business.dto.js';
@@ -8,7 +9,14 @@ import type { UpdateBusinessDto } from './dto/update-business.dto.js';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private payments: PaymentsService,
+  ) {}
+
+  listTransactions() {
+    return this.payments.getAllTransactions();
+  }
 
   // ── Drivers ──────────────────────────────────────────────────────────────
 
@@ -171,15 +179,27 @@ export class AdminService {
       include: {
         business: { select: { id: true, name: true } },
         driver: { select: { id: true, name: true, phone: true } },
+        payments: { select: { type: true, status: true } },
       },
       orderBy: { scheduledAt: 'desc' },
     });
-    return jobs.map((j) => ({ ...j, netPriceCents: Math.round(j.grossPriceCents * 0.9) }));
+    return jobs.map((j: any) => ({
+      ...j,
+      netPriceCents: Math.round(j.grossPriceCents * 0.9),
+      escrowStatus: PaymentsService.escrowStatus(j.payments),
+    }));
   }
 
   async markJobPaid(id: string) {
-    const job = await this.prisma.job.findUnique({ where: { id } });
+    const job = await this.prisma.job.findUnique({ where: { id }, include: { driver: true } });
     if (!job) throw new NotFoundException('Job not found');
+    // Ensure the driver's payout went through (idempotent — skips if already released).
+    if ((job as any).driverId) {
+      await this.payments.releaseToDriver(
+        { id: job.id, grossPriceCents: (job as any).grossPriceCents },
+        { stripeAccountId: (job as any).driver?.stripeAccountId ?? null },
+      );
+    }
     return this.prisma.job.update({ where: { id }, data: { status: 'PAID' as any } });
   }
 }

@@ -41,6 +41,26 @@ export class DriversService {
     };
   }
 
+  async getMyPayouts(userId: string) {
+    const driver = await this.getMyProfile(userId);
+    const payments = await this.prisma.payment.findMany({
+      where: { type: 'TRANSFER', job: { driverId: driver.id } },
+      include: { job: { select: { id: true, title: true, scheduledAt: true, fromLocation: true, toLocation: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    return payments.map((p: any) => ({
+      id: p.id,
+      jobId: p.jobId,
+      jobTitle: p.job.title,
+      scheduledAt: p.job.scheduledAt,
+      fromLocation: p.job.fromLocation,
+      toLocation: p.job.toLocation,
+      amountCents: p.amountCents,
+      status: p.status,
+      createdAt: p.createdAt,
+    }));
+  }
+
   async getAvailableFeed() {
     const jobs = await this.prisma.job.findMany({
       where: { status: 'OPEN' as any },

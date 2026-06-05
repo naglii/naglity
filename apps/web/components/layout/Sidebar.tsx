@@ -7,18 +7,20 @@ import type { Role } from '@/types/api';
 import { Logo } from './Logo';
 import {
   Truck, CalendarDays, BarChart2, Briefcase, PlusCircle,
-  Building2, ClipboardList, TrendingUp, LifeBuoy, Inbox,
+  Building2, ClipboardList, TrendingUp, LifeBuoy, Inbox, CreditCard, Wallet, ArrowLeftRight,
 } from 'lucide-react';
 
 const navByRole: Record<Role, { href: string; label: string; icon: React.ElementType }[]> = {
   DRIVER: [
     { href: '/driver/feed', label: 'עבודות זמינות', icon: Truck },
     { href: '/driver/schedule', label: 'לוח זמנים', icon: CalendarDays },
+    { href: '/driver/payouts', label: 'תשלומים', icon: Wallet },
     { href: '/driver/stats', label: 'סטטיסטיקות', icon: BarChart2 },
   ],
   BUSINESS: [
     { href: '/business/jobs', label: 'העבודות שלי', icon: Briefcase },
     { href: '/business/jobs/new', label: 'פרסם עבודה', icon: PlusCircle },
+    { href: '/business/billing', label: 'תשלומים', icon: CreditCard },
     { href: '/business/stats', label: 'סטטיסטיקות', icon: BarChart2 },
   ],
   ADMIN: [
@@ -26,6 +28,7 @@ const navByRole: Record<Role, { href: string; label: string; icon: React.Element
     { href: '/admin/drivers', label: 'נהגים', icon: Truck },
     { href: '/admin/businesses', label: 'עסקים', icon: Building2 },
     { href: '/admin/jobs', label: 'כל העבודות', icon: ClipboardList },
+    { href: '/admin/transactions', label: 'תנועות כספים', icon: ArrowLeftRight },
     { href: '/admin/revenue', label: 'הכנסות', icon: TrendingUp },
   ],
 };
