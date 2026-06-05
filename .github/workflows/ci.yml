@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    # Base branch of the PR. RC branches (e.g. style_rc, feat/x_rc) are matched
+    # by '**_rc' so PRs targeting an RC branch are gated too.
+    branches: [main, dev, '**_rc']
+  push:
+    # '**_rc' runs CI on every push to any RC branch, which also covers PRs
+    # opened *from* an RC branch (the head branch gets its own push runs).
+    branches: [main, dev, '**_rc']
+
+# Cancel superseded runs on the same ref (e.g. a new push to a PR branch).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build · Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The API imports the generated Prisma client at type-check/build time.
+      - name: Generate Prisma client
+        run: pnpm --filter api exec prisma generate
+
+      - name: Build API
+        run: pnpm --filter api run build
+
+      - name: Build Web
+        run: pnpm --filter web run build
+        env:
+          # Build-time placeholders only — at runtime the app talks to the real
+          # API via these vars. A value is needed so next.config rewrites resolve.
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+          NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
+
+      - name: Test API
+        run: pnpm --filter api run test
+
+  # NOTE: linting is intentionally NOT a gate yet — the codebase has pre-existing
+  # lint debt (prettier formatting + `any` usage + React 19 compiler rules).
+  # Plan: land a dedicated lint-cleanup PR, then add a `lint` job here and mark it
+  # required in branch protection. Until then, run `pnpm --filter <app> lint` locally.
