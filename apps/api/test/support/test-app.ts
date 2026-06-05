@@ -5,9 +5,16 @@ import { AppModule } from '../../src/app.module';
 import { JobsGateway } from '../../src/gateway/jobs.gateway';
 
 // The real gateway emits over Socket.IO (this.server.to(...)). E2E asserts HTTP +
-// DB side effects, not socket delivery, so we replace it with a no-op: any
-// gateway.<method>(...) call becomes a harmless no-op and no WS server is started.
-const noopGateway = new Proxy({}, { get: () => () => undefined });
+// DB side effects, not socket delivery, so we replace it with no-ops and no WS
+// server is started. NOTE: must be a plain object, not a Proxy — a catch-all
+// Proxy also traps `.then`, which makes Nest's async DI treat it as a thenable
+// that never resolves (the app hangs on init).
+const noopGateway = {
+  emitJobNew: () => undefined,
+  emitJobAccepted: () => undefined,
+  emitJobUpdated: () => undefined,
+  emitNotification: () => undefined,
+};
 
 /**
  * Boots the full Nest application wired exactly like production (global `api`
