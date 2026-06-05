@@ -14,6 +14,10 @@ docker compose up -d test-db          # starts Postgres on localhost:5433
 pnpm --filter api test:e2e            # applies schema + runs the suite
 ```
 
+> Note: the test DB is synced via `prisma db push` (matching how this project
+> applies schema changes), not `migrate deploy` — the committed migration history
+> is stale.
+
 The suite **forces** a safe, local `DATABASE_URL` and refuses to run against a
 non-local database (so it can never TRUNCATE your dev/prod data). To point it at a
 remote test DB anyway (e.g. a Neon test branch):
@@ -27,7 +31,7 @@ TEST_DATABASE_URL=<url> ALLOW_REMOTE_TEST_DB=1 pnpm --filter api test:e2e
 | File | Role |
 |---|---|
 | `support/test-env.ts` | Forces a safe test `DATABASE_URL` before any app import (setupFiles). |
-| `support/global-setup.ts` | Runs `prisma migrate deploy` once to create the schema. |
+| `support/global-setup.ts` | Runs `prisma db push` once to sync the test DB to the current schema. |
 | `support/test-app.ts` | Boots the app like prod (api prefix, cookies, validation), gateway no-op'd. |
 | `support/db.ts` | `resetDb()` — TRUNCATEs all tables between tests for isolation. |
 | `support/factories.ts` | `makeBusiness` / `makeDriver` / `makeAdmin` / `makeJob` + cookie-aware `login`. |
