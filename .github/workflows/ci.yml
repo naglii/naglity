@@ -2,9 +2,13 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, dev]
+    # Base branch of the PR. RC branches (e.g. style_rc, feat/x_rc) are matched
+    # by '**_rc' so PRs targeting an RC branch are gated too.
+    branches: [main, dev, '**_rc']
   push:
-    branches: [main, dev]
+    # '**_rc' runs CI on every push to any RC branch, which also covers PRs
+    # opened *from* an RC branch (the head branch gets its own push runs).
+    branches: [main, dev, '**_rc']
 
 # Cancel superseded runs on the same ref (e.g. a new push to a PR branch).
 concurrency:
