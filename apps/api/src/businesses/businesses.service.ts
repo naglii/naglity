@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { PaymentsService } from '../payments/payments.service.js';
 
 @Injectable()
 export class BusinessesService {
@@ -18,10 +19,17 @@ export class BusinessesService {
     const business = await this.getMyProfile(userId);
     const jobs = await this.prisma.job.findMany({
       where: { businessId: business.id },
-      include: { driver: { select: { id: true, name: true, phone: true } } },
+      include: {
+        driver: { select: { id: true, name: true, phone: true } },
+        payments: { select: { type: true, status: true } },
+      },
       orderBy: { scheduledAt: 'desc' },
     });
-    return jobs.map((j: any) => ({ ...j, netPriceCents: Math.round(j.grossPriceCents * 0.9) }));
+    return jobs.map((j: any) => ({
+      ...j,
+      netPriceCents: Math.round(j.grossPriceCents * 0.9),
+      escrowStatus: PaymentsService.escrowStatus(j.payments),
+    }));
   }
 
   async getMyStats(userId: string) {

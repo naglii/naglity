@@ -26,6 +26,11 @@ export class DriversController {
     return this.driversService.getMyStats(user.id);
   }
 
+  @Get('me/payouts')
+  getPayouts(@CurrentUser() user: any) {
+    return this.driversService.getMyPayouts(user.id);
+  }
+
   @Get('me/feed')
   getFeed() {
     return this.driversService.getAvailableFeed();

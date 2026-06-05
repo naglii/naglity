@@ -23,6 +23,11 @@ export class JobsController {
     return this.jobsService.getJob(id);
   }
 
+  @Get(':id/receipt')
+  getReceipt(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.jobsService.getReceipt(id, user);
+  }
+
   @Post(':id/accept')
   @UseGuards(RolesGuard)
   @Roles('DRIVER')

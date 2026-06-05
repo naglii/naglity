@@ -59,4 +59,9 @@ export class AdminController {
 
   @Patch('jobs/:id/paid')
   markPaid(@Param('id') id: string) { return this.adminService.markJobPaid(id); }
+
+  // ── Transactions ledger ────────────────────────────────────────────────────
+
+  @Get('transactions')
+  listTransactions() { return this.adminService.listTransactions(); }
 }

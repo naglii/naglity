@@ -10,6 +10,7 @@ import { StatsModule } from './stats/stats.module.js';
 import { GatewayModule } from './gateway/gateway.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { SignupRequestsModule } from './signup-requests/signup-requests.module.js';
+import { PaymentsModule } from './payments/payments.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SignupRequestsModule } from './signup-requests/signup-requests.module.j
     GatewayModule,
     NotificationsModule,
     SignupRequestsModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {}

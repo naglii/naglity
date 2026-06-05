@@ -1,6 +1,6 @@
 export type Role = 'ADMIN' | 'DRIVER' | 'BUSINESS';
 export type JobStatus = 'OPEN' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAID' | 'DELETED';
-export type NotificationType = 'JOB_ACCEPTED_BY_DRIVER' | 'JOB_CANCELLED_BY_DRIVER' | 'JOB_DELETED_BY_BUSINESS' | 'SIGNUP_REQUEST';
+export type NotificationType = 'JOB_ACCEPTED_BY_DRIVER' | 'JOB_CANCELLED_BY_DRIVER' | 'JOB_DELETED_BY_BUSINESS' | 'SIGNUP_REQUEST' | 'PAYMENT_FAILED';
 
 export interface Notification {
   id: string;
@@ -69,6 +69,76 @@ export interface Job {
   updatedAt: string;
   business?: { id: string; name: string; phone?: string };
   driver?: { id: string; name: string; phone?: string } | null;
+  escrowStatus?: EscrowStatus;
+}
+
+export type EscrowStatus = 'NONE' | 'IN_ESCROW' | 'RELEASED' | 'REFUNDED';
+
+export interface BillingStatus {
+  hasPaymentMethod: boolean;
+  provider: string;
+  cardBrand?: string | null;
+  cardLast4?: string | null;
+  heldInEscrowCents?: number;
+}
+
+export interface BillingTransaction {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  type: 'CHARGE' | 'REFUND';
+  amountCents: number;
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED';
+  createdAt: string;
+}
+
+export interface PayoutAccountStatus {
+  payoutsEnabled: boolean;
+  provider: string;
+  payoutLast4?: string | null;
+}
+
+export interface AdminTransaction {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  businessName: string | null;
+  driverName: string | null;
+  type: 'CHARGE' | 'TRANSFER' | 'REFUND';
+  amountCents: number;
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED';
+  provider: string;
+  providerRef: string | null;
+  createdAt: string;
+}
+
+export interface DriverPayout {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  scheduledAt: string;
+  fromLocation: string;
+  toLocation: string;
+  amountCents: number;
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED';
+  createdAt: string;
+}
+
+export interface Receipt {
+  invoiceNumber: string;
+  issuedAt: string;
+  job: { id: string; title: string; scheduledAt: string; fromLocation: string; toLocation: string };
+  businessName: string | null;
+  driverName: string | null;
+  grossCents: number;
+  platformFeeCents: number;
+  netCents: number;
+  charged: boolean;
+  chargedAt: string | null;
+  released: boolean;
+  releasedAt: string | null;
+  refunded: boolean;
+  refundedAt: string | null;
 }
 
 export interface DriverStats {

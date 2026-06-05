@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import { initSocket } from '@/hooks/useSocket';
 import type { Job, JobStatus } from '@/types/api';
 import { JobStatusBadge } from '@/components/jobs/JobStatusBadge';
+import { EscrowBadge } from '@/components/jobs/EscrowBadge';
 import { MonthNavigator } from '@/components/stats/MonthNavigator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -87,7 +88,10 @@ function JobRow({ job, onMarkPaid }: { job: Job; onMarkPaid: (id: string) => voi
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        <JobStatusBadge status={job.status} />
+        <div className="flex flex-col items-end gap-1">
+          <JobStatusBadge status={job.status} />
+          <EscrowBadge status={job.escrowStatus} />
+        </div>
         <p className="w-16 text-end text-sm font-bold">{formatPrice(job.grossPriceCents)}</p>
         {job.status === 'COMPLETED' && (
           <Button size="sm" variant="outline" onClick={() => onMarkPaid(job.id)}>סמן כשולם</Button>

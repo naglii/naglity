@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException, ForbiddenException, B
 import { PrismaService } from '../prisma/prisma.service.js';
 import { JobsGateway } from '../gateway/jobs.gateway.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { PaymentsService } from '../payments/payments.service.js';
 import type { CreateJobDto } from './dto/create-job.dto.js';
 
 function isSameCalendarDay(a: Date, b: Date) {
@@ -16,11 +17,15 @@ export class JobsService {
     private prisma: PrismaService,
     private gateway: JobsGateway,
     private notifications: NotificationsService,
+    private payments: PaymentsService,
   ) {}
 
   async createJob(userId: string, dto: CreateJobDto) {
     const business = await this.prisma.business.findUnique({ where: { userId } });
     if (!business) throw new ForbiddenException('Business profile not found');
+    if (!business.hasPaymentMethod) {
+      throw new BadRequestException('יש להוסיף אמצעי תשלום לפני פרסום עבודה');
+    }
 
     const job = await this.prisma.job.create({
       data: {
@@ -50,9 +55,60 @@ export class JobsService {
     return { ...job, netPriceCents: Math.round((job as any).grossPriceCents * 0.9) };
   }
 
+  async getReceipt(jobId: string, user: { id: string; role: string }) {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        business: { select: { name: true, phone: true, userId: true } },
+        driver: { select: { name: true, phone: true, userId: true } },
+        payments: { select: { type: true, status: true, amountCents: true, createdAt: true } },
+      },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+
+    const isAdmin = user.role === 'ADMIN';
+    const isOwner = (job as any).business?.userId === user.id;
+    const isDriver = (job as any).driver?.userId === user.id;
+    if (!isAdmin && !isOwner && !isDriver) throw new ForbiddenException('Not allowed');
+
+    const gross = (job as any).grossPriceCents;
+    const platformFeeCents = Math.round(gross * 0.1);
+    const netCents = gross - platformFeeCents;
+    const find = (t: string) => (job as any).payments.find((p: any) => p.type === t && p.status === 'SUCCEEDED');
+    const charge = find('CHARGE');
+    const transfer = find('TRANSFER');
+    const refund = find('REFUND');
+
+    return {
+      invoiceNumber: `NG-${jobId.slice(-8).toUpperCase()}`,
+      issuedAt: charge?.createdAt ?? (job as any).createdAt,
+      job: {
+        id: jobId,
+        title: (job as any).title,
+        scheduledAt: (job as any).scheduledAt,
+        fromLocation: (job as any).fromLocation,
+        toLocation: (job as any).toLocation,
+      },
+      businessName: (job as any).business?.name ?? null,
+      driverName: (job as any).driver?.name ?? null,
+      grossCents: gross,
+      platformFeeCents,
+      netCents,
+      charged: !!charge,
+      chargedAt: charge?.createdAt ?? null,
+      released: !!transfer,
+      releasedAt: transfer?.createdAt ?? null,
+      refunded: !!refund,
+      refundedAt: refund?.createdAt ?? null,
+    };
+  }
+
   async acceptJob(jobId: string, userId: string) {
     const driver = await this.prisma.driver.findUnique({ where: { userId } });
     if (!driver) throw new ForbiddenException('Driver profile not found');
+    if (!driver.payoutsEnabled) {
+      throw new BadRequestException('יש להגדיר אמצעי לקבלת תשלום לפני קבלת עבודות');
+    }
     const driverId = driver.id;
 
     const updatedJob = await this.prisma.$transaction(async (tx: any) => {
@@ -76,10 +132,32 @@ export class JobsService {
         where: { id: jobId },
         data: { driverId, status: 'ACCEPTED' },
         include: {
-          business: { select: { id: true, name: true, userId: true } },
+          business: { select: { id: true, name: true, userId: true, stripeCustomerId: true } },
         },
       });
     });
+
+    // Charge the business off-session now that a driver accepted. If the charge
+    // fails, release the job back to OPEN so it returns to the feed.
+    try {
+      await this.payments.chargeForJob(
+        { id: jobId, grossPriceCents: (updatedJob as any).grossPriceCents },
+        { stripeCustomerId: (updatedJob as any).business.stripeCustomerId },
+      );
+    } catch {
+      await this.prisma.job.update({ where: { id: jobId }, data: { driverId: null, status: 'OPEN' as any } });
+      const reopened = { ...updatedJob, driverId: null, status: 'OPEN', netPriceCents: Math.round((updatedJob as any).grossPriceCents * 0.9) };
+      this.gateway.emitJobNew(reopened);
+      // Let the business know their card was declined so they can fix it.
+      await this.notifications.create(
+        (updatedJob as any).business.userId,
+        'PAYMENT_FAILED',
+        'החיוב נכשל',
+        `לא ניתן היה לחייב עבור "${(updatedJob as any).title}" — עדכן את אמצעי התשלום`,
+        jobId,
+      ).catch(() => {});
+      throw new BadRequestException('לא ניתן לחייב את אמצעי התשלום של העסק — נסה עבודה אחרת');
+    }
 
     await this.prisma.jobEvent.create({
       data: { jobId, actorId: userId, type: 'ACCEPTED' as any },
@@ -119,6 +197,9 @@ export class JobsService {
       where: { id: jobId },
       data: { driverId: null, status: 'OPEN' as any },
     });
+
+    // Driver backed out → refund the business; the job goes back to the feed.
+    await this.payments.refundForJob(jobId);
 
     await this.prisma.jobEvent.create({
       data: { jobId, actorId: userId, type: 'CANCELLED_BY_DRIVER' as any },
@@ -167,14 +248,18 @@ export class JobsService {
     if (['DELETED', 'COMPLETED', 'PAID'].includes((job as any).status)) {
       throw new ConflictException('Job cannot be deleted in its current state');
     }
-    if (isSameCalendarDay(new Date(), new Date((job as any).scheduledAt))) {
-      throw new BadRequestException('Cannot delete a job on the day it is scheduled');
+    // A booked job cannot be deleted on its day (protects the assigned driver).
+    if ((job as any).driverId && isSameCalendarDay(new Date(), new Date((job as any).scheduledAt))) {
+      throw new BadRequestException('לא ניתן למחוק עבודה משובצת ביום העבודה');
     }
 
     await this.prisma.job.update({
       where: { id: jobId },
       data: { status: 'DELETED' as any },
     });
+
+    // If a driver had accepted, the business was charged → refund it.
+    await this.payments.refundForJob(jobId);
 
     await this.prisma.jobEvent.create({
       data: { jobId, actorId: userId, type: 'DELETED_BY_BUSINESS' as any },
@@ -251,10 +336,24 @@ export class JobsService {
       throw new ConflictException('Job cannot be completed in its current state');
     }
 
-    await this.prisma.job.update({ where: { id: jobId }, data: { status: 'COMPLETED' as any } });
     await this.prisma.jobEvent.create({ data: { jobId, actorId: userId, type: 'COMPLETED' as any } });
 
-    this.gateway.emitJobUpdated(jobId, 'COMPLETED', userId);
+    // Release the driver's 90% from escrow. On success the job is settled (PAID);
+    // if the payout fails it stays COMPLETED (awaiting payout) for admin to retry.
+    let released: any = null;
+    if ((job as any).driverId) {
+      const driver = await this.prisma.driver.findUnique({ where: { id: (job as any).driverId } });
+      if (driver) {
+        released = await this.payments.releaseToDriver(
+          { id: jobId, grossPriceCents: (job as any).grossPriceCents },
+          { stripeAccountId: driver.stripeAccountId },
+        );
+      }
+    }
+    const newStatus = released?.status === 'SUCCEEDED' ? 'PAID' : 'COMPLETED';
+    await this.prisma.job.update({ where: { id: jobId }, data: { status: newStatus as any } });
+
+    this.gateway.emitJobUpdated(jobId, newStatus, userId);
     return { success: true };
   }
 }

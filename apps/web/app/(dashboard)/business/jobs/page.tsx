@@ -6,12 +6,14 @@ import { isSameDay } from 'date-fns';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { cn } from '@/lib/utils';
 import { initSocket } from '@/hooks/useSocket';
 import type { Job, JobStatus } from '@/types/api';
 import { JobTable } from '@/components/jobs/JobTable';
+import { ReceiptDialog } from '@/components/jobs/ReceiptDialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Receipt } from 'lucide-react';
 import {
   Dialog, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -37,6 +39,7 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
 export default function BusinessJobsPage() {
   const qc = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
+  const [receiptJobId, setReceiptJobId] = useState<string | null>(null);
 
   const { data: jobs, isLoading } = useQuery<Job[]>({
     queryKey: ['business-jobs'],
@@ -74,9 +77,10 @@ export default function BusinessJobsPage() {
     },
   });
 
+  // Deletable unless a driver is already assigned AND it's the job's day.
   const canDelete = (job: Job) =>
     ['OPEN', 'ACCEPTED', 'IN_PROGRESS'].includes(job.status) &&
-    !isSameDay(new Date(job.scheduledAt), new Date());
+    (!job.driverId || !isSameDay(new Date(job.scheduledAt), new Date()));
 
   return (
     <div className="space-y-8">
@@ -119,10 +123,26 @@ export default function BusinessJobsPage() {
                             סמן כהושלם
                           </Button>
                         )}
-                        {canDelete(job) && (
-                          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteTarget(job)}>
-                            מחק
+                        {job.escrowStatus && job.escrowStatus !== 'NONE' && (
+                          <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setReceiptJobId(job.id)}>
+                            <Receipt className="size-3.5" /> קבלה
                           </Button>
+                        )}
+                        {['OPEN', 'ACCEPTED', 'IN_PROGRESS'].includes(job.status) && (
+                          <span
+                            title={canDelete(job) ? undefined : 'לא ניתן למחוק עבודה משובצת ביום העבודה'}
+                            className={cn('inline-block', !canDelete(job) && 'cursor-not-allowed')}
+                          >
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              disabled={!canDelete(job)}
+                              onClick={() => setDeleteTarget(job)}
+                            >
+                              מחק
+                            </Button>
+                          </span>
                         )}
                       </div>
                     )}
@@ -159,6 +179,8 @@ export default function BusinessJobsPage() {
           </DialogContent>
         </DialogPortal>
       </Dialog>
+
+      <ReceiptDialog jobId={receiptJobId} onClose={() => setReceiptJobId(null)} />
     </div>
   );
 }

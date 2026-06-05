@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { JobStatusBadge } from './JobStatusBadge';
+import { EscrowBadge } from './EscrowBadge';
 import { formatPrice } from '@/lib/utils';
 import { MapPin } from 'lucide-react';
 import type { Job } from '@/types/api';
@@ -82,7 +83,12 @@ export function JobTable({ jobs, showBusiness, showDriver, actions }: Props) {
               <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                 {format(new Date(job.scheduledAt), 'dd/MM/yy HH:mm')}
               </TableCell>
-              <TableCell><JobStatusBadge status={job.status} /></TableCell>
+              <TableCell>
+                <div className="flex flex-col items-start gap-1">
+                  <JobStatusBadge status={job.status} />
+                  <EscrowBadge status={job.escrowStatus} />
+                </div>
+              </TableCell>
               <TableCell className="text-left font-semibold whitespace-nowrap">
                 {formatPrice(job.grossPriceCents)}
               </TableCell>
