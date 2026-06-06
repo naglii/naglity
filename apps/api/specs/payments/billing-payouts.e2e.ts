@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import { createTestApp } from './support/test-app';
-import { resetDb } from './support/db';
-import { makeBusiness, makeDriver, login, seedAcceptedJob } from './support/factories';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { createTestApp } from '../shared/test-app';
+import { resetDb } from '../shared/db';
+import { makeBusiness, makeDriver, login, seedAcceptedJob } from '../shared/factories';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 describe('Billing & payouts (e2e)', () => {
   let app: INestApplication;

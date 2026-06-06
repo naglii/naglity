@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import { createTestApp } from './support/test-app';
-import { resetDb } from './support/db';
-import { makeBusiness, makeDriver, makeJob, login } from './support/factories';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { createTestApp } from '../shared/test-app';
+import { resetDb } from '../shared/db';
+import { makeBusiness, makeDriver, makeJob, login } from '../shared/factories';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 /** A valid create-job payload; override any field per test. */
 const jobBody = (over: Record<string, unknown> = {}) => ({

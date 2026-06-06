@@ -2,14 +2,14 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "testRegex": "\\.e2e\\.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  "setupFiles": ["<rootDir>/support/test-env.ts"],
-  "globalSetup": "<rootDir>/support/global-setup.ts",
+  "setupFiles": ["<rootDir>/shared/test-env.ts"],
+  "globalSetup": "<rootDir>/shared/global-setup.ts",
   "testTimeout": 30000
 }

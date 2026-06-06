@@ -1,9 +1,13 @@
-# API E2E tests
+# API E2E tests (`specs/`)
 
 These are **end-to-end** tests: they boot the full Nest app and assert real side
 effects — HTTP status codes, response bodies, and rows written to a real Postgres.
 No unit tests / mocks of the DB. The only thing stubbed is the Socket.IO gateway
 (replaced with a no-op), since we assert HTTP + DB, not socket delivery.
+
+Specs live under `specs/` and mirror the `src/` module layout — e.g. `specs/jobs/*`
+test `src/jobs/*`, `specs/payments/*` test billing & payouts. Test files use the
+`*.e2e.ts` suffix; shared helpers live in `specs/shared/`.
 
 ## Run locally
 
@@ -30,12 +34,12 @@ TEST_DATABASE_URL=<url> ALLOW_REMOTE_TEST_DB=1 pnpm --filter api test:e2e
 
 | File | Role |
 |---|---|
-| `support/test-env.ts` | Forces a safe test `DATABASE_URL` before any app import (setupFiles). |
-| `support/global-setup.ts` | Runs `prisma db push` once to sync the test DB to the current schema. |
-| `support/test-app.ts` | Boots the app like prod (api prefix, cookies, validation), gateway no-op'd. |
-| `support/db.ts` | `resetDb()` — TRUNCATEs all tables between tests for isolation. |
-| `support/factories.ts` | `makeBusiness` / `makeDriver` / `makeAdmin` / `makeJob` + cookie-aware `login`. |
-| `*.e2e-spec.ts` | The tests. Each `it` follows `// arrange // act // assert`. |
+| `shared/test-env.ts` | Forces a safe test `DATABASE_URL` before any app import (setupFiles). |
+| `shared/global-setup.ts` | Runs `prisma db push` once to sync the test DB to the current schema. |
+| `shared/test-app.ts` | Boots the app like prod (api prefix, cookies, validation), gateway no-op'd. |
+| `shared/db.ts` | `resetDb()` — TRUNCATEs all tables between tests for isolation. |
+| `shared/factories.ts` | `makeBusiness` / `makeDriver` / `makeAdmin` / `makeJob` / `seedAcceptedJob` + cookie-aware `login`. |
+| `<module>/*.e2e.ts` | The tests, grouped by `src/` module. Each `it` follows `// arrange // act // assert`. |
 
 Tests run with `--runInBand` (serial) because they share one database.
 

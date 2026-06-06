@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import { createTestApp } from './support/test-app';
-import { resetDb } from './support/db';
-import { seedAcceptedJob } from './support/factories';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { createTestApp } from '../shared/test-app';
+import { resetDb } from '../shared/db';
+import { seedAcceptedJob } from '../shared/factories';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 describe('Notifications (e2e)', () => {
   let app: INestApplication;

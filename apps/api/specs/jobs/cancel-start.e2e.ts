@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import { createTestApp } from './support/test-app';
-import { resetDb } from './support/db';
-import { makeDriver, login, seedAcceptedJob } from './support/factories';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { createTestApp } from '../shared/test-app';
+import { resetDb } from '../shared/db';
+import { makeDriver, login, seedAcceptedJob } from '../shared/factories';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 const DAY = 24 * 60 * 60 * 1000;
 // A job scheduled a few days out (so same-day rules don't apply).

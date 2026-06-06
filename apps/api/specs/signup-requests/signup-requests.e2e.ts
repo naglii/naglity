@@ -1,9 +1,9 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp } from './support/test-app';
-import { resetDb } from './support/db';
-import { makeAdmin, makeBusiness, login } from './support/factories';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { createTestApp } from '../shared/test-app';
+import { resetDb } from '../shared/db';
+import { makeAdmin, makeBusiness, login } from '../shared/factories';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 describe('Signup requests (e2e)', () => {
   let app: INestApplication;

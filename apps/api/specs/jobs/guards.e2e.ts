@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import { createTestApp } from './support/test-app';
-import { resetDb } from './support/db';
-import { makeBusiness, makeDriver, makeAdmin, makeJob, login, seedAcceptedJob } from './support/factories';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { createTestApp } from '../shared/test-app';
+import { resetDb } from '../shared/db';
+import { makeBusiness, makeDriver, makeAdmin, makeJob, login, seedAcceptedJob } from '../shared/factories';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 const jobBody = (over: Record<string, unknown> = {}) => ({
   title: 'Move a crane',
