@@ -1,0 +1,22 @@
+# Local services for development & testing only.
+# Production uses managed services (Vercel / Render / Neon) — this file is never deployed.
+#
+# Start the test database:   docker compose up -d test-db
+# Run E2E against it:         pnpm --filter api test:e2e
+services:
+  test-db:
+    image: postgres:16-alpine
+    container_name: naglity-test-db
+    environment:
+      POSTGRES_USER: naglity
+      POSTGRES_PASSWORD: naglity
+      POSTGRES_DB: naglity_test
+    ports:
+      - '5433:5432' # host 5433 → container 5432 (avoids clashing with a local 5432)
+    tmpfs:
+      - /var/lib/postgresql/data # ephemeral: fast, wiped on restart (fine for tests)
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U naglity -d naglity_test']
+      interval: 2s
+      timeout: 3s
+      retries: 20
