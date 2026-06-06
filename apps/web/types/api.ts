@@ -207,6 +207,32 @@ export interface CreateBusinessDto {
   phone: string;
 }
 
+// ── Location / maps ──────────────────────────────────────────────────────────
+export interface GeoPlace {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+export interface RouteResult {
+  from: GeoPlace;
+  to: GeoPlace;
+  distanceKm: number;
+  durationMin: number;
+  polyline: [number, number][]; // [lat, lng] pairs
+}
+
+export interface JobTracking {
+  status: JobStatus;
+  title: string;
+  driverName: string | null;
+  vehicleNumber: string | null;
+  route: RouteResult;
+  progress: number; // 0..1
+  position: { lat: number; lng: number };
+  etaMin: number;
+}
+
 export type SignupRequestType = 'DRIVER' | 'BUSINESS';
 
 export interface SignupRequest {

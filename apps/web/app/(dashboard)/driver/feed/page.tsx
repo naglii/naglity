@@ -8,12 +8,13 @@ import api from '@/lib/api';
 import type { Job, PayoutAccountStatus } from '@/types/api';
 import { initSocket } from '@/hooks/useSocket';
 import { JobCard } from '@/components/jobs/JobCard';
+import { FeedMap } from '@/components/maps/FeedMap';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CAPACITY_BUCKETS } from '@/lib/jobAttributes';
-import { Truck, Radio, Search, X, Landmark, ArrowLeft } from 'lucide-react';
+import { Truck, Radio, Search, X, Landmark, ArrowLeft, List, Map as MapIcon } from 'lucide-react';
 
 const FEED_KEY = ['driver-feed'];
 
@@ -33,6 +34,7 @@ export default function DriverFeedPage() {
   const [capacity, setCapacity] = useState('all');
   const [fromDate, setFromDate] = useState('');
   const [sort, setSort] = useState('date');
+  const [view, setView] = useState<'list' | 'map'>('list');
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: FEED_KEY,
@@ -139,10 +141,26 @@ export default function DriverFeedPage() {
           <h1 className="text-xl font-bold">עבודות זמינות</h1>
           <p className="text-sm text-muted-foreground">בחר עבודה וקבל אותה בלחיצה אחת</p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success">
-          <span className="live-dot size-2 rounded-full bg-success" />
-          {filtered.length} פתוחות
-        </span>
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border bg-card p-0.5">
+            <button
+              onClick={() => setView('list')}
+              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${view === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+            >
+              <List className="size-3.5" /> רשימה
+            </button>
+            <button
+              onClick={() => setView('map')}
+              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${view === 'map' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+            >
+              <MapIcon className="size-3.5" /> מפה
+            </button>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success">
+            <span className="live-dot size-2 rounded-full bg-success" />
+            {filtered.length} פתוחות
+          </span>
+        </div>
       </div>
 
       {/* ── Filters ── */}
@@ -186,7 +204,9 @@ export default function DriverFeedPage() {
         )}
       </div>
 
-      {filtered.length === 0 ? (
+      {view === 'map' ? (
+        <FeedMap jobs={filtered} onAccept={handleAccept} />
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span className="icon-chip size-14 bg-accent text-brand-strong">
             <Search className="size-6" />

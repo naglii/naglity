@@ -16,7 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatPrice, netCents, platformCents } from '@/lib/utils';
 import { CRANE_CAPACITIES, LOAD_TYPES } from '@/lib/jobAttributes';
-import { FileText, CalendarClock, Send, Construction, type LucideIcon } from 'lucide-react';
+import { LocationPicker } from '@/components/maps/LocationPicker';
+import { RoutePreview } from '@/components/maps/RoutePreview';
+import { FileText, CalendarClock, Send, Construction, Map as MapIcon, type LucideIcon } from 'lucide-react';
 
 // Half-hour increments from 0.5 up to 12 hours.
 const TRAVEL_OPTIONS = Array.from({ length: 24 }, (_, i) => {
@@ -64,10 +66,12 @@ function Err({ msg }: { msg?: string }) {
 
 export function CreateJobForm() {
   const router = useRouter();
-  const { register, handleSubmit, watch, control, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, control, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
+  const fromLoc = watch('fromLocation');
+  const toLoc = watch('toLocation');
   const grossShekels = Number(watch('grossPriceShekels')) || 0;
   const grossC = Math.round(grossShekels * 100);
   const minDate = format(new Date(), 'yyyy-MM-dd');
@@ -124,18 +128,24 @@ export function CreateJobForm() {
                 </div>
                 <div>
                   <Label className="mb-1.5 block">מיקום מוצא</Label>
-                  <div className="relative">
-                    <span className="absolute top-1/2 size-2 -translate-y-1/2 start-3 rounded-full bg-success" />
-                    <Input className={`${inputCls} ps-8`} placeholder="כתובת מוצא" {...register('fromLocation')} />
-                  </div>
+                  <Controller
+                    control={control}
+                    name="fromLocation"
+                    render={({ field }) => (
+                      <LocationPicker kind="start" placeholder="חפש כתובת מוצא" value={field.value ?? ''} onChange={(label) => field.onChange(label)} />
+                    )}
+                  />
                   <Err msg={errors.fromLocation?.message} />
                 </div>
                 <div>
                   <Label className="mb-1.5 block">מיקום יעד</Label>
-                  <div className="relative">
-                    <span className="absolute top-1/2 size-2 -translate-y-1/2 start-3 rounded-full bg-brand-strong" />
-                    <Input className={`${inputCls} ps-8`} placeholder="כתובת יעד" {...register('toLocation')} />
-                  </div>
+                  <Controller
+                    control={control}
+                    name="toLocation"
+                    render={({ field }) => (
+                      <LocationPicker kind="end" placeholder="חפש כתובת יעד" value={field.value ?? ''} onChange={(label) => field.onChange(label)} />
+                    )}
+                  />
                   <Err msg={errors.toLocation?.message} />
                 </div>
               </div>
@@ -220,6 +230,22 @@ export function CreateJobForm() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* ── Route preview ── */}
+          <div className="border-t pt-5">
+            <GroupTitle icon={MapIcon}>מסלול הנסיעה</GroupTitle>
+            <RoutePreview
+              from={fromLoc}
+              to={toLoc}
+              onRoute={(r) => {
+                const rounded = Math.min(12, Math.max(0.5, Math.round((r.durationMin / 60) * 2) / 2));
+                setValue('travelTimeHours', rounded, { shouldValidate: true });
+              }}
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              זמן הנסיעה המשוער מתעדכן אוטומטית לפי המסלול — ניתן לשנות ידנית למעלה.
+            </p>
           </div>
 
           {/* ── Crane details ── */}
