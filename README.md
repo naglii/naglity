@@ -41,21 +41,21 @@ ever connects to `localhost`, so your dev/prod databases are never touched.
    ```powershell
    winget install -e --id PostgreSQL.PostgreSQL.17
    ```
-   Runs a service on port **5432**, superuser **`postgres`**. Use password **`Aa123456`** during
-   install (or your own — adjust the URL below to match).
+   This installs a background service on port **5432**, superuser **`postgres`**, default password
+   **`postgres`**.
 
-2. **Create the test database** — open **"SQL Shell (psql)"** from the Start menu, press Enter
-   through the prompts, type your password, then:
-   ```sql
-   CREATE DATABASE naglity_test;
+2. **Create the test database** (PowerShell):
+   ```powershell
+   $env:PGPASSWORD = "postgres"
+   & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -h localhost -c "CREATE DATABASE naglity_test;"
    ```
-   (`\q` to exit)
+   (If your version folder isn't `17`, check `C:\Program Files\PostgreSQL` and adjust the path.)
 
 ### Run the tests
 
 From the repo root, in PowerShell:
 ```powershell
-$env:TEST_DATABASE_URL = "postgresql://postgres:Aa123456@localhost:5432/naglity_test"
+$env:TEST_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/naglity_test"
 pnpm --filter api test:e2e
 ```
 
@@ -63,7 +63,7 @@ The suite syncs the schema (`prisma db push`) and runs everything against that d
 
 > To avoid retyping the URL each session, persist it once (then reopen the terminal):
 > ```powershell
-> setx TEST_DATABASE_URL "postgresql://postgres:Aa123456@localhost:5432/naglity_test"
+> setx TEST_DATABASE_URL "postgresql://postgres:postgres@localhost:5432/naglity_test"
 > ```
 
 More detail (structure, helpers, CI): [`apps/api/specs/README.md`](apps/api/specs/README.md).
