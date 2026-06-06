@@ -97,6 +97,25 @@ export interface AuthedClient {
   patch: (url: string) => request.Test;
 }
 
+/**
+ * Seed a job that a driver has already accepted (so it's ACCEPTED + charged into
+ * escrow). Returns the business/driver, the job, and logged-in clients for each.
+ * Pass `jobOverrides` (e.g. scheduledAt) to control timing-sensitive rules.
+ */
+export async function seedAcceptedJob(
+  app: INestApplication,
+  prisma: PrismaService,
+  jobOverrides: Record<string, unknown> = {},
+) {
+  const biz = await makeBusiness(prisma, { withPaymentMethod: true });
+  const drv = await makeDriver(prisma, { payoutsEnabled: true });
+  const job = await makeJob(prisma, biz.business.id, jobOverrides);
+  const driverClient = await login(app, drv.username, drv.password);
+  await driverClient.post(`/api/jobs/${job.id}/accept`).expect(201);
+  const ownerClient = await login(app, biz.username, biz.password);
+  return { biz, drv, job, ownerClient, driverClient };
+}
+
 /** Log in over HTTP and return a client that carries the `access_token` cookie. */
 export async function login(app: INestApplication, identifier: string, password: string): Promise<AuthedClient> {
   const server = app.getHttpServer();
