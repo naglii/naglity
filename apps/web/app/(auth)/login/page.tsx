@@ -126,12 +126,20 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            אין לך חשבון?{' '}
-            <Link href="/request-access" className="font-semibold text-brand-strong hover:underline">
-              בקשת הצטרפות
-            </Link>
-          </p>
+          <div className="mt-6 space-y-1.5 text-center text-sm text-muted-foreground">
+            <p>
+              צריך מנוף?{' '}
+              <Link href="/register" className="font-semibold text-brand-strong hover:underline">
+                פתח חשבון לקוח
+              </Link>
+            </p>
+            <p>
+              נהג מנוף או עסק?{' '}
+              <Link href="/request-access" className="font-semibold text-brand-strong hover:underline">
+                בקשת הצטרפות
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </Card>

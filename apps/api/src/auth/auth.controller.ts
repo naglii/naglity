@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Res, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -22,6 +23,18 @@ export class AuthController {
     res: any,
   ) {
     const { accessToken, user } = await this.authService.login(dto.identifier, dto.password);
+    res.cookie('access_token', accessToken, COOKIE_OPTS);
+    return { accessToken, user };
+  }
+
+  @Post('register')
+  @HttpCode(200)
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    res: any,
+  ) {
+    const { accessToken, user } = await this.authService.register(dto);
     res.cookie('access_token', accessToken, COOKIE_OPTS);
     return { accessToken, user };
   }

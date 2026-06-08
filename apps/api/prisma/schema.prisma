@@ -12,6 +12,13 @@ enum Role {
   BUSINESS
 }
 
+// A job poster ("client") is either a self-serve individual customer or an
+// admin-onboarded business. Both reuse the same posting/escrow pipeline.
+enum AccountType {
+  INDIVIDUAL
+  BUSINESS
+}
+
 enum JobStatus {
   OPEN
   ACCEPTED
@@ -123,10 +130,12 @@ model Driver {
 }
 
 model Business {
-  id               String   @id @default(cuid())
-  userId           String   @unique
+  id               String      @id @default(cuid())
+  userId           String      @unique
   name             String
   phone            String
+  location         String?
+  accountType      AccountType @default(BUSINESS)
   stripeCustomerId String?
   hasPaymentMethod Boolean  @default(false)
   cardBrand        String?
