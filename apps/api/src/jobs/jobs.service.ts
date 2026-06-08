@@ -25,6 +25,9 @@ export class JobsService {
   async createJob(userId: string, dto: CreateJobDto) {
     const business = await this.prisma.business.findUnique({ where: { userId } });
     if (!business) throw new ForbiddenException('Business profile not found');
+    if (!(business as any).phoneVerified) {
+      throw new BadRequestException('יש לאמת את מספר הטלפון לפני פרסום עבודה');
+    }
     if (!business.hasPaymentMethod) {
       throw new BadRequestException('יש להוסיף אמצעי תשלום לפני פרסום עבודה');
     }

@@ -154,6 +154,7 @@ model Business {
   phone            String
   location         String?
   accountType      AccountType @default(BUSINESS)
+  phoneVerified    Boolean     @default(true)
   stripeCustomerId String?
   hasPaymentMethod Boolean  @default(false)
   cardBrand        String?

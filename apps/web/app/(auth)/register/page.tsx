@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -15,15 +15,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { BrandMark, CraneGlyph } from '@/components/layout/Logo';
-import { Search, BadgePercent, ShieldCheck, MessageSquare, CheckCircle2, Loader2, Pencil } from 'lucide-react';
-import { OtpInput } from '@/components/auth/OtpInput';
+import { Search, BadgePercent, ShieldCheck } from 'lucide-react';
 
 const schema = z.object({
   name: z.string().min(2, 'נא להזין שם מלא'),
   phone: z.string().min(5, 'מספר טלפון לא תקין'),
-  email: z.string().email('אימייל לא תקין').optional().or(z.literal('')),
   username: z.string().min(3, 'מינימום 3 תווים'),
   password: z.string().min(6, 'מינימום 6 תווים'),
+  email: z.string().email('אימייל לא תקין').optional().or(z.literal('')),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -36,83 +35,22 @@ const perks = [
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [sentPhone, setSentPhone] = useState('');
-  const [code, setCode] = useState('');
-  const [verifying, setVerifying] = useState(false);
-  const [verified, setVerified] = useState(false);
-  const [resendIn, setResendIn] = useState(0);
-  const lastChecked = useRef('');
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
-  // Resend cooldown ticker.
-  useEffect(() => {
-    if (resendIn <= 0) return;
-    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendIn]);
-
-  // Changing the phone after sending invalidates the verification.
-  const phoneVal = watch('phone');
-  useEffect(() => {
-    if (codeSent && (phoneVal || '').trim() !== sentPhone) {
-      setCodeSent(false);
-      setVerified(false);
-      setCode('');
-      lastChecked.current = '';
-    }
-  }, [phoneVal, codeSent, sentPhone]);
-
-  const sendCode = async () => {
-    const phone = (watch('phone') || '').trim();
-    if (phone.length < 5) { toast.error('נא להזין מספר טלפון תקין'); return; }
-    setSending(true);
-    try {
-      await api.post('/auth/phone/send', { phone });
-      setSentPhone(phone);
-      setCodeSent(true);
-      setVerified(false);
-      setCode('');
-      lastChecked.current = '';
-      setResendIn(30);
-      toast.success('קוד אימות נשלח ב-SMS (לבדיקה: 0000)');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'שגיאה בשליחת הקוד');
-    } finally {
-      setSending(false);
-    }
-  };
-
-  // Auto-verify each distinct 4-digit code as it's entered (instant feedback).
-  useEffect(() => {
-    if (!codeSent || code.length < 4 || lastChecked.current === code) return;
-    lastChecked.current = code;
-    setVerifying(true);
-    setVerified(false);
-    api.post('/auth/phone/verify', { phone: sentPhone, code })
-      .then((r) => setVerified(!!r.data?.verified))
-      .catch(() => setVerified(false))
-      .finally(() => setVerifying(false));
-  }, [code, codeSent, sentPhone]);
-
   const onSubmit = async (data: FormData) => {
-    if (!verified) { toast.error('יש לאמת את מספר הטלפון'); return; }
     setLoading(true);
     try {
       const res = await api.post<LoginResponse>('/auth/register', {
         ...data,
-        phone: sentPhone,
-        code,
         email: data.email || undefined,
       });
       setAuth(res.data.user);
       setToken(res.data.accessToken);
-      toast.success('החשבון נוצר — ברוך הבא!');
-      router.push('/business/jobs');
+      // Next step: verify the phone for this new account.
+      router.push('/verify-phone');
     } catch (err: any) {
       toast.error(
         err.response?.status === 409
@@ -169,7 +107,7 @@ export default function RegisterPage() {
 
           <div className="mb-5">
             <h1 className="text-2xl font-bold">פתיחת חשבון לקוח</h1>
-            <p className="mt-1 text-sm text-muted-foreground">הרשמה מהירה — מתחילים לפרסם עבודות בחינם</p>
+            <p className="mt-1 text-sm text-muted-foreground">הרשמה מהירה — נאמת את הטלפון בשלב הבא</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
@@ -186,67 +124,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* phone verification (fake SMS — code 0000) */}
-            <div className="rounded-xl border bg-muted/30 p-3">
-              {!codeSent ? (
-                <Button type="button" variant="outline" size="lg" className="w-full gap-1.5" disabled={sending} onClick={sendCode}>
-                  {sending ? <Loader2 className="size-4 animate-spin" /> : <MessageSquare className="size-4" />}
-                  {sending ? 'שולח…' : 'שלח קוד אימות ב-SMS'}
-                </Button>
-              ) : (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-muted-foreground">
-                      קוד נשלח אל <bdi className="font-semibold text-foreground">{sentPhone}</bdi>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => { setCodeSent(false); setVerified(false); setCode(''); lastChecked.current = ''; }}
-                      className="inline-flex items-center gap-1 text-xs text-brand-strong hover:underline"
-                    >
-                      <Pencil className="size-3" /> שנה מספר
-                    </button>
-                  </div>
-
-                  <OtpInput
-                    value={code}
-                    onChange={setCode}
-                    autoFocus
-                    disabled={verified}
-                    status={verified ? 'ok' : code.length >= 4 && !verifying ? 'error' : 'idle'}
-                  />
-
-                  <div className="flex items-center justify-center text-xs">
-                    {verifying ? (
-                      <span className="flex items-center gap-1 text-muted-foreground"><Loader2 className="size-3 animate-spin" /> מאמת…</span>
-                    ) : verified ? (
-                      <span className="flex items-center gap-1 font-semibold text-success"><CheckCircle2 className="size-3.5" /> הטלפון אומת</span>
-                    ) : code.length >= 4 ? (
-                      <span className="font-semibold text-destructive">קוד שגוי — נסה שוב</span>
-                    ) : (
-                      <span className="text-muted-foreground">הזן את הקוד מה-SMS</span>
-                    )}
-                  </div>
-
-                  <div className="text-center">
-                    {resendIn > 0 ? (
-                      <span className="text-xs text-muted-foreground">ניתן לשלוח קוד שוב בעוד {resendIn} שניות</span>
-                    ) : (
-                      <button type="button" onClick={sendCode} disabled={sending} className="text-xs text-brand-strong hover:underline">
-                        שלח קוד מחדש
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="email">אימייל <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
-              <Input id="email" type="email" placeholder="you@email.com" {...register('email')} />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="username">שם משתמש</Label>
@@ -260,12 +137,15 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full font-semibold" disabled={loading || !verified}>
-              {loading ? 'יוצר חשבון…' : 'צור חשבון והתחל'}
+            <div className="space-y-1.5">
+              <Label htmlFor="email">אימייל <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+              <Input id="email" type="email" placeholder="you@email.com" {...register('email')} />
+              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+            </div>
+
+            <Button type="submit" size="lg" className="w-full font-semibold" disabled={loading}>
+              {loading ? 'יוצר חשבון…' : 'המשך לאימות טלפון'}
             </Button>
-            {!verified && (
-              <p className="text-center text-xs text-muted-foreground">אמת את מספר הטלפון כדי להמשיך</p>
-            )}
           </form>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">

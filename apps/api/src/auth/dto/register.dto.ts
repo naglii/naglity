@@ -25,9 +25,4 @@ export class RegisterDto {
   @IsEmail()
   @IsOptional()
   email?: string;
-
-  // SMS verification code (fake provider: 0000).
-  @IsString()
-  @MinLength(4)
-  code: string;
 }

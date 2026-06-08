@@ -30,6 +30,7 @@ export interface AuthUser {
   role: Role;
   profileId: string | null;
   accountType?: 'INDIVIDUAL' | 'BUSINESS' | null;
+  phoneVerified?: boolean;
 }
 
 export interface LoginResponse {
@@ -57,6 +58,7 @@ export interface Business {
   phone: string;
   location?: string | null;
   accountType?: 'INDIVIDUAL' | 'BUSINESS';
+  phoneVerified?: boolean;
   createdAt: string;
   updatedAt: string;
 }

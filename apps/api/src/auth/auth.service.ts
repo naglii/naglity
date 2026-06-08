@@ -13,14 +13,22 @@ export class AuthService {
     private sms: SmsService,
   ) {}
 
-  /** Send an SMS verification code to a phone (fake provider logs "0000"). */
-  sendPhoneCode(phone: string) {
-    return this.sms.sendCode(phone);
+  /** Send an SMS code to the logged-in user's account phone (fake provider logs "0000"). */
+  async sendAccountPhoneCode(userId: string) {
+    const business = await this.prisma.business.findUnique({ where: { userId } });
+    if (!business) throw new BadRequestException('אין מספר טלפון בחשבון');
+    await this.sms.sendCode(business.phone);
   }
 
-  /** Check a code for a phone (instant feedback before final signup). */
-  verifyPhone(phone: string, code: string) {
-    return this.sms.verifyCode(phone, code);
+  /** Verify a code against the user's account phone; on success mark the account verified. */
+  async verifyAccountPhone(userId: string, code: string) {
+    const business = await this.prisma.business.findUnique({ where: { userId } });
+    if (!business) throw new BadRequestException('אין מספר טלפון בחשבון');
+    const ok = this.sms.verifyCode(business.phone, code);
+    if (ok && !(business as any).phoneVerified) {
+      await this.prisma.business.update({ where: { id: business.id }, data: { phoneVerified: true } });
+    }
+    return ok;
   }
 
   async login(identifier: string, password: string) {
@@ -40,6 +48,7 @@ export class AuthService {
 
     let profileId: string | null = null;
     let accountType: string | null = null;
+    let phoneVerified = true;
     if (user.role === 'DRIVER') {
       const driver = await this.prisma.driver.findUnique({ where: { userId: user.id } });
       profileId = driver?.id ?? null;
@@ -47,6 +56,7 @@ export class AuthService {
       const business = await this.prisma.business.findUnique({ where: { userId: user.id } });
       profileId = business?.id ?? null;
       accountType = (business as any)?.accountType ?? null;
+      phoneVerified = (business as any)?.phoneVerified ?? true;
     }
 
     const payload = { sub: user.id, username: user.username, role: user.role };
@@ -54,16 +64,12 @@ export class AuthService {
 
     return {
       accessToken,
-      user: { id: user.id, username: user.username, email: user.email, role: user.role, profileId, accountType },
+      user: { id: user.id, username: user.username, email: user.email, role: user.role, profileId, accountType, phoneVerified },
     };
   }
 
-  /** Self-serve customer signup: creates an INDIVIDUAL client account and logs them in. */
+  /** Self-serve customer signup: creates an unverified INDIVIDUAL client account and logs them in. */
   async register(dto: RegisterDto) {
-    if (!this.sms.verifyCode(dto.phone, dto.code)) {
-      throw new BadRequestException('קוד האימות שגוי');
-    }
-
     const orClauses: any[] = [{ username: { equals: dto.username, mode: 'insensitive' } }];
     if (dto.email) orClauses.push({ email: { equals: dto.email, mode: 'insensitive' } });
     const exists = await this.prisma.user.findFirst({ where: { OR: orClauses } });
@@ -82,6 +88,7 @@ export class AuthService {
             phone: dto.phone,
             location: dto.location ?? null,
             accountType: 'INDIVIDUAL',
+            phoneVerified: false,
           },
         },
       },
@@ -99,6 +106,7 @@ export class AuthService {
         role: user.role,
         profileId: user.business?.id ?? null,
         accountType: user.business?.accountType ?? 'INDIVIDUAL',
+        phoneVerified: (user.business as any)?.phoneVerified ?? false,
       },
     };
   }

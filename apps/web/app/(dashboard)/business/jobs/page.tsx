@@ -8,13 +8,13 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { initSocket } from '@/hooks/useSocket';
-import type { Job, JobStatus, BillingStatus } from '@/types/api';
+import type { Job, JobStatus, BillingStatus, Business } from '@/types/api';
 import { JobTable } from '@/components/jobs/JobTable';
 import { ReceiptDialog } from '@/components/jobs/ReceiptDialog';
 import { OffersDialog } from '@/components/jobs/OffersDialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Receipt, Gavel, Phone, CreditCard, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Receipt, Gavel, Phone, CreditCard, ArrowLeft, ShieldAlert } from 'lucide-react';
 import {
   Dialog, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -51,6 +51,11 @@ export default function BusinessJobsPage() {
   const { data: billing } = useQuery<BillingStatus>({
     queryKey: ['billing-status'],
     queryFn: () => api.get('/billing/status').then((r) => r.data),
+  });
+
+  const { data: profile } = useQuery<Business>({
+    queryKey: ['business-profile'],
+    queryFn: () => api.get('/businesses/me/profile').then((r) => r.data),
   });
 
   // Deep-link from a "new offer" notification: /business/jobs?offers=<jobId>
@@ -98,6 +103,20 @@ export default function BusinessJobsPage() {
 
   return (
     <div className="space-y-8">
+      {profile && profile.phoneVerified === false && (
+        <Link
+          href="/verify-phone"
+          className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning-soft/50 p-3.5 transition-colors hover:bg-warning-soft"
+        >
+          <span className="icon-chip size-9 shrink-0 bg-warning-soft text-warning"><ShieldAlert className="size-4.5" /></span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-warning">אמת את מספר הטלפון</p>
+            <p className="text-xs text-muted-foreground">חובה לאמת את הטלפון כדי לפרסם עבודות</p>
+          </div>
+          <ArrowLeft className="size-4 shrink-0 text-warning" />
+        </Link>
+      )}
+
       {billing && !billing.hasPaymentMethod && (
         <Link
           href="/business/billing"

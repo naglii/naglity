@@ -1,7 +1,9 @@
-import { Controller, Post, Body, Res, HttpCode, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Res, HttpCode, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
+import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { CurrentUser } from './current-user.decorator.js';
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -39,18 +41,20 @@ export class AuthController {
     return { accessToken, user };
   }
 
+  // Authenticated: sends/verifies a code for the logged-in user's own account phone.
   @Post('phone/send')
   @HttpCode(200)
-  async sendPhoneCode(@Body('phone') phone: string) {
-    if (!phone || phone.trim().length < 5) throw new BadRequestException('נא להזין מספר טלפון תקין');
-    await this.authService.sendPhoneCode(phone);
+  @UseGuards(JwtAuthGuard)
+  async sendPhoneCode(@CurrentUser() user: any) {
+    await this.authService.sendAccountPhoneCode(user.id);
     return { ok: true };
   }
 
   @Post('phone/verify')
   @HttpCode(200)
-  verifyPhone(@Body('phone') phone: string, @Body('code') code: string) {
-    return { verified: this.authService.verifyPhone(phone ?? '', code ?? '') };
+  @UseGuards(JwtAuthGuard)
+  async verifyPhone(@CurrentUser() user: any, @Body('code') code: string) {
+    return { verified: await this.authService.verifyAccountPhone(user.id, code ?? '') };
   }
 
   @Post('logout')
