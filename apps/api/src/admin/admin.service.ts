@@ -130,6 +130,15 @@ export class AdminService {
     });
   }
 
+  /** Self-serve individual customers (separate from the businesses tab). */
+  async listCustomers() {
+    return this.prisma.business.findMany({
+      where: { accountType: 'INDIVIDUAL' },
+      include: { user: { select: { id: true, username: true, email: true, createdAt: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getBusiness(id: string) {
     const business = await this.prisma.business.findUnique({
       where: { id },

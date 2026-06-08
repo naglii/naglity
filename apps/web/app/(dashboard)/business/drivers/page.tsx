@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import type { DriverDirectoryItem, Job } from '@/types/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingStars } from '@/components/reviews/RatingStars';
@@ -21,6 +20,14 @@ import { Truck, Weight, Ruler, CheckCircle2, UserPlus, Search, PlusCircle } from
 const VEHICLE_LABEL: Record<string, string> = { crane_truck: 'משאית מנוף' };
 const vlabel = (v: string) => VEHICLE_LABEL[v] ?? v;
 const CAPACITY_ITEMS = CAPACITY_BUCKETS.map((b) => ({ value: b.key, label: b.label }));
+
+const HEIGHT_BUCKETS: { key: string; label: string; test: (h?: number | null) => boolean }[] = [
+  { key: 'all', label: 'כל הגבהים', test: () => true },
+  { key: 'le15', label: 'עד 15 מ׳', test: (h) => h != null && h <= 15 },
+  { key: '16-30', label: '16–30 מ׳', test: (h) => h != null && h > 15 && h <= 30 },
+  { key: 'gt30', label: '30+ מ׳', test: (h) => h != null && h > 30 },
+];
+const HEIGHT_ITEMS = HEIGHT_BUCKETS.map((b) => ({ value: b.key, label: b.label }));
 
 function InviteDialog({ driver, onClose }: { driver: DriverDirectoryItem | null; onClose: () => void }) {
   const open = !!driver;
@@ -80,21 +87,30 @@ function InviteDialog({ driver, onClose }: { driver: DriverDirectoryItem | null;
 export default function DriverDirectoryPage() {
   const [inviteDriver, setInviteDriver] = useState<DriverDirectoryItem | null>(null);
 
-  const [search, setSearch] = useState('');
   const [capacity, setCapacity] = useState('all');
+  const [height, setHeight] = useState('all');
+  const [vehicle, setVehicle] = useState('all');
 
   const { data: drivers = [], isLoading } = useQuery<DriverDirectoryItem[]>({
     queryKey: ['driver-directory'],
     queryFn: () => api.get('/drivers/directory').then((r) => r.data),
   });
 
+  const vehicleOptions = useMemo(() => {
+    const types = Array.from(new Set(drivers.map((d) => d.vehicleType).filter(Boolean)));
+    return [{ value: 'all', label: 'כל סוגי הרכב' }, ...types.map((v) => ({ value: v, label: vlabel(v) }))];
+  }, [drivers]);
+
   const filtered = drivers.filter((d) => {
-    const q = search.trim().toLowerCase();
-    if (q && !d.name.toLowerCase().includes(q)) return false;
     if (capacity !== 'all') {
       const b = CAPACITY_BUCKETS.find((x) => x.key === capacity);
       if (b && !b.test(d.craneCapacityTons ?? undefined)) return false;
     }
+    if (height !== 'all') {
+      const b = HEIGHT_BUCKETS.find((x) => x.key === height);
+      if (b && !b.test(d.liftHeightMeters ?? undefined)) return false;
+    }
+    if (vehicle !== 'all' && d.vehicleType !== vehicle) return false;
     return true;
   });
 
@@ -107,14 +123,22 @@ export default function DriverDirectoryPage() {
 
       {!isLoading && drivers.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[180px] flex-1">
-            <Search className="pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 start-2.5 text-muted-foreground" />
-            <Input className="h-9 ps-8" placeholder="חיפוש לפי שם נהג" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
           <Select value={capacity} onValueChange={(v) => setCapacity(v ?? 'all')} items={CAPACITY_ITEMS}>
-            <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               {CAPACITY_BUCKETS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={height} onValueChange={(v) => setHeight(v ?? 'all')} items={HEIGHT_ITEMS}>
+            <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {HEIGHT_BUCKETS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={vehicle} onValueChange={(v) => setVehicle(v ?? 'all')} items={vehicleOptions}>
+            <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {vehicleOptions.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

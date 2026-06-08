@@ -8,7 +8,7 @@ import { Logo } from './Logo';
 import {
   Truck, CalendarDays, BarChart2, Briefcase, PlusCircle,
   Building2, ClipboardList, TrendingUp, LifeBuoy, Inbox, CreditCard, Wallet, ArrowLeftRight,
-  HandCoins, Search,
+  HandCoins, Search, Users,
 } from 'lucide-react';
 
 const navByRole: Record<Role, { href: string; label: string; icon: React.ElementType }[]> = {
@@ -30,6 +30,7 @@ const navByRole: Record<Role, { href: string; label: string; icon: React.Element
     { href: '/admin/requests', label: 'בקשות הצטרפות', icon: Inbox },
     { href: '/admin/drivers', label: 'נהגים', icon: Truck },
     { href: '/admin/businesses', label: 'עסקים', icon: Building2 },
+    { href: '/admin/customers', label: 'לקוחות', icon: Users },
     { href: '/admin/jobs', label: 'כל העבודות', icon: ClipboardList },
     { href: '/admin/transactions', label: 'תנועות כספים', icon: ArrowLeftRight },
     { href: '/admin/revenue', label: 'הכנסות', icon: TrendingUp },
