@@ -122,7 +122,18 @@ export class AdminService {
   }
 
   async listBusinesses() {
+    // Only real businesses — self-serve individual customers are excluded here.
     return this.prisma.business.findMany({
+      where: { accountType: 'BUSINESS' },
+      include: { user: { select: { id: true, username: true, email: true, createdAt: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Self-serve individual customers (separate from the businesses tab). */
+  async listCustomers() {
+    return this.prisma.business.findMany({
+      where: { accountType: 'INDIVIDUAL' },
       include: { user: { select: { id: true, username: true, email: true, createdAt: true } } },
       orderBy: { createdAt: 'desc' },
     });

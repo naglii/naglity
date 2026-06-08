@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { format, formatDistanceToNow, differenceInMinutes } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { CalendarClock, Banknote, ArrowLeft, Timer, Weight, Ruler, Box } from 'lucide-react';
+import { CalendarClock, Banknote, ArrowLeft, Timer, Weight, Ruler, Box, HandCoins, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SubmitOfferDialog } from './SubmitOfferDialog';
 import {
   Dialog, DialogTrigger, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -17,9 +18,11 @@ import type { Job } from '@/types/api';
 interface Props {
   job: Job;
   onAccepted: (jobId: string) => void;
+  invited?: boolean;
+  offered?: boolean;
 }
 
-export function JobCard({ job, onAccepted }: Props) {
+export function JobCard({ job, onAccepted, invited, offered }: Props) {
   const [open, setOpen] = useState(false);
 
   const scheduled = new Date(job.scheduledAt);
@@ -28,7 +31,7 @@ export function JobCard({ job, onAccepted }: Props) {
   const bizInitial = bizName.trim().charAt(0) || '?';
 
   return (
-    <Card className="card-interactive overflow-hidden p-0">
+    <Card className={`card-interactive overflow-hidden p-0 ${invited ? 'ring-2 ring-warning/60' : ''}`}>
       <CardContent className="p-0">
         {/* ── Header with soft brand wash ── */}
         <div className="relative bg-gradient-to-bl from-brand-soft/70 to-transparent p-4 pb-3">
@@ -70,8 +73,12 @@ export function JobCard({ job, onAccepted }: Props) {
               <Banknote className="size-3.5" />
               תשלום נטו
             </div>
-            <p className="mt-1.5 text-2xl font-black leading-none tracking-tight">{formatPrice(job.netPriceCents)}</p>
-            <p className="mt-1.5 text-xs text-muted-foreground">ישירות אליך</p>
+            <p className="mt-1.5 text-2xl font-black leading-none tracking-tight">
+              {job.pricingMode === 'OFFERS' && job.grossPriceCents === 0 ? 'לפי הצעה' : formatPrice(job.netPriceCents)}
+            </p>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {job.pricingMode === 'OFFERS' && job.grossPriceCents === 0 ? 'הגש את הצעתך' : 'ישירות אליך'}
+            </p>
           </div>
         </div>
 
@@ -91,6 +98,16 @@ export function JobCard({ job, onAccepted }: Props) {
 
           {/* crane attributes */}
           <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {invited && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-warning-soft px-2 py-1 text-xs font-bold text-warning">
+                <Sparkles className="size-3.5" />הוזמנת לעבודה
+              </span>
+            )}
+            {job.pricingMode === 'OFFERS' && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-info-soft px-2 py-1 text-xs font-bold text-info">
+                <HandCoins className="size-3.5" />פתוח להצעות
+              </span>
+            )}
             {job.craneCapacityTons != null && (
               <span className="inline-flex items-center gap-1 rounded-md bg-brand-soft px-2 py-1 text-xs font-bold text-brand-strong">
                 <Weight className="size-3.5" />{job.craneCapacityTons} טון
@@ -118,8 +135,11 @@ export function JobCard({ job, onAccepted }: Props) {
           )}
         </div>
 
-        {/* ── Full-width accept ── */}
+        {/* ── Full-width CTA: offer (open-to-offers) or accept (fixed) ── */}
         <div className="p-4 pt-3.5">
+          {job.pricingMode === 'OFFERS' ? (
+            <SubmitOfferDialog job={job} alreadyOffered={offered} />
+          ) : (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger render={
               <Button size="lg" className="w-full gap-1.5 font-semibold">
@@ -145,6 +165,7 @@ export function JobCard({ job, onAccepted }: Props) {
               </DialogContent>
             </DialogPortal>
           </Dialog>
+          )}
         </div>
       </CardContent>
     </Card>

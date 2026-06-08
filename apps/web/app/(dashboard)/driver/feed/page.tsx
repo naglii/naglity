@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import api from '@/lib/api';
-import type { Job, PayoutAccountStatus } from '@/types/api';
+import type { Job, PayoutAccountStatus, Notification, JobOffer } from '@/types/api';
 import { initSocket } from '@/hooks/useSocket';
 import { JobCard } from '@/components/jobs/JobCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,6 +44,26 @@ export default function DriverFeedPage() {
     queryFn: () => api.get('/drivers/me/payout-account').then((r) => r.data),
   });
   const needsPayout = account && !account.payoutsEnabled;
+
+  // Jobs this driver was invited to (from JOB_INVITE notifications) bubble to the top.
+  const { data: notifications = [] } = useQuery<Notification[]>({
+    queryKey: ['notifications'],
+    queryFn: () => api.get('/notifications').then((r) => r.data),
+  });
+  const invitedIds = useMemo(
+    () => new Set(notifications.filter((n) => n.type === 'JOB_INVITE' && n.jobId).map((n) => n.jobId as string)),
+    [notifications],
+  );
+
+  // Jobs this driver has already submitted an offer on (so the card shows "update offer").
+  const { data: myOffers = [] } = useQuery<JobOffer[]>({
+    queryKey: ['my-offers'],
+    queryFn: () => api.get('/jobs/my-offers').then((r) => r.data),
+  });
+  const offeredIds = useMemo(
+    () => new Set(myOffers.filter((o) => o.status === 'PENDING').map((o) => o.jobId)),
+    [myOffers],
+  );
 
   useEffect(() => {
     const socket = initSocket();
@@ -87,10 +107,13 @@ export default function DriverFeedPage() {
       from.setHours(0, 0, 0, 0);
       list = list.filter((j) => new Date(j.scheduledAt) >= from);
     }
-    return [...list].sort((a, b) =>
-      sort === 'price' ? b.netPriceCents - a.netPriceCents : bySchedule(a, b),
-    );
-  }, [jobs, search, capacity, fromDate, sort]);
+    return [...list].sort((a, b) => {
+      const ai = invitedIds.has(a.id) ? 1 : 0;
+      const bi = invitedIds.has(b.id) ? 1 : 0;
+      if (ai !== bi) return bi - ai; // invited jobs first
+      return sort === 'price' ? b.netPriceCents - a.netPriceCents : bySchedule(a, b);
+    });
+  }, [jobs, search, capacity, fromDate, sort, invitedIds]);
 
   const hasFilters = !!search || capacity !== 'all' || !!fromDate || sort !== 'date';
   const clearFilters = () => { setSearch(''); setCapacity('all'); setFromDate(''); setSort('date'); };
@@ -197,7 +220,7 @@ export default function DriverFeedPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((job) => (
-            <JobCard key={job.id} job={job} onAccepted={handleAccept} />
+            <JobCard key={job.id} job={job} onAccepted={handleAccept} invited={invitedIds.has(job.id)} offered={offeredIds.has(job.id)} />
           ))}
         </div>
       )}

@@ -12,6 +12,13 @@ enum Role {
   BUSINESS
 }
 
+// A job poster ("client") is either a self-serve individual customer or an
+// admin-onboarded business. Both reuse the same posting/escrow pipeline.
+enum AccountType {
+  INDIVIDUAL
+  BUSINESS
+}
+
 enum JobStatus {
   OPEN
   ACCEPTED
@@ -19,6 +26,18 @@ enum JobStatus {
   COMPLETED
   PAID
   DELETED
+}
+
+enum PricingMode {
+  FIXED  // poster sets the price; first matching driver accepts
+  OFFERS // drivers submit quotes; poster picks one
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
 }
 
 enum JobEventType {
@@ -36,6 +55,11 @@ enum NotificationType {
   JOB_DELETED_BY_BUSINESS
   SIGNUP_REQUEST
   PAYMENT_FAILED
+  NEW_OFFER
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  JOB_INVITE
+  NEW_REVIEW
 }
 
 enum SignupRequestType {
@@ -118,15 +142,19 @@ model Driver {
   updatedAt     DateTime @updatedAt
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobs          Job[]
+  offers        JobOffer[]
 
   @@index([userId])
 }
 
 model Business {
-  id               String   @id @default(cuid())
-  userId           String   @unique
+  id               String      @id @default(cuid())
+  userId           String      @unique
   name             String
   phone            String
+  location         String?
+  accountType      AccountType @default(BUSINESS)
+  phoneVerified    Boolean     @default(true)
   stripeCustomerId String?
   hasPaymentMethod Boolean  @default(false)
   cardBrand        String?
@@ -147,6 +175,7 @@ model Job {
   title           String
   description     String?
   grossPriceCents Int
+  pricingMode     PricingMode @default(FIXED)
   scheduledAt     DateTime
   estimatedEndAt  DateTime
   fromLocation    String
@@ -162,6 +191,8 @@ model Job {
   events          JobEvent[]
   notifications   Notification[]
   payments        Payment[]
+  offers          JobOffer[]
+  reviews         Review[]
 
   @@index([status])
   @@index([businessId])
@@ -195,5 +226,39 @@ model Notification {
   job       Job?             @relation(fields: [jobId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([jobId])
+}
+
+// A driver's quote on an "open to offers" job; the poster picks one.
+model JobOffer {
+  id          String      @id @default(cuid())
+  jobId       String
+  driverId    String
+  amountCents Int
+  note        String?
+  etaMinutes  Int?
+  status      OfferStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  job         Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  driver      Driver      @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, driverId])
+  @@index([jobId])
+  @@index([driverId])
+}
+
+// Mutual rating left after a job completes (business↔driver).
+model Review {
+  id        String   @id @default(cuid())
+  jobId     String
+  raterId   String // user id of the author
+  direction String // 'BUSINESS_TO_DRIVER' | 'DRIVER_TO_BUSINESS'
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now())
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, raterId])
   @@index([jobId])
 }

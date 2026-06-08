@@ -69,4 +69,24 @@ export class DriversService {
     });
     return jobs.map((j: any) => ({ ...j, netPriceCents: Math.round(j.grossPriceCents * 0.9) }));
   }
+
+  /** Public driver directory for posters — specs + rating, never phone numbers. */
+  async getDirectory() {
+    const drivers = await this.prisma.driver.findMany({
+      select: { id: true, name: true, vehicleType: true, craneCapacityTons: true, liftHeightMeters: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return Promise.all(
+      drivers.map(async (d: any) => {
+        const [reviews, completedJobs] = await Promise.all([
+          this.prisma.review.findMany({ where: { direction: 'BUSINESS_TO_DRIVER', job: { driverId: d.id } }, select: { stars: true } }),
+          this.prisma.job.count({ where: { driverId: d.id, status: { in: ['COMPLETED', 'PAID'] as any } } }),
+        ]);
+        const avg = reviews.length
+          ? Math.round((reviews.reduce((s: number, r: any) => s + r.stars, 0) / reviews.length) * 10) / 10
+          : 0;
+        return { ...d, rating: { avg, count: reviews.length }, completedJobs };
+      }),
+    );
+  }
 }

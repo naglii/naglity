@@ -38,6 +38,9 @@ export class AdminController {
   @Get('businesses')
   listBusinesses() { return this.adminService.listBusinesses(); }
 
+  @Get('customers')
+  listCustomers() { return this.adminService.listCustomers(); }
+
   @Post('businesses')
   createBusiness(@Body() dto: CreateBusinessDto) { return this.adminService.createBusiness(dto); }
 

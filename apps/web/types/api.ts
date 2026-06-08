@@ -1,6 +1,16 @@
 export type Role = 'ADMIN' | 'DRIVER' | 'BUSINESS';
 export type JobStatus = 'OPEN' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAID' | 'DELETED';
-export type NotificationType = 'JOB_ACCEPTED_BY_DRIVER' | 'JOB_CANCELLED_BY_DRIVER' | 'JOB_DELETED_BY_BUSINESS' | 'SIGNUP_REQUEST' | 'PAYMENT_FAILED';
+export type NotificationType =
+  | 'JOB_ACCEPTED_BY_DRIVER'
+  | 'JOB_CANCELLED_BY_DRIVER'
+  | 'JOB_DELETED_BY_BUSINESS'
+  | 'SIGNUP_REQUEST'
+  | 'PAYMENT_FAILED'
+  | 'NEW_OFFER'
+  | 'OFFER_ACCEPTED'
+  | 'OFFER_DECLINED'
+  | 'JOB_INVITE'
+  | 'NEW_REVIEW';
 
 export interface Notification {
   id: string;
@@ -19,6 +29,8 @@ export interface AuthUser {
   email: string | null;
   role: Role;
   profileId: string | null;
+  accountType?: 'INDIVIDUAL' | 'BUSINESS' | null;
+  phoneVerified?: boolean;
 }
 
 export interface LoginResponse {
@@ -44,6 +56,9 @@ export interface Business {
   userId: string;
   name: string;
   phone: string;
+  location?: string | null;
+  accountType?: 'INDIVIDUAL' | 'BUSINESS';
+  phoneVerified?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,11 +80,59 @@ export interface Job {
   liftHeightMeters?: number | null;
   loadType?: string | null;
   accessNotes?: string | null;
+  pricingMode?: PricingMode;
+  offerCount?: number;
   createdAt: string;
   updatedAt: string;
   business?: { id: string; name: string; phone?: string };
   driver?: { id: string; name: string; phone?: string } | null;
   escrowStatus?: EscrowStatus;
+}
+
+export type PricingMode = 'FIXED' | 'OFFERS';
+export type OfferStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'WITHDRAWN';
+
+export interface DriverRating {
+  avg: number;
+  count: number;
+}
+
+export interface DriverDirectoryItem {
+  id: string;
+  name: string;
+  vehicleType: string;
+  craneCapacityTons?: number | null;
+  liftHeightMeters?: number | null;
+  rating: DriverRating;
+  completedJobs: number;
+}
+
+export interface JobOffer {
+  id: string;
+  jobId: string;
+  driverId: string;
+  amountCents: number;
+  note?: string | null;
+  etaMinutes?: number | null;
+  status: OfferStatus;
+  createdAt: string;
+  driver?: {
+    id: string;
+    name: string;
+    vehicleType?: string;
+    craneCapacityTons?: number | null;
+    liftHeightMeters?: number | null;
+    rating?: DriverRating;
+  };
+  job?: {
+    id: string;
+    title: string;
+    fromLocation: string;
+    toLocation: string;
+    scheduledAt: string;
+    status: JobStatus;
+    grossPriceCents: number;
+  };
 }
 
 export type EscrowStatus = 'NONE' | 'IN_ESCROW' | 'RELEASED' | 'REFUNDED';
@@ -177,6 +240,7 @@ export interface CreateJobDto {
   title: string;
   description?: string;
   grossPriceCents: number;
+  pricingMode?: PricingMode;
   scheduledAt: string;
   estimatedEndAt: string;
   fromLocation: string;

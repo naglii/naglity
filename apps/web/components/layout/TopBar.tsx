@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { clearAuth } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
+import { queryClient } from '@/lib/queryClient';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { LogOut, Menu, ChevronDown, UserRound, Settings } from 'lucide-react';
@@ -54,11 +55,13 @@ export function TopBar({ user, onMenuClick }: Props) {
     await api.post('/auth/logout').catch(() => {});
     disconnectSocket();
     clearAuth();
+    queryClient.clear();
     router.push('/login');
   };
 
   const initials = (user.username ?? user.email ?? '??').slice(0, 2).toUpperCase();
-  const role = roleLabel[user.role] ?? user.role;
+  const isClient = user.role === 'BUSINESS' && user.accountType === 'INDIVIDUAL';
+  const role = isClient ? 'לקוח' : (roleLabel[user.role] ?? user.role);
 
   return (
     <header className="h-16 border-b bg-topbar/80 backdrop-blur-md flex items-center gap-3 px-4 md:px-6 shrink-0 sticky top-0 z-30">

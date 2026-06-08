@@ -90,7 +90,9 @@ export function JobTable({ jobs, showBusiness, showDriver, actions }: Props) {
                 </div>
               </TableCell>
               <TableCell className="text-left font-semibold whitespace-nowrap">
-                {formatPrice(job.grossPriceCents)}
+                {job.pricingMode === 'OFFERS' && job.grossPriceCents === 0
+                  ? <span className="font-normal text-muted-foreground">לפי הצעה</span>
+                  : formatPrice(job.grossPriceCents)}
               </TableCell>
               {actions && <TableCell className="text-left">{actions(job)}</TableCell>}
             </TableRow>

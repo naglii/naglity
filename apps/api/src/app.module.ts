@@ -11,6 +11,7 @@ import { GatewayModule } from './gateway/gateway.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { SignupRequestsModule } from './signup-requests/signup-requests.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
+import { SmsModule } from './sms/sms.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PaymentsModule } from './payments/payments.module.js';
     NotificationsModule,
     SignupRequestsModule,
     PaymentsModule,
+    SmsModule,
   ],
 })
 export class AppModule {}

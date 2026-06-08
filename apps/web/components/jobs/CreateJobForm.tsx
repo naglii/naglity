@@ -34,7 +34,8 @@ const TIME_OPTIONS = Array.from({ length: 38 }, (_, i) => {
 const schema = z.object({
   title: z.string().min(1, 'שדה חובה'),
   description: z.string().optional(),
-  grossPriceShekels: z.coerce.number().min(1, 'מינימום ₪1'),
+  grossPriceShekels: z.coerce.number().optional(),
+  pricingMode: z.enum(['FIXED', 'OFFERS']),
   scheduledDate: z.string().min(1, 'שדה חובה'),
   scheduledTime: z.string().min(1, 'שדה חובה'),
   travelTimeHours: z.coerce.number().min(0.5, 'מינימום 30 דקות').max(12, 'מקסימום 12 שעות'),
@@ -44,6 +45,11 @@ const schema = z.object({
   liftHeightMeters: z.string().optional(),
   loadType: z.string().optional(),
   accessNotes: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // A fixed-price job must have a price; an open-to-offers job has none yet.
+  if (data.pricingMode === 'FIXED' && (data.grossPriceShekels == null || data.grossPriceShekels < 1)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['grossPriceShekels'], message: 'יש להזין מחיר (מינימום ₪1)' });
+  }
 });
 type FormData = z.infer<typeof schema>;
 
@@ -64,10 +70,12 @@ function Err({ msg }: { msg?: string }) {
 
 export function CreateJobForm() {
   const router = useRouter();
-  const { register, handleSubmit, watch, control, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, control, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { pricingMode: 'FIXED' },
   });
 
+  const pricingMode = watch('pricingMode') ?? 'FIXED';
   const grossShekels = Number(watch('grossPriceShekels')) || 0;
   const grossC = Math.round(grossShekels * 100);
   const minDate = format(new Date(), 'yyyy-MM-dd');
@@ -82,7 +90,8 @@ export function CreateJobForm() {
       const dto: CreateJobDto = {
         title: data.title,
         description: data.description,
-        grossPriceCents: Math.round(data.grossPriceShekels * 100),
+        grossPriceCents: data.pricingMode === 'OFFERS' ? 0 : Math.round((data.grossPriceShekels ?? 0) * 100),
+        pricingMode: data.pricingMode,
         scheduledAt: scheduledAt.toISOString(),
         estimatedEndAt: new Date(scheduledAt.getTime() + data.travelTimeHours * 60 * 60 * 1000).toISOString(),
         fromLocation: data.fromLocation,
@@ -196,28 +205,56 @@ export function CreateJobForm() {
                   <Err msg={errors.travelTimeHours?.message} />
                 </div>
                 <div>
-                  <Label className="mb-1.5 block">מחיר (₪)</Label>
-                  <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
-                  <Err msg={errors.grossPriceShekels?.message} />
+                  <Label className="mb-1.5 block">אופן התמחור</Label>
+                  <div className="inline-flex w-full rounded-lg border bg-card p-0.5">
+                    {([['FIXED', 'מחיר קבוע'], ['OFFERS', 'פתוח להצעות']] as const).map(([val, label]) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setValue('pricingMode', val)}
+                        className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${pricingMode === val ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {pricingMode === 'FIXED'
+                      ? 'הנהג הראשון שמתאים מקבל את העבודה במחיר שתקבע.'
+                      : 'נהגים יגישו הצעות מחיר — ותבחר את המתאים לך.'}
+                  </p>
                 </div>
+                {pricingMode === 'FIXED' ? (
+                  <>
+                    <div>
+                      <Label className="mb-1.5 block">מחיר (₪)</Label>
+                      <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
+                      <Err msg={errors.grossPriceShekels?.message} />
+                    </div>
 
-                {/* live payout breakdown */}
-                <div className="rounded-xl border bg-muted/50 px-4 py-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-success" />
-                      הנהג מקבל
-                    </span>
-                    <span className="font-bold">{grossC > 0 ? formatPrice(netCents(grossC)) : '—'}</span>
+                    {/* live payout breakdown */}
+                    <div className="rounded-xl border bg-muted/50 px-4 py-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2">
+                          <span className="size-2 rounded-full bg-success" />
+                          הנהג מקבל
+                        </span>
+                        <span className="font-bold">{grossC > 0 ? formatPrice(netCents(grossC)) : '—'}</span>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="flex items-center gap-2">
+                          <span className="size-2 rounded-full bg-brand-strong" />
+                          עמלת פלטפורמה (10%)
+                        </span>
+                        <span className="font-semibold">{grossC > 0 ? formatPrice(platformCents(grossC)) : '—'}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="rounded-xl border border-dashed bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                    אין צורך להזין מחיר — נהגים יגישו הצעות מחיר, ותבחר את ההצעה המתאימה לך.
                   </div>
-                  <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-brand-strong" />
-                      עמלת פלטפורמה (10%)
-                    </span>
-                    <span className="font-semibold">{grossC > 0 ? formatPrice(platformCents(grossC)) : '—'}</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

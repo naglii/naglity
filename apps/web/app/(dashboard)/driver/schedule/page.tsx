@@ -12,7 +12,7 @@ import { formatPrice, formatHoursLabel, durationMins, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Play, CalendarX2, CalendarDays, Clock, Weight, Box } from 'lucide-react';
+import { MapPin, Play, CalendarX2, CalendarDays, Clock, Weight, Box, Phone } from 'lucide-react';
 import { loadTypeLabel } from '@/lib/jobAttributes';
 import {
   Dialog, DialogTrigger, DialogPortal, DialogOverlay,
@@ -167,6 +167,11 @@ export default function DriverSchedulePage() {
                         </p>
 
                         <div className="flex items-center gap-2">
+                          {job.business?.phone && (
+                            <Button size="sm" variant="outline" className="gap-1.5" nativeButton={false} render={<a href={`tel:${job.business.phone}`} />}>
+                              <Phone className="size-3.5" /> התקשר
+                            </Button>
+                          )}
                           {job.status === 'ACCEPTED' && (
                             <Button
                               size="sm"

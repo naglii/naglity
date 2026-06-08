@@ -8,12 +8,13 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { initSocket } from '@/hooks/useSocket';
-import type { Job, JobStatus } from '@/types/api';
+import type { Job, JobStatus, BillingStatus, Business } from '@/types/api';
 import { JobTable } from '@/components/jobs/JobTable';
 import { ReceiptDialog } from '@/components/jobs/ReceiptDialog';
+import { OffersDialog } from '@/components/jobs/OffersDialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Receipt } from 'lucide-react';
+import { PlusCircle, Receipt, Gavel, Phone, CreditCard, ArrowLeft, ShieldAlert } from 'lucide-react';
 import {
   Dialog, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -40,11 +41,30 @@ export default function BusinessJobsPage() {
   const qc = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const [receiptJobId, setReceiptJobId] = useState<string | null>(null);
+  const [offersJobId, setOffersJobId] = useState<string | null>(null);
+  const [completeTarget, setCompleteTarget] = useState<Job | null>(null);
 
   const { data: jobs, isLoading } = useQuery<Job[]>({
     queryKey: ['business-jobs'],
     queryFn: () => api.get('/businesses/me/jobs').then((r) => r.data),
   });
+
+  const { data: billing } = useQuery<BillingStatus>({
+    queryKey: ['billing-status'],
+    queryFn: () => api.get('/billing/status').then((r) => r.data),
+  });
+
+  const { data: profile } = useQuery<Business>({
+    queryKey: ['business-profile'],
+    queryFn: () => api.get('/businesses/me/profile').then((r) => r.data),
+  });
+
+  // Deep-link from a "new offer" notification: /business/jobs?offers=<jobId>
+  // opens that job's offers dialog.
+  useEffect(() => {
+    const offers = new URLSearchParams(window.location.search).get('offers');
+    if (offers) setOffersJobId(offers);
+  }, []);
 
   // Live: refresh when a driver accepts one of our jobs, or any status changes.
   useEffect(() => {
@@ -60,8 +80,8 @@ export default function BusinessJobsPage() {
 
   const completeMutation = useMutation({
     mutationFn: (id: string) => api.post(`/jobs/${id}/complete`),
-    onSuccess: () => { toast.success('העבודה סומנה כהושלמה'); qc.invalidateQueries({ queryKey: ['business-jobs'] }); },
-    onError: (e: any) => toast.error(e.response?.data?.message ?? 'שגיאה'),
+    onSuccess: () => { toast.success('העבודה סומנה כהושלמה — הנהג קיבל תשלום'); setCompleteTarget(null); qc.invalidateQueries({ queryKey: ['business-jobs'] }); },
+    onError: (e: any) => { toast.error(e.response?.data?.message ?? 'שגיאה'); setCompleteTarget(null); },
   });
 
   const deleteMutation = useMutation({
@@ -84,6 +104,34 @@ export default function BusinessJobsPage() {
 
   return (
     <div className="space-y-8">
+      {profile && profile.phoneVerified === false && (
+        <Link
+          href="/verify-phone"
+          className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning-soft/50 p-3.5 transition-colors hover:bg-warning-soft"
+        >
+          <span className="icon-chip size-9 shrink-0 bg-warning-soft text-warning"><ShieldAlert className="size-4.5" /></span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-warning">אמת את מספר הטלפון</p>
+            <p className="text-xs text-muted-foreground">חובה לאמת את הטלפון כדי לפרסם עבודות</p>
+          </div>
+          <ArrowLeft className="size-4 shrink-0 text-warning" />
+        </Link>
+      )}
+
+      {billing && !billing.hasPaymentMethod && (
+        <Link
+          href="/business/billing"
+          className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning-soft/50 p-3.5 transition-colors hover:bg-warning-soft"
+        >
+          <span className="icon-chip size-9 shrink-0 bg-warning-soft text-warning"><CreditCard className="size-4.5" /></span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-warning">הוסף אמצעי תשלום</p>
+            <p className="text-xs text-muted-foreground">חובה להוסיף אמצעי תשלום כדי לפרסם עבודות</p>
+          </div>
+          <ArrowLeft className="size-4 shrink-0 text-warning" />
+        </Link>
+      )}
+
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">העבודות שלי</h1>
@@ -118,9 +166,19 @@ export default function BusinessJobsPage() {
                     showDriver
                     actions={(job) => (
                       <div className="flex items-center gap-2">
+                        {job.status === 'OPEN' && job.pricingMode === 'OFFERS' && (
+                          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setOffersJobId(job.id)}>
+                            <Gavel className="size-3.5" /> הצעות{job.offerCount ? ` (${job.offerCount})` : ''}
+                          </Button>
+                        )}
                         {['ACCEPTED', 'IN_PROGRESS'].includes(job.status) && (
-                          <Button size="sm" variant="outline" onClick={() => completeMutation.mutate(job.id)}>
+                          <Button size="sm" variant="outline" onClick={() => setCompleteTarget(job)}>
                             סמן כהושלם
+                          </Button>
+                        )}
+                        {['ACCEPTED', 'IN_PROGRESS'].includes(job.status) && job.driver?.phone && (
+                          <Button size="sm" variant="outline" className="gap-1.5" nativeButton={false} render={<a href={`tel:${job.driver.phone}`} />}>
+                            <Phone className="size-3.5" /> התקשר לנהג
                           </Button>
                         )}
                         {job.escrowStatus && job.escrowStatus !== 'NONE' && (
@@ -180,7 +238,31 @@ export default function BusinessJobsPage() {
         </DialogPortal>
       </Dialog>
 
+      <Dialog open={!!completeTarget} onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogContent className="max-w-sm">
+            <DialogTitle>לסמן את העבודה כהושלמה?</DialogTitle>
+            <DialogDescription className="mt-1">
+              <span className="font-medium text-foreground">{completeTarget?.title}</span>
+              <br />
+              פעולה זו <span className="font-semibold text-foreground">משחררת את התשלום לנהג</span> ואינה ניתנת לביטול.
+            </DialogDescription>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCompleteTarget(null)}>ביטול</Button>
+              <Button
+                onClick={() => completeTarget && completeMutation.mutate(completeTarget.id)}
+                disabled={completeMutation.isPending}
+              >
+                {completeMutation.isPending ? 'מסמן…' : 'אישור ותשלום לנהג'}
+              </Button>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+
       <ReceiptDialog jobId={receiptJobId} onClose={() => setReceiptJobId(null)} />
+      <OffersDialog jobId={offersJobId} onClose={() => setOffersJobId(null)} />
     </div>
   );
 }

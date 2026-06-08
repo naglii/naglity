@@ -4,6 +4,8 @@ export interface AuthUser {
   email: string | null;
   role: 'ADMIN' | 'DRIVER' | 'BUSINESS';
   profileId: string | null;
+  accountType?: 'INDIVIDUAL' | 'BUSINESS' | null;
+  phoneVerified?: boolean;
 }
 
 const USER_KEY = 'naglity_user';
