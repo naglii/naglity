@@ -7,7 +7,7 @@ import type { Role } from '@/types/api';
 import { Logo } from './Logo';
 import {
   Truck, CalendarDays, BarChart2, Briefcase, PlusCircle,
-  Building2, ClipboardList, TrendingUp, LifeBuoy, Inbox, CreditCard, Wallet, ArrowLeftRight,
+  Building2, ClipboardList, LifeBuoy, Inbox, CreditCard, Wallet, ArrowLeftRight,
   HandCoins, Search, Users,
 } from 'lucide-react';
 
@@ -33,7 +33,7 @@ const navByRole: Record<Role, { href: string; label: string; icon: React.Element
     { href: '/admin/customers', label: 'לקוחות', icon: Users },
     { href: '/admin/jobs', label: 'כל העבודות', icon: ClipboardList },
     { href: '/admin/transactions', label: 'תנועות כספים', icon: ArrowLeftRight },
-    { href: '/admin/revenue', label: 'הכנסות', icon: TrendingUp },
+    { href: '/admin/revenue', label: 'סטטיסטיקות', icon: BarChart2 },
   ],
 };
 
