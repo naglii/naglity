@@ -42,6 +42,7 @@ export default function BusinessJobsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const [receiptJobId, setReceiptJobId] = useState<string | null>(null);
   const [offersJobId, setOffersJobId] = useState<string | null>(null);
+  const [completeTarget, setCompleteTarget] = useState<Job | null>(null);
 
   const { data: jobs, isLoading } = useQuery<Job[]>({
     queryKey: ['business-jobs'],
@@ -79,8 +80,8 @@ export default function BusinessJobsPage() {
 
   const completeMutation = useMutation({
     mutationFn: (id: string) => api.post(`/jobs/${id}/complete`),
-    onSuccess: () => { toast.success('העבודה סומנה כהושלמה'); qc.invalidateQueries({ queryKey: ['business-jobs'] }); },
-    onError: (e: any) => toast.error(e.response?.data?.message ?? 'שגיאה'),
+    onSuccess: () => { toast.success('העבודה סומנה כהושלמה — הנהג קיבל תשלום'); setCompleteTarget(null); qc.invalidateQueries({ queryKey: ['business-jobs'] }); },
+    onError: (e: any) => { toast.error(e.response?.data?.message ?? 'שגיאה'); setCompleteTarget(null); },
   });
 
   const deleteMutation = useMutation({
@@ -171,7 +172,7 @@ export default function BusinessJobsPage() {
                           </Button>
                         )}
                         {['ACCEPTED', 'IN_PROGRESS'].includes(job.status) && (
-                          <Button size="sm" variant="outline" onClick={() => completeMutation.mutate(job.id)}>
+                          <Button size="sm" variant="outline" onClick={() => setCompleteTarget(job)}>
                             סמן כהושלם
                           </Button>
                         )}
@@ -231,6 +232,29 @@ export default function BusinessJobsPage() {
                 disabled={deleteMutation.isPending}
               >
                 {deleteMutation.isPending ? 'מוחק…' : 'מחק עבודה'}
+              </Button>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+
+      <Dialog open={!!completeTarget} onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogContent className="max-w-sm">
+            <DialogTitle>לסמן את העבודה כהושלמה?</DialogTitle>
+            <DialogDescription className="mt-1">
+              <span className="font-medium text-foreground">{completeTarget?.title}</span>
+              <br />
+              פעולה זו <span className="font-semibold text-foreground">משחררת את התשלום לנהג</span> ואינה ניתנת לביטול.
+            </DialogDescription>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCompleteTarget(null)}>ביטול</Button>
+              <Button
+                onClick={() => completeTarget && completeMutation.mutate(completeTarget.id)}
+                disabled={completeMutation.isPending}
+              >
+                {completeMutation.isPending ? 'מסמן…' : 'אישור ותשלום לנהג'}
               </Button>
             </div>
           </DialogContent>
