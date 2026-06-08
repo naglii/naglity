@@ -8,8 +8,9 @@ import api from '@/lib/api';
 import { getUser, setAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { OtpInput } from '@/components/auth/OtpInput';
-import { ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Loader2, Pencil } from 'lucide-react';
 
 export default function VerifyPhonePage() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export default function VerifyPhonePage() {
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [resendIn, setResendIn] = useState(0);
+  const [editing, setEditing] = useState(false);
+  const [newPhone, setNewPhone] = useState('');
   const lastChecked = useRef('');
 
   const send = async () => {
@@ -31,6 +34,26 @@ export default function VerifyPhonePage() {
       toast.success('קוד אימות נשלח ב-SMS (לבדיקה: 0000)');
     } catch (e: any) {
       toast.error(e.response?.data?.message ?? 'שגיאה בשליחת הקוד');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const changePhone = async () => {
+    const p = newPhone.trim();
+    if (p.length < 5) { toast.error('מספר טלפון לא תקין'); return; }
+    setSending(true);
+    try {
+      const r = await api.post('/auth/phone/change', { phone: p });
+      setPhone(r.data?.phone ?? p);
+      setEditing(false);
+      setVerified(false);
+      setCode('');
+      lastChecked.current = '';
+      setResendIn(30);
+      toast.success('קוד אימות נשלח למספר החדש (לבדיקה: 0000)');
+    } catch (e: any) {
+      toast.error(e.response?.data?.message ?? 'שגיאה בעדכון המספר');
     } finally {
       setSending(false);
     }
@@ -91,6 +114,29 @@ export default function VerifyPhonePage() {
           שלחנו קוד אימות בן 4 ספרות אל{' '}
           <bdi className="font-semibold text-foreground">{phone || 'הטלפון שלך'}</bdi>
         </p>
+
+        {!editing ? (
+          <button
+            type="button"
+            onClick={() => { setNewPhone(phone); setEditing(true); }}
+            className="mt-1.5 inline-flex items-center gap-1 text-xs text-brand-strong hover:underline"
+          >
+            <Pencil className="size-3" /> שנה מספר טלפון
+          </button>
+        ) : (
+          <div className="mx-auto mt-3 flex max-w-xs items-center gap-2">
+            <Input
+              value={newPhone}
+              onChange={(e) => setNewPhone(e.target.value)}
+              inputMode="tel"
+              placeholder="050-0000000"
+              className="h-9 text-center"
+              dir="ltr"
+            />
+            <Button size="sm" disabled={sending} onClick={changePhone}>שלח קוד</Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>ביטול</Button>
+          </div>
+        )}
 
         <div className="mt-6">
           <OtpInput

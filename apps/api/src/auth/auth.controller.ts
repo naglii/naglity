@@ -57,6 +57,13 @@ export class AuthController {
     return { verified: await this.authService.verifyAccountPhone(user.id, code ?? '') };
   }
 
+  @Post('phone/change')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  async changePhone(@CurrentUser() user: any, @Body('phone') phone: string) {
+    return this.authService.changeAccountPhone(user.id, phone ?? '');
+  }
+
   @Post('logout')
   @HttpCode(200)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -15,7 +15,8 @@ import { CAPACITY_BUCKETS } from '@/lib/jobAttributes';
 import {
   Dialog, DialogPortal, DialogOverlay, DialogContent, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { Truck, Weight, Ruler, CheckCircle2, UserPlus, Search } from 'lucide-react';
+import Link from 'next/link';
+import { Truck, Weight, Ruler, CheckCircle2, UserPlus, Search, PlusCircle } from 'lucide-react';
 
 const VEHICLE_LABEL: Record<string, string> = { crane_truck: 'משאית מנוף' };
 const vlabel = (v: string) => VEHICLE_LABEL[v] ?? v;
@@ -47,7 +48,12 @@ function InviteDialog({ driver, onClose }: { driver: DriverDirectoryItem | null;
             {isLoading ? (
               Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)
             ) : openJobs.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">אין לך עבודות פתוחות — פרסם עבודה תחילה.</p>
+              <div className="py-8 text-center">
+                <p className="text-sm text-muted-foreground">אין לך עבודות פתוחות לשיבוץ.</p>
+                <Button size="sm" className="mt-3 gap-1.5" nativeButton={false} render={<Link href="/business/jobs/new" />}>
+                  <PlusCircle className="size-4" /> פרסם עבודה
+                </Button>
+              </div>
             ) : (
               openJobs.map((j) => (
                 <button

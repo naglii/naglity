@@ -31,6 +31,17 @@ export class AuthService {
     return ok;
   }
 
+  /** Change the account phone (resets verification) and send a code to the new number. */
+  async changeAccountPhone(userId: string, phone: string) {
+    const trimmed = (phone ?? '').trim();
+    if (trimmed.length < 5) throw new BadRequestException('מספר טלפון לא תקין');
+    const business = await this.prisma.business.findUnique({ where: { userId } });
+    if (!business) throw new BadRequestException('אין מספר טלפון בחשבון');
+    await this.prisma.business.update({ where: { id: business.id }, data: { phone: trimmed, phoneVerified: false } });
+    await this.sms.sendCode(trimmed);
+    return { phone: trimmed };
+  }
+
   async login(identifier: string, password: string) {
     // Allow login by username or email, case-insensitively
     const user = await this.prisma.user.findFirst({
