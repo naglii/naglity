@@ -1,6 +1,16 @@
 export type Role = 'ADMIN' | 'DRIVER' | 'BUSINESS';
 export type JobStatus = 'OPEN' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'PAID' | 'DELETED';
-export type NotificationType = 'JOB_ACCEPTED_BY_DRIVER' | 'JOB_CANCELLED_BY_DRIVER' | 'JOB_DELETED_BY_BUSINESS' | 'SIGNUP_REQUEST' | 'PAYMENT_FAILED';
+export type NotificationType =
+  | 'JOB_ACCEPTED_BY_DRIVER'
+  | 'JOB_CANCELLED_BY_DRIVER'
+  | 'JOB_DELETED_BY_BUSINESS'
+  | 'SIGNUP_REQUEST'
+  | 'PAYMENT_FAILED'
+  | 'NEW_OFFER'
+  | 'OFFER_ACCEPTED'
+  | 'OFFER_DECLINED'
+  | 'JOB_INVITE'
+  | 'NEW_REVIEW';
 
 export interface Notification {
   id: string;

@@ -50,6 +50,13 @@ export default function BusinessJobsPage() {
     queryFn: () => api.get('/businesses/me/jobs').then((r) => r.data),
   });
 
+  // Deep-link from a "new offer" notification: /business/jobs?offers=<jobId>
+  // opens that job's offers dialog.
+  useEffect(() => {
+    const offers = new URLSearchParams(window.location.search).get('offers');
+    if (offers) setOffersJobId(offers);
+  }, []);
+
   // Live: refresh when a driver accepts one of our jobs, or any status changes.
   useEffect(() => {
     const socket = initSocket();

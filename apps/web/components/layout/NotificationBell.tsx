@@ -14,6 +14,22 @@ import type { Notification } from '@/types/api';
 
 const PREVIEW_COUNT = 5;
 
+/** Where clicking a notification should take the user. */
+function hrefForNotification(n: Notification): string | undefined {
+  switch (n.type) {
+    case 'SIGNUP_REQUEST':
+      return '/admin/requests';
+    case 'NEW_OFFER':
+      return n.jobId ? `/business/jobs?offers=${n.jobId}` : '/business/jobs';
+    case 'OFFER_ACCEPTED':
+      return '/driver/schedule';
+    case 'JOB_INVITE':
+      return '/driver/feed';
+    default:
+      return undefined;
+  }
+}
+
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -136,7 +152,7 @@ export function NotificationBell() {
           ) : (
             <>
               {preview.map((n) => {
-                const href = n.type === 'SIGNUP_REQUEST' ? '/admin/requests' : undefined;
+                const href = hrefForNotification(n);
                 const className = cn(
                   'block px-3.5 py-3 border-b last:border-0',
                   !n.read ? 'bg-primary/5' : '',
