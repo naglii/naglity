@@ -20,6 +20,7 @@ export default function AdminBusinessesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [prefill, setPrefill] = useState<Prefill | undefined>();
+  const [typeFilter, setTypeFilter] = useState<'all' | 'BUSINESS' | 'INDIVIDUAL'>('all');
 
   // Opened from a signup request? Pull the prefilled details and open the form.
   useEffect(() => {
@@ -46,8 +47,8 @@ export default function AdminBusinessesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">עסקים</h1>
-          <p className="text-sm text-muted-foreground">{data?.length ?? 0} עסקים רשומים</p>
+          <h1 className="text-xl font-bold">לקוחות ועסקים</h1>
+          <p className="text-sm text-muted-foreground">{data?.length ?? 0} חשבונות רשומים</p>
         </div>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger render={<Button size="lg" className="gap-1.5 font-semibold" />}>
@@ -62,12 +63,25 @@ export default function AdminBusinessesPage() {
         </Sheet>
       </div>
 
+      <div className="flex flex-wrap gap-1.5">
+        {([['all', 'הכל'], ['BUSINESS', 'עסקים'], ['INDIVIDUAL', 'לקוחות']] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTypeFilter(key)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${typeFilter === key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? <Skeleton className="h-64 rounded-xl" /> : (
         <div className="rounded-xl border bg-card overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead className="font-semibold">שם</TableHead>
+                <TableHead className="font-semibold">סוג</TableHead>
                 <TableHead className="font-semibold">שם משתמש</TableHead>
                 <TableHead className="font-semibold">טלפון</TableHead>
                 <TableHead className="font-semibold">הצטרף</TableHead>
@@ -75,7 +89,9 @@ export default function AdminBusinessesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(data ?? []).map((b) => (
+              {(data ?? [])
+                .filter((b) => typeFilter === 'all' || (b.accountType ?? 'BUSINESS') === typeFilter)
+                .map((b) => (
                 <TableRow key={b.id} className="transition-colors hover:bg-accent/40">
                   <TableCell className="font-medium">
                     <span className="flex items-center gap-2">
@@ -83,6 +99,11 @@ export default function AdminBusinessesPage() {
                         {b.name.trim().charAt(0) || '?'}
                       </span>
                       {b.name}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${(b.accountType ?? 'BUSINESS') === 'INDIVIDUAL' ? 'bg-info-soft text-info' : 'bg-brand-soft text-brand-strong'}`}>
+                      {(b.accountType ?? 'BUSINESS') === 'INDIVIDUAL' ? 'לקוח' : 'עסק'}
                     </span>
                   </TableCell>
                   <TableCell>{b.user.username}</TableCell>

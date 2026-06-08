@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SmsService } from '../sms/sms.service.js';
 import bcrypt from 'bcrypt';
 import type { RegisterDto } from './dto/register.dto.js';
 
@@ -9,7 +10,13 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private sms: SmsService,
   ) {}
+
+  /** Send an SMS verification code to a phone (fake provider logs "0000"). */
+  sendPhoneCode(phone: string) {
+    return this.sms.sendCode(phone);
+  }
 
   async login(identifier: string, password: string) {
     // Allow login by username or email, case-insensitively
@@ -48,6 +55,10 @@ export class AuthService {
 
   /** Self-serve customer signup: creates an INDIVIDUAL client account and logs them in. */
   async register(dto: RegisterDto) {
+    if (!this.sms.verifyCode(dto.phone, dto.code)) {
+      throw new BadRequestException('קוד האימות שגוי');
+    }
+
     const orClauses: any[] = [{ username: { equals: dto.username, mode: 'insensitive' } }];
     if (dto.email) orClauses.push({ email: { equals: dto.email, mode: 'insensitive' } });
     const exists = await this.prisma.user.findFirst({ where: { OR: orClauses } });

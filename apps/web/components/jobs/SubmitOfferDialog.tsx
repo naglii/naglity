@@ -24,9 +24,9 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-export function SubmitOfferDialog({ job }: { job: Job }) {
+export function SubmitOfferDialog({ job, alreadyOffered }: { job: Job; alreadyOffered?: boolean }) {
   const [open, setOpen] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(!!alreadyOffered);
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),

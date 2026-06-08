@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, Res, HttpCode, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -37,6 +37,14 @@ export class AuthController {
     const { accessToken, user } = await this.authService.register(dto);
     res.cookie('access_token', accessToken, COOKIE_OPTS);
     return { accessToken, user };
+  }
+
+  @Post('phone/send')
+  @HttpCode(200)
+  async sendPhoneCode(@Body('phone') phone: string) {
+    if (!phone || phone.trim().length < 5) throw new BadRequestException('נא להזין מספר טלפון תקין');
+    await this.authService.sendPhoneCode(phone);
+    return { ok: true };
   }
 
   @Post('logout')

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { BrandMark, CraneGlyph } from '@/components/layout/Logo';
-import { Search, BadgePercent, ShieldCheck } from 'lucide-react';
+import { Search, BadgePercent, ShieldCheck, MessageSquare } from 'lucide-react';
 
 const schema = z.object({
   name: z.string().min(2, 'נא להזין שם מלא'),
@@ -23,6 +23,7 @@ const schema = z.object({
   email: z.string().email('אימייל לא תקין').optional().or(z.literal('')),
   username: z.string().min(3, 'מינימום 3 תווים'),
   password: z.string().min(6, 'מינימום 6 תווים'),
+  code: z.string().min(4, 'הזן את קוד האימות'),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -35,10 +36,35 @@ const perks = [
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sentPhone, setSentPhone] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+
+  // If the phone changes after a code was sent, force re-verification of the new number.
+  const phoneVal = watch('phone');
+  useEffect(() => {
+    if (codeSent && (phoneVal || '').trim() !== sentPhone) setCodeSent(false);
+  }, [phoneVal, codeSent, sentPhone]);
+
+  const sendCode = async () => {
+    const phone = (watch('phone') || '').trim();
+    if (phone.length < 5) { toast.error('נא להזין מספר טלפון תקין'); return; }
+    setSending(true);
+    try {
+      await api.post('/auth/phone/send', { phone });
+      setSentPhone(phone);
+      setCodeSent(true);
+      toast.success('קוד אימות נשלח ב-SMS (לבדיקה: 0000)');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? 'שגיאה בשליחת הקוד');
+    } finally {
+      setSending(false);
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -124,6 +150,23 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* phone verification (fake SMS — code 0000) */}
+            <div>
+              {!codeSent ? (
+                <Button type="button" variant="outline" size="lg" className="w-full gap-1.5" disabled={sending} onClick={sendCode}>
+                  <MessageSquare className="size-4" />
+                  {sending ? 'שולח…' : 'שלח קוד אימות ב-SMS'}
+                </Button>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="code">קוד אימות מה-SMS</Label>
+                  <Input id="code" inputMode="numeric" maxLength={6} placeholder="0000" {...register('code')} />
+                  {errors.code && <p className="text-xs text-destructive">{errors.code.message}</p>}
+                  <button type="button" onClick={sendCode} className="text-xs text-brand-strong hover:underline">שלח קוד מחדש</button>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="email">אימייל <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
               <Input id="email" type="email" placeholder="you@email.com" {...register('email')} />
@@ -143,9 +186,12 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full font-semibold" disabled={loading}>
+            <Button type="submit" size="lg" className="w-full font-semibold" disabled={loading || !codeSent}>
               {loading ? 'יוצר חשבון…' : 'צור חשבון והתחל'}
             </Button>
+            {!codeSent && (
+              <p className="text-center text-xs text-muted-foreground">שלח ואמת את הטלפון כדי להמשיך</p>
+            )}
           </form>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">

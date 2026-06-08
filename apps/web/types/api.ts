@@ -55,6 +55,8 @@ export interface Business {
   userId: string;
   name: string;
   phone: string;
+  location?: string | null;
+  accountType?: 'INDIVIDUAL' | 'BUSINESS';
   createdAt: string;
   updatedAt: string;
 }

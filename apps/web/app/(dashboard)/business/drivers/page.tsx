@@ -7,8 +7,11 @@ import api from '@/lib/api';
 import type { DriverDirectoryItem, Job } from '@/types/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingStars } from '@/components/reviews/RatingStars';
+import { CAPACITY_BUCKETS } from '@/lib/jobAttributes';
 import {
   Dialog, DialogPortal, DialogOverlay, DialogContent, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -16,6 +19,7 @@ import { Truck, Weight, Ruler, CheckCircle2, UserPlus, Search } from 'lucide-rea
 
 const VEHICLE_LABEL: Record<string, string> = { crane_truck: 'משאית מנוף' };
 const vlabel = (v: string) => VEHICLE_LABEL[v] ?? v;
+const CAPACITY_ITEMS = CAPACITY_BUCKETS.map((b) => ({ value: b.key, label: b.label }));
 
 function InviteDialog({ driver, onClose }: { driver: DriverDirectoryItem | null; onClose: () => void }) {
   const open = !!driver;
@@ -70,9 +74,22 @@ function InviteDialog({ driver, onClose }: { driver: DriverDirectoryItem | null;
 export default function DriverDirectoryPage() {
   const [inviteDriver, setInviteDriver] = useState<DriverDirectoryItem | null>(null);
 
+  const [search, setSearch] = useState('');
+  const [capacity, setCapacity] = useState('all');
+
   const { data: drivers = [], isLoading } = useQuery<DriverDirectoryItem[]>({
     queryKey: ['driver-directory'],
     queryFn: () => api.get('/drivers/directory').then((r) => r.data),
+  });
+
+  const filtered = drivers.filter((d) => {
+    const q = search.trim().toLowerCase();
+    if (q && !d.name.toLowerCase().includes(q)) return false;
+    if (capacity !== 'all') {
+      const b = CAPACITY_BUCKETS.find((x) => x.key === capacity);
+      if (b && !b.test(d.craneCapacityTons ?? undefined)) return false;
+    }
+    return true;
   });
 
   return (
@@ -82,16 +99,31 @@ export default function DriverDirectoryPage() {
         <p className="text-sm text-muted-foreground">עיין בנהגים, בדוק דירוג וניסיון — והזמן את המתאים לעבודה שלך</p>
       </div>
 
+      {!isLoading && drivers.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[180px] flex-1">
+            <Search className="pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 start-2.5 text-muted-foreground" />
+            <Input className="h-9 ps-8" placeholder="חיפוש לפי שם נהג" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <Select value={capacity} onValueChange={(v) => setCapacity(v ?? 'all')} items={CAPACITY_ITEMS}>
+            <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {CAPACITY_BUCKETS.map((b) => <SelectItem key={b.key} value={b.key}>{b.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>
-      ) : drivers.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <span className="icon-chip size-14 bg-accent text-brand-strong"><Search className="size-6" /></span>
-          <p className="mt-3 font-semibold">אין נהגים להצגה עדיין</p>
+          <p className="mt-3 font-semibold">{drivers.length === 0 ? 'אין נהגים להצגה עדיין' : 'אין נהגים שתואמים את הסינון'}</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {drivers.map((d) => (
+          {filtered.map((d) => (
             <Card key={d.id} className="p-0">
               <CardContent className="space-y-3 p-4">
                 <div className="flex items-center gap-3">
