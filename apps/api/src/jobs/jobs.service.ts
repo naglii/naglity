@@ -32,9 +32,17 @@ export class JobsService {
       throw new BadRequestException('יש להוסיף אמצעי תשלום לפני פרסום עבודה');
     }
 
+    // FIXED jobs need a price now; OFFERS jobs have no price until an offer is picked.
+    const isOffers = dto.pricingMode === 'OFFERS';
+    if (!isOffers && (!dto.grossPriceCents || dto.grossPriceCents < 1)) {
+      throw new BadRequestException('יש להזין מחיר לעבודה');
+    }
+    const grossPriceCents = isOffers ? 0 : dto.grossPriceCents;
+
     const job = await this.prisma.job.create({
       data: {
         ...dto,
+        grossPriceCents,
         scheduledAt: new Date(dto.scheduledAt),
         estimatedEndAt: new Date(dto.estimatedEndAt),
         businessId: business.id,

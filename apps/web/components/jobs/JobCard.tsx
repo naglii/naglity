@@ -73,8 +73,12 @@ export function JobCard({ job, onAccepted, invited, offered }: Props) {
               <Banknote className="size-3.5" />
               תשלום נטו
             </div>
-            <p className="mt-1.5 text-2xl font-black leading-none tracking-tight">{formatPrice(job.netPriceCents)}</p>
-            <p className="mt-1.5 text-xs text-muted-foreground">ישירות אליך</p>
+            <p className="mt-1.5 text-2xl font-black leading-none tracking-tight">
+              {job.pricingMode === 'OFFERS' && job.grossPriceCents === 0 ? 'לפי הצעה' : formatPrice(job.netPriceCents)}
+            </p>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {job.pricingMode === 'OFFERS' && job.grossPriceCents === 0 ? 'הגש את הצעתך' : 'ישירות אליך'}
+            </p>
           </div>
         </div>
 

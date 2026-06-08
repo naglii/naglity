@@ -13,8 +13,9 @@ export class CreateJobDto {
   @IsOptional()
   description?: string;
 
+  // 0 is allowed for OFFERS jobs (price is set when the poster picks an offer).
   @IsInt()
-  @Min(1)
+  @Min(0)
   grossPriceCents: number;
 
   @IsDateString()

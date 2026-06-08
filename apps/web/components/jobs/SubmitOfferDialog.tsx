@@ -30,7 +30,7 @@ export function SubmitOfferDialog({ job, alreadyOffered }: { job: Job; alreadyOf
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { amountShekels: Math.round(job.grossPriceCents / 100), etaMinutes: '', note: '' },
+    defaultValues: { amountShekels: job.grossPriceCents > 0 ? Math.round(job.grossPriceCents / 100) : undefined, etaMinutes: '', note: '' },
   });
   const amount = Number(watch('amountShekels')) || 0;
 
