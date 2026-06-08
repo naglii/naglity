@@ -58,7 +58,8 @@ export function TopBar({ user, onMenuClick }: Props) {
   };
 
   const initials = (user.username ?? user.email ?? '??').slice(0, 2).toUpperCase();
-  const role = roleLabel[user.role] ?? user.role;
+  const isClient = user.role === 'BUSINESS' && user.accountType === 'INDIVIDUAL';
+  const role = isClient ? 'לקוח' : (roleLabel[user.role] ?? user.role);
 
   return (
     <header className="h-16 border-b bg-topbar/80 backdrop-blur-md flex items-center gap-3 px-4 md:px-6 shrink-0 sticky top-0 z-30">

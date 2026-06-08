@@ -35,6 +35,7 @@ const schema = z.object({
   title: z.string().min(1, 'שדה חובה'),
   description: z.string().optional(),
   grossPriceShekels: z.coerce.number().min(1, 'מינימום ₪1'),
+  pricingMode: z.enum(['FIXED', 'OFFERS']),
   scheduledDate: z.string().min(1, 'שדה חובה'),
   scheduledTime: z.string().min(1, 'שדה חובה'),
   travelTimeHours: z.coerce.number().min(0.5, 'מינימום 30 דקות').max(12, 'מקסימום 12 שעות'),
@@ -64,10 +65,12 @@ function Err({ msg }: { msg?: string }) {
 
 export function CreateJobForm() {
   const router = useRouter();
-  const { register, handleSubmit, watch, control, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, control, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { pricingMode: 'FIXED' },
   });
 
+  const pricingMode = watch('pricingMode') ?? 'FIXED';
   const grossShekels = Number(watch('grossPriceShekels')) || 0;
   const grossC = Math.round(grossShekels * 100);
   const minDate = format(new Date(), 'yyyy-MM-dd');
@@ -83,6 +86,7 @@ export function CreateJobForm() {
         title: data.title,
         description: data.description,
         grossPriceCents: Math.round(data.grossPriceShekels * 100),
+        pricingMode: data.pricingMode,
         scheduledAt: scheduledAt.toISOString(),
         estimatedEndAt: new Date(scheduledAt.getTime() + data.travelTimeHours * 60 * 60 * 1000).toISOString(),
         fromLocation: data.fromLocation,
@@ -196,7 +200,27 @@ export function CreateJobForm() {
                   <Err msg={errors.travelTimeHours?.message} />
                 </div>
                 <div>
-                  <Label className="mb-1.5 block">מחיר (₪)</Label>
+                  <Label className="mb-1.5 block">אופן התמחור</Label>
+                  <div className="inline-flex w-full rounded-lg border bg-card p-0.5">
+                    {([['FIXED', 'מחיר קבוע'], ['OFFERS', 'פתוח להצעות']] as const).map(([val, label]) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setValue('pricingMode', val)}
+                        className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${pricingMode === val ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {pricingMode === 'FIXED'
+                      ? 'הנהג הראשון שמתאים מקבל את העבודה במחיר שתקבע.'
+                      : 'נהגים יגישו הצעות מחיר — ותבחר את המתאים לך.'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">{pricingMode === 'OFFERS' ? 'תקציב משוער (₪)' : 'מחיר (₪)'}</Label>
                   <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
                   <Err msg={errors.grossPriceShekels?.message} />
                 </div>

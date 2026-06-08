@@ -19,6 +19,7 @@ export interface AuthUser {
   email: string | null;
   role: Role;
   profileId: string | null;
+  accountType?: 'INDIVIDUAL' | 'BUSINESS' | null;
 }
 
 export interface LoginResponse {
@@ -65,11 +66,59 @@ export interface Job {
   liftHeightMeters?: number | null;
   loadType?: string | null;
   accessNotes?: string | null;
+  pricingMode?: PricingMode;
+  offerCount?: number;
   createdAt: string;
   updatedAt: string;
   business?: { id: string; name: string; phone?: string };
   driver?: { id: string; name: string; phone?: string } | null;
   escrowStatus?: EscrowStatus;
+}
+
+export type PricingMode = 'FIXED' | 'OFFERS';
+export type OfferStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'WITHDRAWN';
+
+export interface DriverRating {
+  avg: number;
+  count: number;
+}
+
+export interface DriverDirectoryItem {
+  id: string;
+  name: string;
+  vehicleType: string;
+  craneCapacityTons?: number | null;
+  liftHeightMeters?: number | null;
+  rating: DriverRating;
+  completedJobs: number;
+}
+
+export interface JobOffer {
+  id: string;
+  jobId: string;
+  driverId: string;
+  amountCents: number;
+  note?: string | null;
+  etaMinutes?: number | null;
+  status: OfferStatus;
+  createdAt: string;
+  driver?: {
+    id: string;
+    name: string;
+    vehicleType?: string;
+    craneCapacityTons?: number | null;
+    liftHeightMeters?: number | null;
+    rating?: DriverRating;
+  };
+  job?: {
+    id: string;
+    title: string;
+    fromLocation: string;
+    toLocation: string;
+    scheduledAt: string;
+    status: JobStatus;
+    grossPriceCents: number;
+  };
 }
 
 export type EscrowStatus = 'NONE' | 'IN_ESCROW' | 'RELEASED' | 'REFUNDED';
@@ -177,6 +226,7 @@ export interface CreateJobDto {
   title: string;
   description?: string;
   grossPriceCents: number;
+  pricingMode?: PricingMode;
   scheduledAt: string;
   estimatedEndAt: string;
   fromLocation: string;

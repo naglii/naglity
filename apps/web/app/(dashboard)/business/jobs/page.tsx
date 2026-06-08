@@ -11,9 +11,11 @@ import { initSocket } from '@/hooks/useSocket';
 import type { Job, JobStatus } from '@/types/api';
 import { JobTable } from '@/components/jobs/JobTable';
 import { ReceiptDialog } from '@/components/jobs/ReceiptDialog';
+import { OffersDialog } from '@/components/jobs/OffersDialog';
+import { ReviewDialog } from '@/components/reviews/ReviewDialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Receipt } from 'lucide-react';
+import { PlusCircle, Receipt, Gavel, Star } from 'lucide-react';
 import {
   Dialog, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -40,6 +42,8 @@ export default function BusinessJobsPage() {
   const qc = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const [receiptJobId, setReceiptJobId] = useState<string | null>(null);
+  const [offersJobId, setOffersJobId] = useState<string | null>(null);
+  const [reviewJob, setReviewJob] = useState<Job | null>(null);
 
   const { data: jobs, isLoading } = useQuery<Job[]>({
     queryKey: ['business-jobs'],
@@ -118,9 +122,19 @@ export default function BusinessJobsPage() {
                     showDriver
                     actions={(job) => (
                       <div className="flex items-center gap-2">
+                        {job.status === 'OPEN' && job.pricingMode === 'OFFERS' && (
+                          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setOffersJobId(job.id)}>
+                            <Gavel className="size-3.5" /> הצעות{job.offerCount ? ` (${job.offerCount})` : ''}
+                          </Button>
+                        )}
                         {['ACCEPTED', 'IN_PROGRESS'].includes(job.status) && (
                           <Button size="sm" variant="outline" onClick={() => completeMutation.mutate(job.id)}>
                             סמן כהושלם
+                          </Button>
+                        )}
+                        {['COMPLETED', 'PAID'].includes(job.status) && job.driverId && (
+                          <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setReviewJob(job)}>
+                            <Star className="size-3.5" /> דרג נהג
                           </Button>
                         )}
                         {job.escrowStatus && job.escrowStatus !== 'NONE' && (
@@ -181,6 +195,12 @@ export default function BusinessJobsPage() {
       </Dialog>
 
       <ReceiptDialog jobId={receiptJobId} onClose={() => setReceiptJobId(null)} />
+      <OffersDialog jobId={offersJobId} onClose={() => setOffersJobId(null)} />
+      <ReviewDialog
+        jobId={reviewJob?.id ?? null}
+        title={reviewJob ? `דרג את הנהג עבור "${reviewJob.title}"` : undefined}
+        onClose={() => setReviewJob(null)}
+      />
     </div>
   );
 }

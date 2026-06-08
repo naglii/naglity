@@ -8,11 +8,13 @@ import { Logo } from './Logo';
 import {
   Truck, CalendarDays, BarChart2, Briefcase, PlusCircle,
   Building2, ClipboardList, TrendingUp, LifeBuoy, Inbox, CreditCard, Wallet, ArrowLeftRight,
+  HandCoins, Search,
 } from 'lucide-react';
 
 const navByRole: Record<Role, { href: string; label: string; icon: React.ElementType }[]> = {
   DRIVER: [
     { href: '/driver/feed', label: 'עבודות זמינות', icon: Truck },
+    { href: '/driver/offers', label: 'ההצעות שלי', icon: HandCoins },
     { href: '/driver/schedule', label: 'לוח זמנים', icon: CalendarDays },
     { href: '/driver/payouts', label: 'תשלומים', icon: Wallet },
     { href: '/driver/stats', label: 'סטטיסטיקות', icon: BarChart2 },
@@ -20,6 +22,7 @@ const navByRole: Record<Role, { href: string; label: string; icon: React.Element
   BUSINESS: [
     { href: '/business/jobs', label: 'העבודות שלי', icon: Briefcase },
     { href: '/business/jobs/new', label: 'פרסם עבודה', icon: PlusCircle },
+    { href: '/business/drivers', label: 'מצא נהג', icon: Search },
     { href: '/business/billing', label: 'תשלומים', icon: CreditCard },
     { href: '/business/stats', label: 'סטטיסטיקות', icon: BarChart2 },
   ],

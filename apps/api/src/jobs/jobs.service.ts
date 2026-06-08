@@ -4,6 +4,8 @@ import { JobsGateway } from '../gateway/jobs.gateway.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PaymentsService } from '../payments/payments.service.js';
 import type { CreateJobDto } from './dto/create-job.dto.js';
+import type { CreateOfferDto } from './dto/create-offer.dto.js';
+import type { CreateReviewDto } from './dto/create-review.dto.js';
 
 function isSameCalendarDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() &&
@@ -115,6 +117,7 @@ export class JobsService {
       const job = await tx.job.findUnique({ where: { id: jobId } });
       if (!job) throw new NotFoundException('Job not found');
       if (job.status !== 'OPEN') throw new ConflictException('Job is no longer available');
+      if (job.pricingMode === 'OFFERS') throw new BadRequestException('עבודה זו פתוחה להצעות — שלח הצעה');
 
       const overlap = await tx.job.findFirst({
         where: {
@@ -355,5 +358,208 @@ export class JobsService {
 
     this.gateway.emitJobUpdated(jobId, newStatus, userId);
     return { success: true };
+  }
+
+  // ── Offers (open-to-offers jobs) ───────────────────────────────────────────
+
+  /** A driver submits/updates a quote on an OFFERS job. */
+  async submitOffer(jobId: string, userId: string, dto: CreateOfferDto) {
+    const driver = await this.prisma.driver.findUnique({ where: { userId } });
+    if (!driver) throw new ForbiddenException('Driver profile not found');
+    if (!driver.payoutsEnabled) {
+      throw new BadRequestException('יש להגדיר אמצעי לקבלת תשלום לפני שליחת הצעה');
+    }
+
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: { business: { select: { userId: true } } },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+    if ((job as any).pricingMode !== 'OFFERS') throw new BadRequestException('עבודה זו אינה פתוחה להצעות');
+    if ((job as any).status !== 'OPEN') throw new ConflictException('העבודה כבר אינה פתוחה');
+
+    const offer = await this.prisma.jobOffer.upsert({
+      where: { jobId_driverId: { jobId, driverId: driver.id } },
+      create: { jobId, driverId: driver.id, amountCents: dto.amountCents, note: dto.note ?? null, etaMinutes: dto.etaMinutes ?? null, status: 'PENDING' },
+      update: { amountCents: dto.amountCents, note: dto.note ?? null, etaMinutes: dto.etaMinutes ?? null, status: 'PENDING' },
+    });
+
+    await this.notifications.create(
+      (job as any).business.userId,
+      'NEW_OFFER',
+      'הצעה חדשה',
+      `${driver.name} הציע ₪${Math.round(dto.amountCents / 100)} עבור "${(job as any).title}"`,
+      jobId,
+    );
+    this.gateway.emitJobUpdated(jobId, (job as any).status, (job as any).business.userId);
+    return offer;
+  }
+
+  /** Offers on a job, for the owning poster. No driver phone numbers exposed. */
+  async listOffers(jobId: string, userId: string) {
+    const business = await this.prisma.business.findUnique({ where: { userId } });
+    if (!business) throw new ForbiddenException('Business profile not found');
+    const job = await this.prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) throw new NotFoundException('Job not found');
+    if ((job as any).businessId !== business.id) throw new ForbiddenException('Not your job');
+
+    const offers = await this.prisma.jobOffer.findMany({
+      where: { jobId },
+      include: { driver: { select: { id: true, name: true, vehicleType: true, craneCapacityTons: true, liftHeightMeters: true } } },
+      orderBy: [{ status: 'asc' }, { amountCents: 'asc' }],
+    });
+
+    // Attach each driver's rating (no phone — privacy).
+    const withRating = await Promise.all(
+      offers.map(async (o: any) => ({ ...o, driver: { ...o.driver, rating: await this.driverRating(o.driverId) } })),
+    );
+    return withRating;
+  }
+
+  /** The poster picks a driver's offer → assign, set the price, charge escrow. */
+  async acceptOffer(jobId: string, offerId: string, userId: string) {
+    const business = await this.prisma.business.findUnique({ where: { userId } });
+    if (!business) throw new ForbiddenException('Business profile not found');
+
+    const offer = await this.prisma.jobOffer.findUnique({
+      where: { id: offerId },
+      include: {
+        driver: { select: { id: true, name: true, userId: true } },
+        job: { include: { business: { select: { userId: true, stripeCustomerId: true } } } },
+      },
+    });
+    if (!offer || (offer as any).jobId !== jobId) throw new NotFoundException('Offer not found');
+    const job = (offer as any).job;
+    if (job.businessId !== business.id) throw new ForbiddenException('Not your job');
+    if (job.status !== 'OPEN') throw new ConflictException('העבודה כבר אינה פתוחה');
+
+    const originalPrice = job.grossPriceCents;
+
+    await this.prisma.$transaction(async (tx: any) => {
+      const fresh = await tx.job.findUnique({ where: { id: jobId } });
+      if (!fresh || fresh.status !== 'OPEN') throw new ConflictException('העבודה כבר אינה פתוחה');
+      await tx.job.update({
+        where: { id: jobId },
+        data: { driverId: (offer as any).driverId, grossPriceCents: (offer as any).amountCents, status: 'ACCEPTED' },
+      });
+    });
+
+    // Charge the poster for the agreed offer amount; revert on failure.
+    try {
+      await this.payments.chargeForJob(
+        { id: jobId, grossPriceCents: (offer as any).amountCents },
+        { stripeCustomerId: job.business.stripeCustomerId },
+      );
+    } catch {
+      await this.prisma.job.update({ where: { id: jobId }, data: { driverId: null, status: 'OPEN' as any, grossPriceCents: originalPrice } });
+      await this.notifications.create(
+        job.business.userId,
+        'PAYMENT_FAILED',
+        'החיוב נכשל',
+        `לא ניתן היה לחייב עבור "${job.title}" — עדכן את אמצעי התשלום`,
+        jobId,
+      ).catch(() => {});
+      throw new BadRequestException('לא ניתן לחייב את אמצעי התשלום — נסה שוב');
+    }
+
+    await this.prisma.jobOffer.update({ where: { id: offerId }, data: { status: 'ACCEPTED' } });
+    await this.prisma.jobOffer.updateMany({ where: { jobId, id: { not: offerId }, status: 'PENDING' }, data: { status: 'DECLINED' } });
+    await this.prisma.jobEvent.create({ data: { jobId, actorId: userId, type: 'ACCEPTED' as any } });
+
+    await this.notifications.create(
+      (offer as any).driver.userId,
+      'OFFER_ACCEPTED',
+      'ההצעה התקבלה 🎉',
+      `ההצעה שלך עבור "${job.title}" התקבלה`,
+      jobId,
+    );
+    const declined = await this.prisma.jobOffer.findMany({
+      where: { jobId, status: 'DECLINED' },
+      include: { driver: { select: { userId: true } } },
+    });
+    await Promise.all(
+      declined.map((o: any) =>
+        this.notifications.create(o.driver.userId, 'OFFER_DECLINED', 'ההצעה לא נבחרה', `העבודה "${job.title}" שובצה לנהג אחר`, jobId).catch(() => {}),
+      ),
+    );
+
+    this.gateway.emitJobAccepted(jobId, (offer as any).driverId, (offer as any).driver.name, job.business.userId);
+    return { success: true };
+  }
+
+  /** A driver's own submitted offers. */
+  async myOffers(userId: string) {
+    const driver = await this.prisma.driver.findUnique({ where: { userId } });
+    if (!driver) throw new ForbiddenException('Driver profile not found');
+    return this.prisma.jobOffer.findMany({
+      where: { driverId: driver.id },
+      include: {
+        job: { select: { id: true, title: true, fromLocation: true, toLocation: true, scheduledAt: true, status: true, grossPriceCents: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Average rating + count for a driver (from completed-job reviews). */
+  async driverRating(driverId: string): Promise<{ avg: number; count: number }> {
+    const reviews = await this.prisma.review.findMany({
+      where: { direction: 'BUSINESS_TO_DRIVER', job: { driverId } },
+      select: { stars: true },
+    });
+    if (reviews.length === 0) return { avg: 0, count: 0 };
+    const sum = reviews.reduce((s: number, r: any) => s + r.stars, 0);
+    return { avg: Math.round((sum / reviews.length) * 10) / 10, count: reviews.length };
+  }
+
+  /** A poster invites a specific driver (from the directory) to an open job. */
+  async inviteDriver(jobId: string, driverId: string, userId: string) {
+    const business = await this.prisma.business.findUnique({ where: { userId } });
+    if (!business) throw new ForbiddenException('Business profile not found');
+    const job = await this.prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) throw new NotFoundException('Job not found');
+    if ((job as any).businessId !== business.id) throw new ForbiddenException('Not your job');
+    if ((job as any).status !== 'OPEN') throw new ConflictException('ניתן להזמין רק לעבודה פתוחה');
+
+    const driver = await this.prisma.driver.findUnique({ where: { id: driverId }, select: { userId: true } });
+    if (!driver) throw new NotFoundException('Driver not found');
+
+    await this.notifications.create(
+      driver.userId,
+      'JOB_INVITE',
+      'הוזמנת לעבודה',
+      `${business.name} הזמין אותך לעבודה "${(job as any).title}"`,
+      jobId,
+    );
+    return { success: true };
+  }
+
+  /** Leave a 1–5 star review after a job completes (business→driver or driver→business). */
+  async submitReview(jobId: string, userId: string, dto: CreateReviewDto) {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: { business: { select: { userId: true } }, driver: { select: { userId: true } } },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+    if (!['COMPLETED', 'PAID'].includes((job as any).status)) {
+      throw new BadRequestException('ניתן לדרג רק לאחר סיום העבודה');
+    }
+    const isOwner = (job as any).business?.userId === userId;
+    const isDriver = (job as any).driver?.userId === userId;
+    if (!isOwner && !isDriver) throw new ForbiddenException('Not allowed');
+
+    const direction = isOwner ? 'BUSINESS_TO_DRIVER' : 'DRIVER_TO_BUSINESS';
+    const review = await this.prisma.review.upsert({
+      where: { jobId_raterId: { jobId, raterId: userId } },
+      create: { jobId, raterId: userId, direction, stars: dto.stars, comment: dto.comment ?? null },
+      update: { direction, stars: dto.stars, comment: dto.comment ?? null },
+    });
+
+    const rateeUserId = isOwner ? (job as any).driver?.userId : (job as any).business?.userId;
+    if (rateeUserId) {
+      await this.notifications
+        .create(rateeUserId, 'NEW_REVIEW', 'קיבלת דירוג חדש', `דירוג ${dto.stars}★ עבור "${(job as any).title}"`, jobId)
+        .catch(() => {});
+    }
+    return review;
   }
 }

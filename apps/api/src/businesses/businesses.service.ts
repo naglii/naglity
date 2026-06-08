@@ -22,6 +22,7 @@ export class BusinessesService {
       include: {
         driver: { select: { id: true, name: true, phone: true } },
         payments: { select: { type: true, status: true } },
+        _count: { select: { offers: true } },
       },
       orderBy: { scheduledAt: 'desc' },
     });
@@ -29,6 +30,7 @@ export class BusinessesService {
       ...j,
       netPriceCents: Math.round(j.grossPriceCents * 0.9),
       escrowStatus: PaymentsService.escrowStatus(j.payments),
+      offerCount: j._count?.offers ?? 0,
     }));
   }
 

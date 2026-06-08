@@ -21,7 +21,6 @@ const schema = z.object({
   name: z.string().min(2, 'נא להזין שם מלא'),
   phone: z.string().min(5, 'מספר טלפון לא תקין'),
   email: z.string().email('אימייל לא תקין').optional().or(z.literal('')),
-  location: z.string().optional(),
   username: z.string().min(3, 'מינימום 3 תווים'),
   password: z.string().min(6, 'מינימום 6 תווים'),
 });
@@ -47,7 +46,6 @@ export default function RegisterPage() {
       const res = await api.post<LoginResponse>('/auth/register', {
         ...data,
         email: data.email || undefined,
-        location: data.location || undefined,
       });
       setAuth(res.data.user);
       setToken(res.data.accessToken);
@@ -126,16 +124,10 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="email">אימייל <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
-                <Input id="email" type="email" placeholder="you@email.com" {...register('email')} />
-                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="location">מיקום <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
-                <Input id="location" placeholder="עיר / כתובת" {...register('location')} />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email">אימייל <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+              <Input id="email" type="email" placeholder="you@email.com" {...register('email')} />
+              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">

@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { format, formatDistanceToNow, differenceInMinutes } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { CalendarClock, Banknote, ArrowLeft, Timer, Weight, Ruler, Box } from 'lucide-react';
+import { CalendarClock, Banknote, ArrowLeft, Timer, Weight, Ruler, Box, HandCoins } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SubmitOfferDialog } from './SubmitOfferDialog';
 import {
   Dialog, DialogTrigger, DialogPortal, DialogOverlay,
   DialogContent, DialogTitle, DialogDescription,
@@ -91,6 +92,11 @@ export function JobCard({ job, onAccepted }: Props) {
 
           {/* crane attributes */}
           <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {job.pricingMode === 'OFFERS' && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-info-soft px-2 py-1 text-xs font-bold text-info">
+                <HandCoins className="size-3.5" />פתוח להצעות
+              </span>
+            )}
             {job.craneCapacityTons != null && (
               <span className="inline-flex items-center gap-1 rounded-md bg-brand-soft px-2 py-1 text-xs font-bold text-brand-strong">
                 <Weight className="size-3.5" />{job.craneCapacityTons} טון
@@ -118,8 +124,11 @@ export function JobCard({ job, onAccepted }: Props) {
           )}
         </div>
 
-        {/* ── Full-width accept ── */}
+        {/* ── Full-width CTA: offer (open-to-offers) or accept (fixed) ── */}
         <div className="p-4 pt-3.5">
+          {job.pricingMode === 'OFFERS' ? (
+            <SubmitOfferDialog job={job} />
+          ) : (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger render={
               <Button size="lg" className="w-full gap-1.5 font-semibold">
@@ -145,6 +154,7 @@ export function JobCard({ job, onAccepted }: Props) {
               </DialogContent>
             </DialogPortal>
           </Dialog>
+          )}
         </div>
       </CardContent>
     </Card>

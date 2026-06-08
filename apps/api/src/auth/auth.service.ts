@@ -27,12 +27,14 @@ export class AuthService {
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
     let profileId: string | null = null;
+    let accountType: string | null = null;
     if (user.role === 'DRIVER') {
       const driver = await this.prisma.driver.findUnique({ where: { userId: user.id } });
       profileId = driver?.id ?? null;
     } else if (user.role === 'BUSINESS') {
       const business = await this.prisma.business.findUnique({ where: { userId: user.id } });
       profileId = business?.id ?? null;
+      accountType = (business as any)?.accountType ?? null;
     }
 
     const payload = { sub: user.id, username: user.username, role: user.role };
@@ -40,7 +42,7 @@ export class AuthService {
 
     return {
       accessToken,
-      user: { id: user.id, username: user.username, email: user.email, role: user.role, profileId },
+      user: { id: user.id, username: user.username, email: user.email, role: user.role, profileId, accountType },
     };
   }
 
@@ -80,6 +82,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         profileId: user.business?.id ?? null,
+        accountType: user.business?.accountType ?? 'INDIVIDUAL',
       },
     };
   }

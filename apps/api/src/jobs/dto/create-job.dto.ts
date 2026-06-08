@@ -1,8 +1,13 @@
-import { IsString, IsInt, IsDateString, IsOptional, Min } from 'class-validator';
+import { IsString, IsInt, IsDateString, IsOptional, Min, IsIn } from 'class-validator';
 
 export class CreateJobDto {
   @IsString()
   title: string;
+
+  // FIXED = poster sets the price (first-accept). OFFERS = drivers quote, poster picks.
+  @IsIn(['FIXED', 'OFFERS'])
+  @IsOptional()
+  pricingMode?: 'FIXED' | 'OFFERS';
 
   @IsString()
   @IsOptional()
