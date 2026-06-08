@@ -42,10 +42,10 @@ export class AuthService {
     return { phone: trimmed };
   }
 
+  /** Password login by username or email (case-insensitive). */
   async login(identifier: string, password: string) {
     const id = (identifier ?? '').trim();
-    // Allow login by username or email, case-insensitively.
-    let user = await this.prisma.user.findFirst({
+    const user = await this.prisma.user.findFirst({
       where: {
         OR: [
           { username: { equals: id, mode: 'insensitive' } },
@@ -53,19 +53,37 @@ export class AuthService {
         ],
       },
     });
-    // Or by phone — only if that phone is verified and linked to an account.
-    if (!user) {
-      const business = await this.prisma.business.findFirst({
-        where: { phone: id, phoneVerified: true },
-        include: { user: true },
-      });
-      user = (business as any)?.user ?? null;
-    }
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
+    return this.buildSession(user);
+  }
+
+  /** Phone login step 1: send a code — only to a verified phone linked to an account. */
+  async loginPhoneSend(phone: string) {
+    const id = (phone ?? '').trim();
+    const business = await this.prisma.business.findFirst({ where: { phone: id, phoneVerified: true } });
+    if (!business) throw new BadRequestException('מספר טלפון לא נמצא או שאינו מאומת');
+    await this.sms.sendCode(id);
+    return { ok: true };
+  }
+
+  /** Phone login step 2: verify the code and issue a session (no password). */
+  async loginPhoneVerify(phone: string, code: string) {
+    const id = (phone ?? '').trim();
+    const business = await this.prisma.business.findFirst({
+      where: { phone: id, phoneVerified: true },
+      include: { user: true },
+    });
+    if (!business) throw new UnauthorizedException('Invalid credentials');
+    if (!this.sms.verifyCode(id, code)) throw new UnauthorizedException('קוד שגוי');
+    return this.buildSession((business as any).user);
+  }
+
+  /** Build the token + user payload returned by every login path. */
+  private async buildSession(user: any) {
     let profileId: string | null = null;
     let accountType: string | null = null;
     let phoneVerified = true;
@@ -81,7 +99,6 @@ export class AuthService {
 
     const payload = { sub: user.id, username: user.username, role: user.role };
     const accessToken = this.jwt.sign(payload);
-
     return {
       accessToken,
       user: { id: user.id, username: user.username, email: user.email, role: user.role, profileId, accountType, phoneVerified },
@@ -94,6 +111,12 @@ export class AuthService {
     if (dto.email) orClauses.push({ email: { equals: dto.email, mode: 'insensitive' } });
     const exists = await this.prisma.user.findFirst({ where: { OR: orClauses } });
     if (exists) throw new ConflictException('שם המשתמש או האימייל כבר בשימוש');
+
+    // If this phone already belongs to a verified account, send them to log in instead.
+    const phoneTaken = await this.prisma.business.findFirst({
+      where: { phone: (dto.phone ?? '').trim(), phoneVerified: true },
+    });
+    if (phoneTaken) throw new ConflictException('מספר הטלפון כבר רשום — התחבר עם הטלפון שלך');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({

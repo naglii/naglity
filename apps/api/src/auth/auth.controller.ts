@@ -29,6 +29,26 @@ export class AuthController {
     return { accessToken, user };
   }
 
+  // Passwordless phone login — only for verified phones linked to an account.
+  @Post('login/phone/send')
+  @HttpCode(200)
+  async loginPhoneSend(@Body('phone') phone: string) {
+    return this.authService.loginPhoneSend(phone ?? '');
+  }
+
+  @Post('login/phone/verify')
+  @HttpCode(200)
+  async loginPhoneVerify(
+    @Body('phone') phone: string,
+    @Body('code') code: string,
+    @Res({ passthrough: true }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    res: any,
+  ) {
+    const { accessToken, user } = await this.authService.loginPhoneVerify(phone ?? '', code ?? '');
+    res.cookie('access_token', accessToken, COOKIE_OPTS);
+    return { accessToken, user };
+  }
+
   @Post('register')
   @HttpCode(200)
   async register(

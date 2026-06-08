@@ -54,11 +54,8 @@ export default function RegisterPage() {
       // Next step: verify the phone for this new account.
       router.push('/verify-phone');
     } catch (err: any) {
-      toast.error(
-        err.response?.status === 409
-          ? 'שם המשתמש או האימייל כבר בשימוש'
-          : (err.response?.data?.message ?? 'משהו השתבש, נסה שנית'),
-      );
+      // Backend returns specific Hebrew messages (e.g. phone already registered → log in).
+      toast.error(err.response?.data?.message ?? 'משהו השתבש, נסה שנית');
     } finally {
       setLoading(false);
     }
