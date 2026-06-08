@@ -9,6 +9,7 @@ import { z } from 'zod/v3';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { setAuth, setToken } from '@/lib/auth';
+import { queryClient } from '@/lib/queryClient';
 import type { LoginResponse } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ const features = [
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [method, setMethod] = useState<'id' | 'phone'>('id');
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -41,6 +43,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await api.post<LoginResponse>('/auth/login', data);
+      // Wipe any cached data from a previous session — prevents cross-account leaks.
+      queryClient.clear();
       setAuth(res.data.user);
       setToken(res.data.accessToken);
       switch (res.data.user.role) {
@@ -111,10 +115,31 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="inline-flex w-full rounded-lg border bg-card p-0.5">
+              {([['id', 'אימייל / שם משתמש'], ['phone', 'טלפון']] as const).map(([val, label]) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setMethod(val)}
+                  className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${method === val ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="identifier">שם משתמש או אימייל</Label>
-              <Input id="identifier" placeholder="שם משתמש או אימייל" autoComplete="username" {...register('identifier')} />
+              <Label htmlFor="identifier">{method === 'phone' ? 'מספר טלפון' : 'שם משתמש או אימייל'}</Label>
+              <Input
+                id="identifier"
+                placeholder={method === 'phone' ? '050-0000000' : 'שם משתמש או אימייל'}
+                inputMode={method === 'phone' ? 'tel' : 'text'}
+                autoComplete={method === 'phone' ? 'tel' : 'username'}
+                {...register('identifier')}
+              />
               {errors.identifier && <p className="text-xs text-destructive">{errors.identifier.message}</p>}
+              {method === 'phone' && (
+                <p className="text-xs text-muted-foreground">התחברות בטלפון אפשרית רק לאחר אימות המספר.</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">סיסמה</Label>

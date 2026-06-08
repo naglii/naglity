@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { clearAuth } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
+import { queryClient } from '@/lib/queryClient';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { LogOut, Menu, ChevronDown, UserRound, Settings } from 'lucide-react';
@@ -54,6 +55,7 @@ export function TopBar({ user, onMenuClick }: Props) {
     await api.post('/auth/logout').catch(() => {});
     disconnectSocket();
     clearAuth();
+    queryClient.clear();
     router.push('/login');
   };
 

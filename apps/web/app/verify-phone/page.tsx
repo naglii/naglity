@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { getUser, setAuth } from '@/lib/auth';
+import { queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -92,6 +93,7 @@ export default function VerifyPhonePage() {
         if (ok) {
           const u = getUser();
           if (u) setAuth({ ...u, phoneVerified: true });
+          queryClient.invalidateQueries({ queryKey: ['business-profile'] });
           toast.success('הטלפון אומת!');
           setTimeout(() => router.replace('/business/jobs'), 700);
         }

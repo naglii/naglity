@@ -43,15 +43,24 @@ export class AuthService {
   }
 
   async login(identifier: string, password: string) {
-    // Allow login by username or email, case-insensitively
-    const user = await this.prisma.user.findFirst({
+    const id = (identifier ?? '').trim();
+    // Allow login by username or email, case-insensitively.
+    let user = await this.prisma.user.findFirst({
       where: {
         OR: [
-          { username: { equals: identifier, mode: 'insensitive' } },
-          { email: { equals: identifier, mode: 'insensitive' } },
+          { username: { equals: id, mode: 'insensitive' } },
+          { email: { equals: id, mode: 'insensitive' } },
         ],
       },
     });
+    // Or by phone — only if that phone is verified and linked to an account.
+    if (!user) {
+      const business = await this.prisma.business.findFirst({
+        where: { phone: id, phoneVerified: true },
+        include: { user: true },
+      });
+      user = (business as any)?.user ?? null;
+    }
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const valid = await bcrypt.compare(password, user.passwordHash);

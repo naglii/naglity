@@ -9,6 +9,7 @@ import { z } from 'zod/v3';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { setAuth, setToken } from '@/lib/auth';
+import { queryClient } from '@/lib/queryClient';
 import type { LoginResponse } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,7 @@ export default function RegisterPage() {
         ...data,
         email: data.email || undefined,
       });
+      queryClient.clear();
       setAuth(res.data.user);
       setToken(res.data.accessToken);
       // Next step: verify the phone for this new account.
