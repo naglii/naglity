@@ -47,6 +47,12 @@ export class AuthController {
     return { ok: true };
   }
 
+  @Post('phone/verify')
+  @HttpCode(200)
+  verifyPhone(@Body('phone') phone: string, @Body('code') code: string) {
+    return { verified: this.authService.verifyPhone(phone ?? '', code ?? '') };
+  }
+
   @Post('logout')
   @HttpCode(200)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

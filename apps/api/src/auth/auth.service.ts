@@ -18,6 +18,11 @@ export class AuthService {
     return this.sms.sendCode(phone);
   }
 
+  /** Check a code for a phone (instant feedback before final signup). */
+  verifyPhone(phone: string, code: string) {
+    return this.sms.verifyCode(phone, code);
+  }
+
   async login(identifier: string, password: string) {
     // Allow login by username or email, case-insensitively
     const user = await this.prisma.user.findFirst({
