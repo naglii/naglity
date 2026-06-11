@@ -14,9 +14,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { formatPrice, netCents, platformCents } from '@/lib/utils';
+import { formatPrice, netCents, platformCents, cn } from '@/lib/utils';
 import { CRANE_CAPACITIES, LOAD_TYPES } from '@/lib/jobAttributes';
-import { FileText, CalendarClock, Send, Construction, type LucideIcon } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, CalendarClock, Send, Construction, ArrowLeft, ArrowRight, Check, type LucideIcon } from 'lucide-react';
 
 // Half-hour increments from 0.5 up to 12 hours.
 const TRAVEL_OPTIONS = Array.from({ length: 24 }, (_, i) => {
@@ -68,9 +69,18 @@ function Err({ msg }: { msg?: string }) {
   return msg ? <p className="mt-1 text-xs text-destructive">{msg}</p> : null;
 }
 
+const STEPS = [
+  { n: 1, label: 'פרטי העבודה', icon: FileText },
+  { n: 2, label: 'מסלול, תזמון ותמחור', icon: CalendarClock },
+] as const;
+
+// Fields that must be valid before advancing past step 1.
+const STEP1_FIELDS = ['title', 'craneCapacityTons'] as const;
+
 export function CreateJobForm() {
   const router = useRouter();
-  const { register, handleSubmit, watch, control, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const [step, setStep] = useState<1 | 2>(1);
+  const { register, handleSubmit, watch, control, setValue, trigger, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { pricingMode: 'FIXED' },
   });
@@ -79,6 +89,22 @@ export function CreateJobForm() {
   const grossShekels = Number(watch('grossPriceShekels')) || 0;
   const grossC = Math.round(grossShekels * 100);
   const minDate = format(new Date(), 'yyyy-MM-dd');
+
+  // Validate step-1 fields, then reveal step 2 on the same screen.
+  const goNext = async () => {
+    if (await trigger(STEP1_FIELDS)) {
+      setStep(2);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Enter advances on step 1 (but not from a textarea, where it adds a newline).
+  const onFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === 'Enter' && step === 1 && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      void goNext();
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -110,17 +136,60 @@ export function CreateJobForm() {
   };
 
   return (
-    <Card className="mx-auto w-full max-w-3xl">
-      <CardHeader className="pb-2">
+    <Card className="mx-auto w-full max-w-2xl">
+      <CardHeader className="pb-3">
         <CardTitle className="text-lg">פרסם עבודה חדשה</CardTitle>
-        <CardDescription>מלא את הפרטים — העבודה תופץ לנהגים זמינים בזמן אמת</CardDescription>
+        <CardDescription>
+          {step === 1 ? 'נתחיל בפרטי העבודה והמנוף הנדרש' : 'מתי, איפה, וכמה — וסיימנו'}
+        </CardDescription>
+
+        {/* ── Step indicator ── */}
+        <div className="mt-4 flex items-center gap-2">
+          {STEPS.map((s, i) => {
+            const done = step > s.n;
+            const active = step === s.n;
+            return (
+              <div key={s.n} className="flex flex-1 items-center gap-2">
+                <button
+                  type="button"
+                  // Allow stepping back, never skip ahead past validation.
+                  onClick={() => s.n < step && setStep(s.n as 1 | 2)}
+                  disabled={s.n > step}
+                  className={cn(
+                    'flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 py-2 text-start transition-colors',
+                    active && 'border-brand bg-brand-soft',
+                    done && 'border-success/40 bg-success/5 hover:bg-success/10',
+                    !active && !done && 'opacity-60',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold',
+                      active && 'bg-brand text-white',
+                      done && 'bg-success text-white',
+                      !active && !done && 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {done ? <Check className="size-4" /> : s.n}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[10px] leading-none text-muted-foreground">שלב {s.n}</span>
+                    <span className="block truncate text-xs font-semibold leading-tight">{s.label}</span>
+                  </span>
+                </button>
+                {i === 0 && <span className="hidden h-px w-4 shrink-0 bg-border sm:block" />}
+              </div>
+            );
+          })}
+        </div>
       </CardHeader>
+
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="grid gap-x-8 gap-y-5 md:grid-cols-2">
-            {/* ── Details + route ── */}
+        <form onSubmit={handleSubmit(onSubmit)} onKeyDown={onFormKeyDown} className="space-y-5">
+          {/* ══ Step 1 · Job + crane details ══ */}
+          <div className={cn('space-y-5', step !== 1 && 'hidden')}>
             <div>
-              <GroupTitle icon={FileText}>פרטים ומסלול</GroupTitle>
+              <GroupTitle icon={FileText}>פרטי העבודה</GroupTitle>
               <div className="space-y-3">
                 <div>
                   <Label className="mb-1.5 block">כותרת</Label>
@@ -128,9 +197,71 @@ export function CreateJobForm() {
                   <Err msg={errors.title?.message} />
                 </div>
                 <div>
-                  <Label className="mb-1.5 block">תיאור (אופציונלי)</Label>
+                  <Label className="mb-1.5 block">תיאור <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
                   <Textarea rows={2} placeholder="פרטים נוספים על העבודה…" {...register('description')} />
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <GroupTitle icon={Construction}>פרטי המנוף</GroupTitle>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="mb-1.5 block">קיבולת מנוף נדרשת (טון)</Label>
+                  <Controller
+                    control={control}
+                    name="craneCapacityTons"
+                    render={({ field }) => (
+                      <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <SelectTrigger className={`${inputCls} w-full`}>
+                          <SelectValue placeholder="בחר קיבולת" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CRANE_CAPACITIES.map((t) => (
+                            <SelectItem key={t} value={String(t)}>{t} טון</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <Err msg={errors.craneCapacityTons?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">גובה הרמה (מ׳) <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+                  <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 12" {...register('liftHeightMeters')} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">סוג מטען <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+                  <Controller
+                    control={control}
+                    name="loadType"
+                    render={({ field }) => (
+                      <Select value={field.value || undefined} onValueChange={field.onChange} items={LOAD_TYPES}>
+                        <SelectTrigger className={`${inputCls} w-full`}>
+                          <SelectValue placeholder="בחר סוג" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LOAD_TYPES.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">הערות גישה לאתר <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
+                  <Input className={inputCls} placeholder="חנייה, מכשולים, חוטי חשמל…" {...register('accessNotes')} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ══ Step 2 · Route, schedule & pricing ══ */}
+          <div className={cn('space-y-5', step !== 2 && 'hidden')}>
+            <div>
+              <GroupTitle icon={FileText}>מסלול</GroupTitle>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label className="mb-1.5 block">מיקום מוצא</Label>
                   <div className="relative">
@@ -150,39 +281,36 @@ export function CreateJobForm() {
               </div>
             </div>
 
-            {/* ── Schedule + pricing ── */}
             <div>
-              <GroupTitle icon={CalendarClock}>תזמון ותמחור</GroupTitle>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="mb-1.5 block">תאריך התחלה</Label>
-                    <Input className={inputCls} type="date" min={minDate} {...register('scheduledDate')} />
-                    <Err msg={errors.scheduledDate?.message} />
-                  </div>
-                  <div>
-                    <Label className="mb-1.5 block">שעת התחלה</Label>
-                    <Controller
-                      control={control}
-                      name="scheduledTime"
-                      render={({ field }) => (
-                        <Select value={field.value || undefined} onValueChange={field.onChange}>
-                          <SelectTrigger className={`${inputCls} w-full`}>
-                            <SelectValue placeholder="בחר שעה" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TIME_OPTIONS.map((o) => (
-                              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <Err msg={errors.scheduledTime?.message} />
-                  </div>
+              <GroupTitle icon={CalendarClock}>תזמון</GroupTitle>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <Label className="mb-1.5 block">תאריך התחלה</Label>
+                  <Input className={inputCls} type="date" min={minDate} {...register('scheduledDate')} />
+                  <Err msg={errors.scheduledDate?.message} />
                 </div>
                 <div>
-                  <Label className="mb-1.5 block">זמן נסיעה משוער (שעות)</Label>
+                  <Label className="mb-1.5 block">שעת התחלה</Label>
+                  <Controller
+                    control={control}
+                    name="scheduledTime"
+                    render={({ field }) => (
+                      <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <SelectTrigger className={`${inputCls} w-full`}>
+                          <SelectValue placeholder="בחר שעה" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIME_OPTIONS.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <Err msg={errors.scheduledTime?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">זמן נסיעה (שעות)</Label>
                   <Controller
                     control={control}
                     name="travelTimeHours"
@@ -204,26 +332,29 @@ export function CreateJobForm() {
                   />
                   <Err msg={errors.travelTimeHours?.message} />
                 </div>
-                <div>
-                  <Label className="mb-1.5 block">אופן התמחור</Label>
-                  <div className="inline-flex w-full rounded-lg border bg-card p-0.5">
-                    {([['FIXED', 'מחיר קבוע'], ['OFFERS', 'פתוח להצעות']] as const).map(([val, label]) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => setValue('pricingMode', val)}
-                        className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${pricingMode === val ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {pricingMode === 'FIXED'
-                      ? 'הנהג הראשון שמתאים מקבל את העבודה במחיר שתקבע.'
-                      : 'נהגים יגישו הצעות מחיר — ותבחר את המתאים לך.'}
-                  </p>
+              </div>
+            </div>
+
+            <div>
+              <GroupTitle icon={Send}>תמחור</GroupTitle>
+              <div className="space-y-3">
+                <div className="inline-flex w-full rounded-lg border bg-card p-0.5">
+                  {([['FIXED', 'מחיר קבוע'], ['OFFERS', 'פתוח להצעות']] as const).map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setValue('pricingMode', val)}
+                      className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${pricingMode === val ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {pricingMode === 'FIXED'
+                    ? 'הנהג הראשון שמתאים מקבל את העבודה במחיר שתקבע.'
+                    : 'נהגים יגישו הצעות מחיר — ותבחר את המתאים לך.'}
+                </p>
                 {pricingMode === 'FIXED' ? (
                   <>
                     <div>
@@ -259,66 +390,28 @@ export function CreateJobForm() {
             </div>
           </div>
 
-          {/* ── Crane details ── */}
-          <div className="border-t pt-5">
-            <GroupTitle icon={Construction}>פרטי המנוף</GroupTitle>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <Label className="mb-1.5 block">קיבולת מנוף נדרשת (טון)</Label>
-                <Controller
-                  control={control}
-                  name="craneCapacityTons"
-                  render={({ field }) => (
-                    <Select value={field.value || undefined} onValueChange={field.onChange}>
-                      <SelectTrigger className={`${inputCls} w-full`}>
-                        <SelectValue placeholder="בחר קיבולת" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CRANE_CAPACITIES.map((t) => (
-                          <SelectItem key={t} value={String(t)}>{t} טון</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <Err msg={errors.craneCapacityTons?.message} />
-              </div>
-              <div>
-                <Label className="mb-1.5 block">גובה הרמה (מ׳) <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
-                <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 12" {...register('liftHeightMeters')} />
-              </div>
-              <div>
-                <Label className="mb-1.5 block">סוג מטען <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
-                <Controller
-                  control={control}
-                  name="loadType"
-                  render={({ field }) => (
-                    <Select value={field.value || undefined} onValueChange={field.onChange} items={LOAD_TYPES}>
-                      <SelectTrigger className={`${inputCls} w-full`}>
-                        <SelectValue placeholder="בחר סוג" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {LOAD_TYPES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-            </div>
-            <div className="mt-3">
-              <Label className="mb-1.5 block">הערות גישה לאתר <span className="font-normal text-muted-foreground">(אופציונלי)</span></Label>
-              <Textarea rows={2} placeholder="מגבלות גישה, חנייה, מכשולים, חוטי חשמל…" {...register('accessNotes')} />
-            </div>
-          </div>
-
+          {/* ── Wizard navigation ── */}
           <div className="flex gap-3 border-t pt-4">
-            <Button type="submit" size="lg" className="flex-1 gap-1.5 font-semibold sm:flex-none" disabled={isSubmitting}>
-              <Send className="size-4" />
-              {isSubmitting ? 'מפרסם…' : 'פרסם עבודה'}
-            </Button>
-            <Button type="button" size="lg" variant="outline" onClick={() => router.back()}>ביטול</Button>
+            {step === 1 ? (
+              <>
+                <Button type="button" size="lg" className="flex-1 gap-1.5 font-semibold" onClick={goNext}>
+                  המשך
+                  <ArrowLeft className="size-4" />
+                </Button>
+                <Button type="button" size="lg" variant="outline" onClick={() => router.back()}>ביטול</Button>
+              </>
+            ) : (
+              <>
+                <Button type="button" size="lg" variant="outline" className="gap-1.5" onClick={() => setStep(1)}>
+                  <ArrowRight className="size-4" />
+                  חזרה
+                </Button>
+                <Button type="submit" size="lg" className="flex-1 gap-1.5 font-semibold" disabled={isSubmitting}>
+                  <Send className="size-4" />
+                  {isSubmitting ? 'מפרסם…' : 'פרסם עבודה'}
+                </Button>
+              </>
+            )}
           </div>
         </form>
       </CardContent>
