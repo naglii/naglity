@@ -3,7 +3,9 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { JobsGateway } from '../gateway/jobs.gateway.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PaymentsService } from '../payments/payments.service.js';
+import { PricingService } from '../pricing/pricing.service.js';
 import type { CreateJobDto } from './dto/create-job.dto.js';
+import type { EstimatePriceDto } from './dto/estimate-price.dto.js';
 import type { CreateOfferDto } from './dto/create-offer.dto.js';
 import type { CreateReviewDto } from './dto/create-review.dto.js';
 
@@ -20,7 +22,13 @@ export class JobsService {
     private gateway: JobsGateway,
     private notifications: NotificationsService,
     private payments: PaymentsService,
+    private pricing: PricingService,
   ) {}
+
+  /** Route-based price estimate for the post-job form (LOCATION mode). */
+  estimatePrice(dto: EstimatePriceDto) {
+    return this.pricing.estimate(dto.fromLocation, dto.toLocation, dto.craneCapacityTons);
+  }
 
   async createJob(userId: string, dto: CreateJobDto) {
     const business = await this.prisma.business.findUnique({ where: { userId } });
@@ -32,18 +40,33 @@ export class JobsService {
       throw new BadRequestException('יש להוסיף אמצעי תשלום לפני פרסום עבודה');
     }
 
-    // FIXED jobs need a price now; OFFERS jobs have no price until an offer is picked.
-    const isOffers = dto.pricingMode === 'OFFERS';
-    if (!isOffers && (!dto.grossPriceCents || dto.grossPriceCents < 1)) {
-      throw new BadRequestException('יש להזין מחיר לעבודה');
+    const mode = dto.pricingMode ?? 'LOCATION';
+    const scheduledAt = new Date(dto.scheduledAt);
+
+    // Offers need lead time for drivers to bid — not allowed for same-day jobs.
+    if (mode === 'OFFERS' && isSameCalendarDay(scheduledAt, new Date())) {
+      throw new BadRequestException('עבודה ליום הנוכחי אינה יכולה להיות פתוחה להצעות — בחר מחיר לפי מרחק או מחיר קבוע');
     }
-    const grossPriceCents = isOffers ? 0 : dto.grossPriceCents;
+
+    // LOCATION: price is computed server-side from the route (authoritative).
+    // FIXED: poster sets the price now. OFFERS: no price until an offer is picked.
+    let grossPriceCents: number;
+    if (mode === 'OFFERS') {
+      grossPriceCents = 0;
+    } else if (mode === 'LOCATION') {
+      grossPriceCents = (await this.pricing.estimate(dto.fromLocation, dto.toLocation, dto.craneCapacityTons)).grossPriceCents;
+    } else {
+      if (!dto.grossPriceCents || dto.grossPriceCents < 1) {
+        throw new BadRequestException('יש להזין מחיר לעבודה');
+      }
+      grossPriceCents = dto.grossPriceCents;
+    }
 
     const job = await this.prisma.job.create({
       data: {
         ...dto,
         grossPriceCents,
-        scheduledAt: new Date(dto.scheduledAt),
+        scheduledAt,
         estimatedEndAt: new Date(dto.estimatedEndAt),
         businessId: business.id,
         status: 'OPEN' as any,

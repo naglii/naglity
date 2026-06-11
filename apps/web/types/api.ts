@@ -89,8 +89,13 @@ export interface Job {
   escrowStatus?: EscrowStatus;
 }
 
-export type PricingMode = 'FIXED' | 'OFFERS';
+export type PricingMode = 'LOCATION' | 'FIXED' | 'OFFERS';
 export type OfferStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'WITHDRAWN';
+
+export interface PriceEstimate {
+  grossPriceCents: number;
+  distanceKm: number;
+}
 
 export interface DriverRating {
   avg: number;

@@ -7,7 +7,7 @@ import { z } from 'zod/v3';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import api from '@/lib/api';
-import type { CreateJobDto } from '@/types/api';
+import type { CreateJobDto, PriceEstimate } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,8 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatPrice, netCents, platformCents, cn } from '@/lib/utils';
 import { CRANE_CAPACITIES, LOAD_TYPES } from '@/lib/jobAttributes';
-import { useState } from 'react';
-import { FileText, CalendarClock, Send, Construction, ArrowLeft, ArrowRight, Check, type LucideIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, CalendarClock, Send, Construction, ArrowLeft, ArrowRight, Check, MapPin, Loader2, Info, type LucideIcon } from 'lucide-react';
 
 // Half-hour increments from 0.5 up to 12 hours.
 const TRAVEL_OPTIONS = Array.from({ length: 24 }, (_, i) => {
@@ -36,7 +36,7 @@ const schema = z.object({
   title: z.string().min(1, 'שדה חובה'),
   description: z.string().optional(),
   grossPriceShekels: z.coerce.number().optional(),
-  pricingMode: z.enum(['FIXED', 'OFFERS']),
+  pricingMode: z.enum(['LOCATION', 'FIXED', 'OFFERS']),
   scheduledDate: z.string().min(1, 'שדה חובה'),
   scheduledTime: z.string().min(1, 'שדה חובה'),
   travelTimeHours: z.coerce.number().min(0.5, 'מינימום 30 דקות').max(12, 'מקסימום 12 שעות'),
@@ -69,6 +69,29 @@ function Err({ msg }: { msg?: string }) {
   return msg ? <p className="mt-1 text-xs text-destructive">{msg}</p> : null;
 }
 
+// The 90/10 split, shown live for both location-based and custom prices.
+function PayoutBreakdown({ grossCents }: { grossCents: number }) {
+  const has = grossCents > 0;
+  return (
+    <div className="rounded-xl border bg-muted/50 px-4 py-3">
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-2"><span className="size-2 rounded-full bg-success" />הנהג מקבל</span>
+        <span className="font-bold">{has ? formatPrice(netCents(grossCents)) : '—'}</span>
+      </div>
+      <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+        <span className="flex items-center gap-2"><span className="size-2 rounded-full bg-brand-strong" />עמלת פלטפורמה (10%)</span>
+        <span className="font-semibold">{has ? formatPrice(platformCents(grossCents)) : '—'}</span>
+      </div>
+    </div>
+  );
+}
+
+const PRICING_MODES = [
+  { val: 'LOCATION', label: 'לפי מרחק', note: 'המחיר מחושב אוטומטית לפי המרחק בין הכתובות.' },
+  { val: 'FIXED', label: 'מחיר קבוע', note: 'הנהג הראשון שמתאים מקבל את העבודה במחיר שתקבע.' },
+  { val: 'OFFERS', label: 'פתוח להצעות', note: 'נהגים יגישו הצעות מחיר — ותבחר את המתאים לך.' },
+] as const;
+
 const STEPS = [
   { n: 1, label: 'פרטי העבודה', icon: FileText },
   { n: 2, label: 'מסלול, תזמון ותמחור', icon: CalendarClock },
@@ -80,15 +103,49 @@ const STEP1_FIELDS = ['title', 'craneCapacityTons'] as const;
 export function CreateJobForm() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
+  const [estimate, setEstimate] = useState<PriceEstimate | null>(null);
+  const [estLoading, setEstLoading] = useState(false);
   const { register, handleSubmit, watch, control, setValue, trigger, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { pricingMode: 'FIXED' },
+    defaultValues: { pricingMode: 'LOCATION' },
   });
 
-  const pricingMode = watch('pricingMode') ?? 'FIXED';
+  const pricingMode = watch('pricingMode') ?? 'LOCATION';
   const grossShekels = Number(watch('grossPriceShekels')) || 0;
   const grossC = Math.round(grossShekels * 100);
   const minDate = format(new Date(), 'yyyy-MM-dd');
+
+  const fromLocation = watch('fromLocation');
+  const toLocation = watch('toLocation');
+  const capacity = watch('craneCapacityTons');
+  const scheduledDate = watch('scheduledDate');
+  // Offers need lead time for drivers to bid — disallowed for same-day jobs.
+  const sameDay = !!scheduledDate && scheduledDate === minDate;
+
+  // Picking today while OFFERS is selected falls back to the default location pricing.
+  useEffect(() => {
+    if (sameDay && pricingMode === 'OFFERS') setValue('pricingMode', 'LOCATION');
+  }, [sameDay, pricingMode, setValue]);
+
+  // Live route-based estimate (debounced) while in LOCATION mode.
+  useEffect(() => {
+    if (pricingMode !== 'LOCATION') return;
+    const from = fromLocation?.trim();
+    const to = toLocation?.trim();
+    if (!from || !to) { setEstimate(null); return; }
+    setEstLoading(true);
+    const t = setTimeout(() => {
+      api.post<PriceEstimate>('/jobs/price-estimate', {
+        fromLocation: from,
+        toLocation: to,
+        craneCapacityTons: capacity ? Number(capacity) : undefined,
+      })
+        .then((r) => setEstimate(r.data))
+        .catch(() => setEstimate(null))
+        .finally(() => setEstLoading(false));
+    }, 450);
+    return () => clearTimeout(t);
+  }, [pricingMode, fromLocation, toLocation, capacity]);
 
   // Validate step-1 fields, then reveal step 2 on the same screen.
   const goNext = async () => {
@@ -116,7 +173,9 @@ export function CreateJobForm() {
       const dto: CreateJobDto = {
         title: data.title,
         description: data.description,
-        grossPriceCents: data.pricingMode === 'OFFERS' ? 0 : Math.round((data.grossPriceShekels ?? 0) * 100),
+        // Only a custom (FIXED) price comes from the client; LOCATION is priced
+        // server-side from the route, OFFERS has no price yet.
+        grossPriceCents: data.pricingMode === 'FIXED' ? Math.round((data.grossPriceShekels ?? 0) * 100) : 0,
         pricingMode: data.pricingMode,
         scheduledAt: scheduledAt.toISOString(),
         estimatedEndAt: new Date(scheduledAt.getTime() + data.travelTimeHours * 60 * 60 * 1000).toISOString(),
@@ -339,49 +398,79 @@ export function CreateJobForm() {
               <GroupTitle icon={Send}>תמחור</GroupTitle>
               <div className="space-y-3">
                 <div className="inline-flex w-full rounded-lg border bg-card p-0.5">
-                  {([['FIXED', 'מחיר קבוע'], ['OFFERS', 'פתוח להצעות']] as const).map(([val, label]) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setValue('pricingMode', val)}
-                      className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${pricingMode === val ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                  {PRICING_MODES.map((m) => {
+                    const selected = pricingMode === m.val;
+                    const disabled = m.val === 'OFFERS' && sameDay;
+                    return (
+                      <button
+                        key={m.val}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => !disabled && setValue('pricingMode', m.val)}
+                        className={cn(
+                          'flex-1 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors',
+                          selected && 'bg-primary text-primary-foreground',
+                          !selected && !disabled && 'text-muted-foreground hover:bg-accent',
+                          disabled && 'cursor-not-allowed text-muted-foreground/40',
+                        )}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
                 </div>
+
+                {/* Explain why offers is unavailable for same-day jobs (visible on mobile too). */}
+                {sameDay && (
+                  <p className="flex items-start gap-1.5 rounded-lg border border-dashed bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                    <Info className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                    <span>״פתוח להצעות״ אינו זמין לעבודה ליום הנוכחי — אין מספיק זמן לנהגים להגיש הצעות. בחר מחיר לפי מרחק או מחיר קבוע.</span>
+                  </p>
+                )}
+
                 <p className="text-xs text-muted-foreground">
-                  {pricingMode === 'FIXED'
-                    ? 'הנהג הראשון שמתאים מקבל את העבודה במחיר שתקבע.'
-                    : 'נהגים יגישו הצעות מחיר — ותבחר את המתאים לך.'}
+                  {PRICING_MODES.find((m) => m.val === pricingMode)?.note}
                 </p>
-                {pricingMode === 'FIXED' ? (
+
+                {pricingMode === 'LOCATION' && (
+                  !fromLocation?.trim() || !toLocation?.trim() ? (
+                    <div className="flex items-center gap-2 rounded-xl border border-dashed bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                      <MapPin className="size-4 shrink-0" />
+                      מלא מיקום מוצא ויעד כדי לחשב את המחיר.
+                    </div>
+                  ) : estLoading ? (
+                    <div className="flex items-center gap-2 rounded-xl border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" /> מחשב מחיר לפי המסלול…
+                    </div>
+                  ) : estimate ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between rounded-xl border border-brand/30 bg-brand-soft px-4 py-3">
+                        <span className="flex items-center gap-2 text-sm font-semibold text-brand-strong">
+                          <MapPin className="size-4" /> מחיר משוער (~{estimate.distanceKm} ק״מ)
+                        </span>
+                        <span className="text-lg font-black text-brand-strong">{formatPrice(estimate.grossPriceCents)}</span>
+                      </div>
+                      <PayoutBreakdown grossCents={estimate.grossPriceCents} />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                      לא הצלחנו לחשב מחיר כעת — נסה שוב או בחר מחיר קבוע.
+                    </div>
+                  )
+                )}
+
+                {pricingMode === 'FIXED' && (
                   <>
                     <div>
                       <Label className="mb-1.5 block">מחיר (₪)</Label>
                       <Input className={inputCls} type="number" min="1" step="1" placeholder="לדוגמה: 500" {...register('grossPriceShekels')} />
                       <Err msg={errors.grossPriceShekels?.message} />
                     </div>
-
-                    {/* live payout breakdown */}
-                    <div className="rounded-xl border bg-muted/50 px-4 py-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2">
-                          <span className="size-2 rounded-full bg-success" />
-                          הנהג מקבל
-                        </span>
-                        <span className="font-bold">{grossC > 0 ? formatPrice(netCents(grossC)) : '—'}</span>
-                      </div>
-                      <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-2">
-                          <span className="size-2 rounded-full bg-brand-strong" />
-                          עמלת פלטפורמה (10%)
-                        </span>
-                        <span className="font-semibold">{grossC > 0 ? formatPrice(platformCents(grossC)) : '—'}</span>
-                      </div>
-                    </div>
+                    <PayoutBreakdown grossCents={grossC} />
                   </>
-                ) : (
+                )}
+
+                {pricingMode === 'OFFERS' && (
                   <div className="rounded-xl border border-dashed bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
                     אין צורך להזין מחיר — נהגים יגישו הצעות מחיר, ותבחר את ההצעה המתאימה לך.
                   </div>

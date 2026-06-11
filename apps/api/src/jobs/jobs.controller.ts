@@ -5,6 +5,7 @@ import { RolesGuard } from '../auth/roles.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { CreateJobDto } from './dto/create-job.dto.js';
+import { EstimatePriceDto } from './dto/estimate-price.dto.js';
 import { CreateOfferDto } from './dto/create-offer.dto.js';
 import { CreateReviewDto } from './dto/create-review.dto.js';
 
@@ -18,6 +19,14 @@ export class JobsController {
   @Roles('BUSINESS')
   createJob(@CurrentUser() user: any, @Body() dto: CreateJobDto) {
     return this.jobsService.createJob(user.id, dto);
+  }
+
+  // Live price estimate for the post-job form (LOCATION mode). Before ':id'.
+  @Post('price-estimate')
+  @UseGuards(RolesGuard)
+  @Roles('BUSINESS')
+  estimatePrice(@Body() dto: EstimatePriceDto) {
+    return this.jobsService.estimatePrice(dto);
   }
 
   // Declared before ':id' so it isn't shadowed by the param route.
