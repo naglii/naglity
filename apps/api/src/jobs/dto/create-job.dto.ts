@@ -4,10 +4,11 @@ export class CreateJobDto {
   @IsString()
   title: string;
 
-  // FIXED = poster sets the price (first-accept). OFFERS = drivers quote, poster picks.
-  @IsIn(['FIXED', 'OFFERS'])
+  // LOCATION = priced from the route (server-computed). FIXED = poster sets a custom
+  // price (first-accept). OFFERS = drivers quote, poster picks.
+  @IsIn(['LOCATION', 'FIXED', 'OFFERS'])
   @IsOptional()
-  pricingMode?: 'FIXED' | 'OFFERS';
+  pricingMode?: 'LOCATION' | 'FIXED' | 'OFFERS';
 
   @IsString()
   @IsOptional()

@@ -12,6 +12,7 @@ import { NotificationsModule } from './notifications/notifications.module.js';
 import { SignupRequestsModule } from './signup-requests/signup-requests.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { SmsModule } from './sms/sms.module.js';
+import { PricingModule } from './pricing/pricing.module.js';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { SmsModule } from './sms/sms.module.js';
     SignupRequestsModule,
     PaymentsModule,
     SmsModule,
+    PricingModule,
   ],
 })
 export class AppModule {}

@@ -4,9 +4,10 @@ import { resetDb } from '../shared/db';
 import { makeBusiness, makeDriver, makeJob, login } from '../shared/factories';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
-/** A valid create-job payload; override any field per test. */
+/** A valid create-job payload with a poster-set (FIXED) price; override per test. */
 const jobBody = (over: Record<string, unknown> = {}) => ({
   title: 'Move a crane',
+  pricingMode: 'FIXED',
   grossPriceCents: 100_000,
   scheduledAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   estimatedEndAt: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
@@ -43,6 +44,40 @@ describe('Job lifecycle (e2e)', () => {
     expect(res.body).toMatchObject({ status: 'OPEN', grossPriceCents: 100_000, netPriceCents: 90_000 });
     const inDb = await prisma.job.findUnique({ where: { id: res.body.id } });
     expect(inDb?.status).toBe('OPEN');
+  });
+
+  it('prices a LOCATION job server-side, ignoring any client price', async () => {
+    // arrange
+    const biz = await makeBusiness(prisma, { withPaymentMethod: true });
+    const owner = await login(app, biz.username, biz.password);
+
+    // act — default mode is LOCATION; the client price should be overridden
+    const res = await owner.post('/api/jobs').send(jobBody({ pricingMode: 'LOCATION', grossPriceCents: 100_000 }));
+
+    // assert
+    expect(res.status).toBe(201);
+    expect(res.body.grossPriceCents).toBeGreaterThan(0);
+    expect(res.body.grossPriceCents).not.toBe(100_000); // route-computed, not the posted value
+    expect(res.body.netPriceCents).toBe(Math.round(res.body.grossPriceCents * 0.9));
+  });
+
+  it('rejects an OFFERS job scheduled for today (needs lead time for bids)', async () => {
+    // arrange
+    const biz = await makeBusiness(prisma, { withPaymentMethod: true });
+    const owner = await login(app, biz.username, biz.password);
+    const todayNoon = new Date();
+    todayNoon.setHours(23, 0, 0, 0); // still today, in the future
+
+    // act
+    const res = await owner.post('/api/jobs').send(jobBody({
+      pricingMode: 'OFFERS',
+      grossPriceCents: 0,
+      scheduledAt: todayNoon.toISOString(),
+    }));
+
+    // assert
+    expect(res.status).toBe(400);
+    expect(await prisma.job.count()).toBe(0);
   });
 
   it('rejects posting a job without a payment method (400) and writes no job', async () => {

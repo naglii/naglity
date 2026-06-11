@@ -29,8 +29,9 @@ enum JobStatus {
 }
 
 enum PricingMode {
-  FIXED  // poster sets the price; first matching driver accepts
-  OFFERS // drivers submit quotes; poster picks one
+  LOCATION // price computed from the route between the from/to locations (default)
+  FIXED    // poster sets a custom price; first matching driver accepts
+  OFFERS   // drivers submit quotes; poster picks one
 }
 
 enum OfferStatus {
@@ -175,7 +176,7 @@ model Job {
   title           String
   description     String?
   grossPriceCents Int
-  pricingMode     PricingMode @default(FIXED)
+  pricingMode     PricingMode @default(LOCATION)
   scheduledAt     DateTime
   estimatedEndAt  DateTime
   fromLocation    String
