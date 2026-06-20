@@ -33,11 +33,11 @@ export function HeaderActions() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, paddingHorizontal: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8 },
   btn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   btnPressed: { backgroundColor: colors.muted },
   badge: {
-    position: 'absolute', top: 6, left: 6, minWidth: 18, height: 18, borderRadius: 999,
+    position: 'absolute', top: 6, start: 6, minWidth: 18, height: 18, borderRadius: 999,
     backgroundColor: colors.destructive, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
     borderWidth: 2, borderColor: colors.card,
   },

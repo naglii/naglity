@@ -38,7 +38,7 @@ function NavBtn({ icon, onPress, disabled }: { icon: any; onPress: () => void; d
 
 const styles = StyleSheet.create({
   wrap: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
     backgroundColor: colors.card,

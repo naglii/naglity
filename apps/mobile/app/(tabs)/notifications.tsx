@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   markText: { fontSize: 14, color: colors.primary, fontWeight: '700', writingDirection: 'rtl' },
   list: { gap: space.md },
   item: {
-    flexDirection: 'row-reverse', alignItems: 'flex-start', gap: space.md,
+    flexDirection: 'row', alignItems: 'flex-start', gap: space.md,
     backgroundColor: colors.card, borderRadius: radius.xl, padding: space.lg,
     ...shadow.card,
   },

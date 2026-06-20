@@ -192,22 +192,22 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   screen: { padding: space.lg, paddingBottom: 40, gap: space.md },
   payoutBanner: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: space.md,
+    flexDirection: 'row', alignItems: 'center', gap: space.md,
     backgroundColor: colors.pendingSoft, borderRadius: radius.xl, padding: space.lg,
   },
   payoutIcon: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   payoutTitle: { fontSize: 15, fontWeight: '800', color: colors.pending, textAlign: 'right', writingDirection: 'rtl' },
   payoutSub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  headerRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: space.md, marginTop: space.xs },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginTop: space.xs },
   h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
   sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  countPill: { flexDirection: 'row-reverse', alignItems: 'center', gap: 7, backgroundColor: colors.moneySoft, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill },
+  countPill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: colors.moneySoft, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill },
   countDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: colors.money },
   countText: { fontSize: 15, fontWeight: '800', color: colors.money },
   searchWrap: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: space.sm,
+    flexDirection: 'row', alignItems: 'center', gap: space.sm,
     backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: space.lg, height: 52,
   },
   searchInput: { flex: 1, fontSize: 15, color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  chipRow: { flexDirection: 'row-reverse', gap: space.sm, paddingVertical: 2 },
+  chipRow: { flexDirection: 'row', gap: space.sm, paddingVertical: 2 },
 });

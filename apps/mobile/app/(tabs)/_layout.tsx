@@ -1,9 +1,13 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeaderActions } from '@/components/HeaderActions';
 import { colors } from '@/theme/colors';
 
 export default function TabsLayout() {
+  // Lift the tab bar above the Android system nav buttons (edge-to-edge is on).
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -14,7 +18,13 @@ export default function TabsLayout() {
         headerTitleAlign: 'center',
         headerShadowVisible: false,
         headerRight: () => <HeaderActions />,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border, height: 60, paddingTop: 6, paddingBottom: 8 },
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+          height: 60 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: insets.bottom + 8,
+        },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         tabBarItemStyle: { paddingVertical: 2 },
       }}

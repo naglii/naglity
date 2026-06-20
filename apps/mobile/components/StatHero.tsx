@@ -56,11 +56,11 @@ export function StatHero({
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.card, borderRadius: radius.xxl, padding: 24, ...shadow.card },
-  labelRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: space.sm },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   iconChip: { width: 36, height: 36, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   label: { fontSize: 14, fontWeight: '600', color: colors.mutedForeground, writingDirection: 'rtl' },
   amount: { fontSize: 40, fontWeight: '900', marginTop: 10, textAlign: 'right' },
-  pills: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8, marginTop: 18 },
-  pill: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999 },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 18 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999 },
   pillText: { fontSize: 13, fontWeight: '700', writingDirection: 'rtl' },
 });

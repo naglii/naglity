@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   btn: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   },
   btnText: { fontWeight: '800', writingDirection: 'rtl' },
   chip: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,

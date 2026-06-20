@@ -14,7 +14,7 @@ export function JobStatusBadge({ status }: { status: JobStatus }) {
 
 const styles = StyleSheet.create({
   badge: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingVertical: 5,
