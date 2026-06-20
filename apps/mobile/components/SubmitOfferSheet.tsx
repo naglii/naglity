@@ -101,17 +101,17 @@ export function SubmitOfferSheet({
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 18, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  subtitle: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2, marginBottom: 8 },
-  field: { marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl', marginBottom: 6 },
+  title: { fontSize: 20, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  subtitle: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2, marginBottom: 10 },
+  field: { marginBottom: 16 },
+  label: { fontSize: 14, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl', marginBottom: 7 },
   input: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 15,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
     color: colors.foreground,
     textAlign: 'right',
     writingDirection: 'rtl',

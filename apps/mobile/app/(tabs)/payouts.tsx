@@ -10,6 +10,7 @@ import { Button, Card, EmptyState } from '@/components/ui';
 import { ReceiptSheet } from '@/components/ReceiptSheet';
 import { toast } from '@/components/Toast';
 import { colors } from '@/theme/colors';
+import { radius, space } from '@/theme/tokens';
 
 export default function PayoutsScreen() {
   const qc = useQueryClient();
@@ -79,8 +80,8 @@ export default function PayoutsScreen() {
           </View>
         ) : (
           <View style={styles.accountSetup}>
-            <View style={[styles.iconChip, styles.iconChipLg, { backgroundColor: colors.accent }]}>
-              <Ionicons name="business-outline" size={28} color={colors.brandStrong} />
+            <View style={[styles.iconChip, styles.iconChipLg, { backgroundColor: colors.primarySoft }]}>
+              <Ionicons name="business-outline" size={30} color={colors.primary} />
             </View>
             <Text style={styles.accountTitle}>הגדר אמצעי לקבלת תשלום</Text>
             <Text style={[styles.accountSub, { textAlign: 'center' }]}>חובה להגדיר חשבון לקבלת כספים כדי שתוכל לקבל עבודות</Text>
@@ -120,7 +121,7 @@ export default function PayoutsScreen() {
 
       {payouts.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="wallet-outline" size={26} color={colors.brandStrong} />}
+          icon={<Ionicons name="wallet-outline" size={34} color={colors.primary} />}
           title="אין תשלומים עדיין"
           subtitle="תשלומים יופיעו כאן לאחר שעבודות יושלמו וישולמו"
         />
@@ -155,30 +156,30 @@ export default function PayoutsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: 16, paddingBottom: 40, gap: 16 },
-  h1: { fontSize: 20, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  iconChip: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  iconChipLg: { width: 56, height: 56, borderRadius: 16 },
-  accountActive: { flexDirection: 'row-reverse', alignItems: 'center', gap: 14 },
-  accountSetup: { alignItems: 'center', gap: 12 },
-  accountTitle: { fontSize: 15, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  screen: { padding: space.lg, paddingBottom: 40, gap: space.lg },
+  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  iconChip: { width: 48, height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  iconChipLg: { width: 64, height: 64, borderRadius: radius.lg },
+  accountActive: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  accountSetup: { alignItems: 'center', gap: space.md },
+  accountTitle: { fontSize: 16, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
   demo: { fontSize: 12, fontWeight: '400', color: colors.mutedForeground },
-  accountLine: { fontSize: 14, color: colors.foreground, marginTop: 4, textAlign: 'right' },
-  accountSub: { fontSize: 13, color: colors.mutedForeground, marginTop: 2, textAlign: 'right', writingDirection: 'rtl' },
-  totalCard: { padding: 22 },
-  totalHead: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
-  totalLabel: { fontSize: 13, fontWeight: '600', color: colors.mutedForeground, writingDirection: 'rtl' },
-  totalAmount: { fontSize: 34, fontWeight: '900', color: colors.success, marginTop: 8, textAlign: 'right' },
-  totalPills: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8, marginTop: 14 },
-  pill: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999 },
-  pillText: { fontSize: 12, fontWeight: '700', writingDirection: 'rtl' },
-  payoutRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 14, padding: 16 },
+  accountLine: { fontSize: 15, color: colors.foreground, marginTop: 4, textAlign: 'right' },
+  accountSub: { fontSize: 14, color: colors.mutedForeground, marginTop: 2, textAlign: 'right', writingDirection: 'rtl', lineHeight: 20 },
+  totalCard: { padding: 24 },
+  totalHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  totalLabel: { fontSize: 14, fontWeight: '600', color: colors.money, writingDirection: 'rtl' },
+  totalAmount: { fontSize: 40, fontWeight: '900', color: colors.money, marginTop: 8, textAlign: 'right' },
+  totalPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999 },
+  pillText: { fontSize: 13, fontWeight: '700', writingDirection: 'rtl' },
+  payoutRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg },
   rowDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  payoutTitle: { fontSize: 14, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  payoutMeta: { fontSize: 12, color: colors.mutedForeground, marginTop: 2, textAlign: 'right', writingDirection: 'rtl' },
-  payoutEnd: { alignItems: 'center', gap: 4 },
-  payoutAmount: { fontSize: 14, fontWeight: '800', color: colors.success },
-  receiptBtn: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
-  receiptText: { fontSize: 12, color: colors.mutedForeground, writingDirection: 'rtl' },
+  payoutTitle: { fontSize: 15, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  payoutMeta: { fontSize: 13, color: colors.mutedForeground, marginTop: 2, textAlign: 'right', writingDirection: 'rtl' },
+  payoutEnd: { alignItems: 'center', gap: 5 },
+  payoutAmount: { fontSize: 15, fontWeight: '800', color: colors.money },
+  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 },
+  receiptText: { fontSize: 13, color: colors.primary, fontWeight: '600', writingDirection: 'rtl' },
 });

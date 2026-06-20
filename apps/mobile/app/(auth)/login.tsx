@@ -107,17 +107,17 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 24, paddingBottom: 40, alignItems: 'center' },
   logo: {
-    width: 64, height: 64, borderRadius: 20, backgroundColor: colors.brand,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+    width: 76, height: 76, borderRadius: 24, backgroundColor: colors.primary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
   },
-  brand: { fontSize: 28, fontWeight: '900', color: colors.foreground },
-  tagline: { fontSize: 14, color: colors.mutedForeground, marginTop: 4, marginBottom: 32, writingDirection: 'rtl' },
-  form: { width: '100%', gap: 16 },
-  field: { gap: 6 },
-  label: { fontSize: 13, fontWeight: '600', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  brand: { fontSize: 30, fontWeight: '900', color: colors.foreground },
+  tagline: { fontSize: 15, color: colors.mutedForeground, marginTop: 4, marginBottom: 36, writingDirection: 'rtl' },
+  form: { width: '100%', gap: 18 },
+  field: { gap: 8 },
+  label: { fontSize: 14, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
   input: {
-    borderWidth: 1, borderColor: colors.border, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: colors.foreground,
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: 16,
+    paddingHorizontal: 16, height: 54, fontSize: 16, color: colors.foreground,
     backgroundColor: colors.card, textAlign: 'right', writingDirection: 'rtl',
   },
 });

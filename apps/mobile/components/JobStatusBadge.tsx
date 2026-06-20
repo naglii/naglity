@@ -14,14 +14,14 @@ export function JobStatusBadge({ status }: { status: JobStatus }) {
 
 const styles = StyleSheet.create({
   badge: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
     borderRadius: 999,
     alignSelf: 'flex-start',
   },
-  dot: { width: 6, height: 6, borderRadius: 999 },
-  label: { fontSize: 12, fontWeight: '700', writingDirection: 'rtl' },
+  dot: { width: 7, height: 7, borderRadius: 999 },
+  label: { fontSize: 12.5, fontWeight: '800', writingDirection: 'rtl' },
 });
