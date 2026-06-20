@@ -2,11 +2,11 @@
 // all logic (accept/offer flow, props, state) is unchanged.
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { differenceInMinutes, format, formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
 import type { Job } from '@/types/api';
-import { durationMins, formatHoursLabel, formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils';
 import { loadTypeLabel } from '@/lib/jobAttributes';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
@@ -72,30 +72,15 @@ export function JobCard({ job, onAccept, invited, offered, onOffered }: Props) {
           )}
         </View>
 
-        {/* Key figures: when + payout */}
-        <View style={styles.figures}>
-          <View style={styles.figureBlock}>
-            <View style={styles.figureHead}>
-              <Ionicons name="calendar-outline" size={14} color={colors.mutedForeground} />
-              <Text style={styles.figureLabel} numberOfLines={1}>{format(scheduled, 'EEEE, d בMMM', { locale: he })}</Text>
-            </View>
-            <Text style={styles.figureTime}>{format(scheduled, 'HH:mm')}</Text>
-            <Text style={styles.figureFoot}>נסיעה ≈ {formatHoursLabel(durationMins(job.scheduledAt, job.estimatedEndAt))}</Text>
-          </View>
-
-          <View style={styles.figureSep} />
-
-          <View style={[styles.figureBlock, { alignItems: 'flex-start' }]}>
-            <View style={styles.figureHead}>
-              <MaterialCommunityIcons name="cash" size={15} color={colors.money} />
-              <Text style={[styles.figureLabel, { color: colors.money }]}>תשלום נטו</Text>
-            </View>
-            <Text style={styles.figurePrice}>{noPrice ? 'לפי הצעה' : formatPrice(job.netPriceCents)}</Text>
-            <Text style={styles.figureFoot}>{noPrice ? 'הגש את הצעתך' : 'ישירות אליך'}</Text>
-          </View>
+        {/* When — date (muted) + time (bold) */}
+        <View style={styles.whenRow}>
+          <Ionicons name="calendar-outline" size={15} color={colors.mutedForeground} />
+          <Text style={styles.dateText}>{format(scheduled, 'dd/MM/yyyy')}</Text>
+          <Text style={styles.whenDot}>·</Text>
+          <Text style={styles.timeText}>{format(scheduled, 'HH:mm')}</Text>
         </View>
 
-        {/* Route */}
+        {/* Route — strictly aligned */}
         <View style={styles.route}>
           <View style={styles.routeNode}>
             <View style={[styles.routeDot, { backgroundColor: colors.money }]} />
@@ -106,6 +91,12 @@ export function JobCard({ job, onAccept, invited, offered, onOffered }: Props) {
             <View style={[styles.routeDot, { backgroundColor: colors.primary }]} />
             <Text style={styles.routeText} numberOfLines={1}>{job.toLocation}</Text>
           </View>
+        </View>
+
+        {/* Price — the hero, directly under the route */}
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{noPrice ? 'לפי הצעה' : formatPrice(job.netPriceCents)}</Text>
+          {!noPrice && <Text style={styles.priceUnit}>נטו</Text>}
         </View>
 
         {/* Status badges that gate the action stay visible */}
@@ -184,7 +175,7 @@ function Tag({ bg, fg, icon, text }: { bg: string; fg: string; icon: any; text: 
 
 const styles = StyleSheet.create({
   invited: { borderWidth: 2, borderColor: colors.pending },
-  body: { padding: space.lg, gap: space.md },
+  body: { padding: space.xl, gap: space.md },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   avatar: {
     width: 48, height: 48, borderRadius: radius.lg, backgroundColor: colors.primary,
@@ -199,21 +190,17 @@ const styles = StyleSheet.create({
   },
   newDot: { width: 7, height: 7, borderRadius: 999, backgroundColor: colors.money },
   newText: { fontSize: 11, fontWeight: '800', color: colors.money },
-  figures: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.background, borderRadius: radius.lg, padding: space.md,
-  },
-  figureBlock: { flex: 1, gap: 4 },
-  figureSep: { width: 1, alignSelf: 'stretch', backgroundColor: colors.border, marginHorizontal: space.md },
-  figureHead: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  figureLabel: { fontSize: 12, fontWeight: '600', color: colors.mutedForeground, writingDirection: 'rtl' },
-  figureTime: { fontSize: 26, fontWeight: '900', color: colors.foreground, textAlign: 'right' },
-  figurePrice: { fontSize: 26, fontWeight: '900', color: colors.money, textAlign: 'right' },
-  figureFoot: { fontSize: 12, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl' },
+  whenRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dateText: { fontSize: 14, fontWeight: '500', color: colors.mutedForeground, writingDirection: 'rtl' },
+  whenDot: { fontSize: 14, color: colors.mutedForeground },
+  timeText: { fontSize: 22, fontWeight: '900', color: colors.foreground },
   route: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
   routeNode: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   routeDot: { width: 9, height: 9, borderRadius: 999 },
   routeText: { fontSize: 15, fontWeight: '600', color: colors.foreground, writingDirection: 'rtl', flexShrink: 1 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 7 },
+  price: { fontSize: 30, fontWeight: '900', color: colors.money },
+  priceUnit: { fontSize: 14, fontWeight: '500', color: colors.mutedForeground, writingDirection: 'rtl' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: radius.md },
   tagText: { fontSize: 13, fontWeight: '700', writingDirection: 'rtl' },

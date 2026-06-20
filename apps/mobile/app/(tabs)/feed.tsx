@@ -6,7 +6,6 @@ import { useRouter } from 'expo-router';
 import api from '@/lib/api';
 import { initSocket } from '@/lib/socket';
 import type { Job, JobOffer, Notification, PayoutAccountStatus } from '@/types/api';
-import { CAPACITY_BUCKETS } from '@/lib/jobAttributes';
 import { JobCard } from '@/components/JobCard';
 import { Chip, EmptyState, Skeleton } from '@/components/ui';
 import { toast } from '@/components/Toast';
@@ -22,7 +21,6 @@ export default function FeedScreen() {
   const router = useRouter();
 
   const [search, setSearch] = useState('');
-  const [capacity, setCapacity] = useState('all');
   const [sort, setSort] = useState<'date' | 'price'>('date');
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
@@ -88,17 +86,13 @@ export default function FeedScreen() {
         [j.title, j.fromLocation, j.toLocation].some((s) => s?.toLowerCase().includes(q)),
       );
     }
-    if (capacity !== 'all') {
-      const bucket = CAPACITY_BUCKETS.find((b) => b.key === capacity);
-      if (bucket) list = list.filter((j) => bucket.test(j.craneCapacityTons));
-    }
     return [...list].sort((a, b) => {
       const ai = invitedIds.has(a.id) ? 1 : 0;
       const bi = invitedIds.has(b.id) ? 1 : 0;
       if (ai !== bi) return bi - ai;
       return sort === 'price' ? b.netPriceCents - a.netPriceCents : bySchedule(a, b);
     });
-  }, [jobs, search, capacity, sort, invitedIds]);
+  }, [jobs, search, sort, invitedIds]);
 
   if (isLoading) {
     return (
@@ -124,10 +118,7 @@ export default function FeedScreen() {
       )}
 
       <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.h1}>עבודות זמינות</Text>
-          <Text style={styles.sub}>בחר עבודה וקבל אותה בלחיצה אחת</Text>
-        </View>
+        <Text style={styles.h1}>עבודות זמינות</Text>
         <View style={styles.countPill}>
           <View style={styles.countDot} />
           <Text style={styles.countText}>{filtered.length}</Text>
@@ -146,13 +137,6 @@ export default function FeedScreen() {
         />
       </View>
 
-      {/* Capacity chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-        {CAPACITY_BUCKETS.map((b) => (
-          <Chip key={b.key} label={b.label} active={capacity === b.key} onPress={() => setCapacity(b.key)} />
-        ))}
-      </ScrollView>
-
       {/* Sort toggle */}
       <View style={styles.chipRow}>
         <Chip label="הקרוב ביותר" active={sort === 'date'} onPress={() => setSort('date')} />
@@ -168,8 +152,8 @@ export default function FeedScreen() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Ionicons name="search" size={30} color={colors.primary} />}
-          title="אין עבודות שתואמות את הסינון"
-          subtitle="נסה לשנות את מסנני הקיבולת או החיפוש"
+          title="אין עבודות שתואמות את החיפוש"
+          subtitle="נסה חיפוש אחר"
         />
       ) : (
         <View style={{ gap: space.md, marginTop: space.xs }}>
@@ -199,8 +183,7 @@ const styles = StyleSheet.create({
   payoutTitle: { fontSize: 15, fontWeight: '800', color: colors.pending, textAlign: 'right', writingDirection: 'rtl' },
   payoutSub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginTop: space.xs },
-  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  h1: { flex: 1, fontSize: 26, fontWeight: '900', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
   countPill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: colors.moneySoft, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill },
   countDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: colors.money },
   countText: { fontSize: 15, fontWeight: '800', color: colors.money },

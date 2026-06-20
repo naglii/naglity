@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { format, startOfMonth } from 'date-fns';
-import { he } from 'date-fns/locale';
 import api from '@/lib/api';
 import type { Job } from '@/types/api';
 import { durationMins, formatHoursLabel, formatPrice, isInMonth } from '@/lib/utils';
@@ -59,11 +58,10 @@ export default function StatsScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
-      <View>
+      <View style={styles.headerRow}>
         <Text style={styles.h1}>סטטיסטיקות</Text>
-        <Text style={styles.sub}>סיכום הכנסות ופעילות לפי חודש</Text>
+        <MonthNavigator month={month} onChange={setMonth} />
       </View>
-      <MonthNavigator month={month} onChange={setMonth} />
 
       {isLoading ? (
         <View style={{ gap: space.lg }}>
@@ -76,7 +74,7 @@ export default function StatsScreen() {
         <>
           <StatHero
             icon="wallet"
-            label={`הכנסות נטו · ${format(month, 'MMMM yyyy', { locale: he })}`}
+            label="הכנסות נטו"
             amount={formatPrice(m.earnedNet)}
             tone="success"
           >
@@ -155,8 +153,8 @@ function StatTile({ title, value, icon, tone }: { title: string; value: string; 
 
 const styles = StyleSheet.create({
   screen: { padding: space.lg, paddingBottom: 40, gap: space.lg },
-  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+  h1: { fontSize: 26, fontWeight: '900', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, justifyContent: 'space-between' },
   tile: { width: '48%', padding: space.lg, gap: space.sm, alignItems: 'flex-end' },
   tileIcon: { width: 48, height: 48, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
