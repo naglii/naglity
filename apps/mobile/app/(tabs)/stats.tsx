@@ -12,6 +12,7 @@ import { MonthNavigator } from '@/components/MonthNavigator';
 import { JobStatusBadge } from '@/components/JobStatusBadge';
 import { Card, Chip, Skeleton } from '@/components/ui';
 import { colors } from '@/theme/colors';
+import { radius, space } from '@/theme/tokens';
 
 const sum = (jobs: Job[], pick: (j: Job) => number) => jobs.reduce((t, j) => t + pick(j), 0);
 type Filter = 'all' | 'PAID' | 'COMPLETED' | 'upcoming';
@@ -58,19 +59,17 @@ export default function StatsScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.h1}>סטטיסטיקות</Text>
-          <Text style={styles.sub}>סיכום הכנסות ופעילות לפי חודש</Text>
-        </View>
+      <View>
+        <Text style={styles.h1}>סטטיסטיקות</Text>
+        <Text style={styles.sub}>סיכום הכנסות ופעילות לפי חודש</Text>
       </View>
       <MonthNavigator month={month} onChange={setMonth} />
 
       {isLoading ? (
-        <View style={{ gap: 14 }}>
-          <Skeleton height={140} />
-          <View style={styles.cardsGrid}>
-            {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={88} style={{ width: '48%' }} />)}
+        <View style={{ gap: space.lg }}>
+          <Skeleton height={150} />
+          <View style={styles.grid}>
+            {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={120} style={{ width: '48%' }} />)}
           </View>
         </View>
       ) : (
@@ -79,35 +78,34 @@ export default function StatsScreen() {
             icon="wallet"
             label={`הכנסות נטו · ${format(month, 'MMMM yyyy', { locale: he })}`}
             amount={formatPrice(m.earnedNet)}
+            tone="success"
           >
             <HeroPill icon="checkmark-circle" tone="success">{m.paid.length} שולמו · {formatPrice(m.paidNet)}</HeroPill>
             <HeroPill icon="time" tone="info">{m.completed.length} ממתינות · {formatPrice(m.pendingNet)}</HeroPill>
           </StatHero>
 
-          <View style={styles.cardsGrid}>
+          <View style={styles.grid}>
             <StatTile title="עבודות שהושלמו" value={String(m.done.length)} icon="checkmark-circle" tone="success" />
-            <StatTile title="עבודות ששולמו" value={String(m.paid.length)} icon="cash" tone="brand" />
+            <StatTile title="עבודות ששולמו" value={String(m.paid.length)} icon="cash" tone="primary" />
             <StatTile title="שעות עבודה" value={formatHoursLabel(m.totalMins)} icon="timer-outline" tone="info" />
             <StatTile title="מתוכננות החודש" value={String(m.upcoming.length)} icon="calendar" tone="warning" />
           </View>
 
           {/* Breakdown */}
-          <View style={styles.breakdownHead}>
-            <Text style={styles.breakdownTitle}>פירוט עבודות</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-              {chips.map((c) => (
-                <Chip key={c.key} label={`${c.label} ${c.count}`} active={filter === c.key} onPress={() => setFilter(c.key)} />
-              ))}
-            </ScrollView>
-          </View>
+          <Text style={styles.breakdownTitle}>פירוט עבודות</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            {chips.map((c) => (
+              <Chip key={c.key} label={`${c.label} ${c.count}`} active={filter === c.key} onPress={() => setFilter(c.key)} />
+            ))}
+          </ScrollView>
 
           {filtered.length === 0 ? (
-            <Card style={{ padding: 40, alignItems: 'center' }}>
-              <Ionicons name="file-tray-outline" size={26} color={colors.brandStrong} />
+            <Card style={styles.emptyCard}>
+              <Ionicons name="file-tray-outline" size={30} color={colors.primary} />
               <Text style={styles.emptyText}>אין עבודות להצגה בחודש זה</Text>
             </Card>
           ) : (
-            <Card style={{ padding: 0 }}>
+            <Card>
               {filtered.map((job, i) => (
                 <View key={job.id} style={[styles.jobRow, i > 0 && styles.rowDivider]}>
                   <View style={styles.dateCol}>
@@ -117,7 +115,7 @@ export default function StatsScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
                     <View style={styles.routeRow}>
-                      <Ionicons name="location-outline" size={12} color={colors.brandStrong} />
+                      <Ionicons name="location-outline" size={13} color={colors.primary} />
                       <Text style={styles.routeText} numberOfLines={1}>{job.fromLocation} ← {job.toLocation}</Text>
                     </View>
                   </View>
@@ -135,48 +133,47 @@ export default function StatsScreen() {
   );
 }
 
-function StatTile({ title, value, icon, tone }: { title: string; value: string; icon: any; tone: 'brand' | 'success' | 'info' | 'warning' }) {
-  const TONE = {
-    brand: { bg: colors.brandSoft, fg: colors.brandStrong },
-    success: { bg: colors.successSoft, fg: colors.success },
-    info: { bg: colors.infoSoft, fg: colors.info },
-    warning: { bg: colors.warningSoft, fg: colors.warning },
-  }[tone];
+const TONES: Record<string, { bg: string; fg: string }> = {
+  primary: { bg: colors.primarySoft, fg: colors.primary },
+  success: { bg: colors.moneySoft, fg: colors.money },
+  info: { bg: colors.infoSoft, fg: colors.info },
+  warning: { bg: colors.warningSoft, fg: colors.warning },
+};
+
+function StatTile({ title, value, icon, tone }: { title: string; value: string; icon: any; tone: 'primary' | 'success' | 'info' | 'warning' }) {
+  const t = TONES[tone];
   return (
     <Card style={styles.tile}>
-      <View style={[styles.tileIcon, { backgroundColor: TONE.bg }]}>
-        <Ionicons name={icon} size={20} color={TONE.fg} />
+      <View style={[styles.tileIcon, { backgroundColor: t.bg }]}>
+        <Ionicons name={icon} size={22} color={t.fg} />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.tileTitle} numberOfLines={1}>{title}</Text>
-        <Text style={styles.tileValue}>{value}</Text>
-      </View>
+      <Text style={styles.tileValue}>{value}</Text>
+      <Text style={styles.tileTitle} numberOfLines={1}>{title}</Text>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: 16, paddingBottom: 40, gap: 16 },
-  headerRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
-  h1: { fontSize: 20, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  cardsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
-  tile: { width: '48%', flexDirection: 'row-reverse', alignItems: 'center', gap: 12, padding: 14 },
-  tileIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  tileTitle: { fontSize: 12, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl' },
-  tileValue: { fontSize: 22, fontWeight: '800', color: colors.foreground, marginTop: 2, textAlign: 'right' },
-  breakdownHead: { gap: 10 },
-  breakdownTitle: { fontSize: 14, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  chipRow: { flexDirection: 'row-reverse', gap: 8, paddingVertical: 2 },
-  emptyText: { fontSize: 13, color: colors.mutedForeground, marginTop: 8, writingDirection: 'rtl' },
-  jobRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 14, padding: 16 },
+  screen: { padding: space.lg, paddingBottom: 40, gap: space.lg },
+  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: space.md, justifyContent: 'space-between' },
+  tile: { width: '48%', padding: space.lg, gap: space.sm, alignItems: 'flex-end' },
+  tileIcon: { width: 48, height: 48, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
+  tileValue: { fontSize: 30, fontWeight: '900', color: colors.foreground, marginTop: 4 },
+  tileTitle: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl' },
+  breakdownTitle: { fontSize: 17, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  chipRow: { flexDirection: 'row-reverse', gap: space.sm, paddingVertical: 2 },
+  emptyCard: { padding: 40, alignItems: 'center', gap: space.sm },
+  emptyText: { fontSize: 14, color: colors.mutedForeground, writingDirection: 'rtl' },
+  jobRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: space.md, padding: space.lg },
   rowDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  dateCol: { width: 48, alignItems: 'center' },
-  dateBig: { fontSize: 14, fontWeight: '800', color: colors.foreground },
-  dateSmall: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },
-  jobTitle: { fontSize: 14, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  routeRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 5, marginTop: 2 },
-  routeText: { fontSize: 12, color: colors.mutedForeground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
-  jobEnd: { alignItems: 'flex-start', gap: 4 },
-  jobPrice: { fontSize: 14, fontWeight: '800', color: colors.foreground },
+  dateCol: { width: 50, alignItems: 'center' },
+  dateBig: { fontSize: 15, fontWeight: '800', color: colors.foreground },
+  dateSmall: { fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
+  jobTitle: { fontSize: 15, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  routeRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 5, marginTop: 3 },
+  routeText: { fontSize: 13, color: colors.mutedForeground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
+  jobEnd: { alignItems: 'flex-start', gap: 5 },
+  jobPrice: { fontSize: 15, fontWeight: '800', color: colors.money },
 });

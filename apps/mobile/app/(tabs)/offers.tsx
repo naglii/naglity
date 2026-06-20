@@ -10,6 +10,7 @@ import { formatPrice, netCents } from '@/lib/utils';
 import { OFFER_STATUS_CONFIG } from '@/theme/jobStatus';
 import { Card, Chip, EmptyState, Skeleton } from '@/components/ui';
 import { colors } from '@/theme/colors';
+import { radius, space } from '@/theme/tokens';
 
 const monthKey = (iso: string) => format(startOfMonth(new Date(iso)), 'yyyy-MM');
 
@@ -48,7 +49,7 @@ export default function OffersScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <EmptyState
-          icon={<Ionicons name="cash-outline" size={28} color={colors.brandStrong} />}
+          icon={<Ionicons name="cash-outline" size={34} color={colors.primary} />}
           title="לא שלחת הצעות עדיין"
           subtitle='הצעות שתגיש על עבודות "פתוחות להצעות" יופיעו כאן'
         />
@@ -134,31 +135,31 @@ export default function OffersScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: 16, paddingBottom: 40, gap: 12 },
+  screen: { padding: space.lg, paddingBottom: 40, gap: space.md },
   headerRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
-  h1: { fontSize: 20, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  pendingPill: { backgroundColor: colors.warningSoft, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999 },
-  pendingText: { fontSize: 13, fontWeight: '700', color: colors.warning },
-  chipRow: { flexDirection: 'row-reverse', gap: 8, paddingVertical: 2 },
+  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  pendingPill: { backgroundColor: colors.pendingSoft, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill },
+  pendingText: { fontSize: 13, fontWeight: '800', color: colors.pending },
+  chipRow: { flexDirection: 'row-reverse', gap: space.sm, paddingVertical: 2 },
   emptyMonth: { textAlign: 'center', color: colors.mutedForeground, paddingVertical: 40, writingDirection: 'rtl' },
   offerCard: { flexDirection: 'row-reverse' },
-  offerBody: { flex: 1, padding: 14, gap: 8 },
-  offerTitleRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
-  offerTitle: { fontSize: 15, fontWeight: '800', color: colors.foreground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
-  statusChip: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999 },
-  statusText: { fontSize: 11, fontWeight: '700', writingDirection: 'rtl' },
+  offerBody: { flex: 1, padding: space.lg, gap: space.sm },
+  offerTitleRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: space.sm },
+  offerTitle: { fontSize: 16, fontWeight: '800', color: colors.foreground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
+  statusChip: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999 },
+  statusText: { fontSize: 12, fontWeight: '800', writingDirection: 'rtl' },
   routeRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
   routeText: { fontSize: 14, color: colors.mutedForeground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
-  metaRow: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12 },
+  metaRow: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: space.md },
   metaItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
   metaText: { fontSize: 12, color: colors.mutedForeground, writingDirection: 'rtl' },
-  note: { fontSize: 12, color: colors.foreground, writingDirection: 'rtl', textAlign: 'right' },
+  note: { fontSize: 13, color: colors.foreground, writingDirection: 'rtl', textAlign: 'right' },
   priceRail: {
-    width: 108, alignItems: 'center', justifyContent: 'center', gap: 2,
-    backgroundColor: colors.accent, padding: 12, borderLeftWidth: 1, borderLeftColor: colors.border,
+    width: 116, alignItems: 'center', justifyContent: 'center', gap: 2,
+    backgroundColor: colors.primarySoft, padding: space.md,
   },
-  priceBig: { fontSize: 18, fontWeight: '900', color: colors.brandStrong },
+  priceBig: { fontSize: 20, fontWeight: '900', color: colors.primary },
   priceLabel: { fontSize: 11, color: colors.mutedForeground, writingDirection: 'rtl' },
-  priceNet: { fontSize: 11, fontWeight: '700', color: colors.success, marginTop: 4, writingDirection: 'rtl' },
+  priceNet: { fontSize: 12, fontWeight: '800', color: colors.money, marginTop: 4, writingDirection: 'rtl' },
 });

@@ -6,6 +6,7 @@ import { he } from 'date-fns/locale';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
+import { radius, shadow } from '@/theme/tokens';
 
 export function MonthNavigator({ month, onChange }: { month: Date; onChange: (m: Date) => void }) {
   const current = startOfMonth(new Date());
@@ -25,8 +26,12 @@ export function MonthNavigator({ month, onChange }: { month: Date; onChange: (m:
 
 function NavBtn({ icon, onPress, disabled }: { icon: any; onPress: () => void; disabled?: boolean }) {
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={[styles.btn, disabled && { opacity: 0.3 }]}>
-      <Ionicons name={icon} size={16} color={colors.mutedForeground} />
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [styles.btn, disabled && { opacity: 0.25 }, pressed && !disabled && { backgroundColor: colors.muted }]}
+    >
+      <Ionicons name={icon} size={18} color={colors.primary} />
     </Pressable>
   );
 }
@@ -37,11 +42,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 4,
+    borderRadius: radius.lg,
+    padding: 5,
+    ...shadow.card,
   },
-  btn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
-  label: { minWidth: 110, textAlign: 'center', fontSize: 13, fontWeight: '700', color: colors.foreground },
+  btn: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md },
+  label: { flex: 1, minWidth: 120, textAlign: 'center', fontSize: 15, fontWeight: '800', color: colors.foreground },
 });

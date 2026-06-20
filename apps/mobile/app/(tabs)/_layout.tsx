@@ -7,14 +7,16 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.brand,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        headerStyle: { backgroundColor: colors.card },
-        headerTitleStyle: { fontWeight: '800', color: colors.foreground },
+        headerStyle: { backgroundColor: colors.card, elevation: 0, shadowOpacity: 0 },
+        headerTitleStyle: { fontWeight: '800', color: colors.foreground, fontSize: 18 },
         headerTitleAlign: 'center',
+        headerShadowVisible: false,
         headerRight: () => <HeaderActions />,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border, height: 60, paddingTop: 6, paddingBottom: 8 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        tabBarItemStyle: { paddingVertical: 2 },
       }}
     >
       <Tabs.Screen

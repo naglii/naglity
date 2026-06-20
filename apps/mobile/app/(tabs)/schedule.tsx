@@ -11,6 +11,7 @@ import { JobStatusBadge } from '@/components/JobStatusBadge';
 import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { colors } from '@/theme/colors';
+import { radius, space } from '@/theme/tokens';
 
 const accentByStatus: Record<string, string> = {
   ACCEPTED: colors.warning,
@@ -57,7 +58,7 @@ export default function ScheduleScreen() {
   if (isLoading) {
     return (
       <View style={styles.screen}>
-        {[0, 1, 2].map((i) => <Skeleton key={i} height={120} style={{ marginBottom: 12 }} />)}
+        {[0, 1, 2].map((i) => <Skeleton key={i} height={150} style={{ marginBottom: space.md }} />)}
       </View>
     );
   }
@@ -72,7 +73,7 @@ export default function ScheduleScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <EmptyState
-          icon={<Ionicons name="calendar-outline" size={28} color={colors.brandStrong} />}
+          icon={<Ionicons name="calendar-outline" size={34} color={colors.primary} />}
           title="לוח הזמנים ריק"
           subtitle="עבודות שתקבל יופיעו כאן מסודרות לפי יום ושעה"
         />
@@ -96,88 +97,92 @@ export default function ScheduleScreen() {
       </View>
 
       {groups.map((group) => (
-        <View key={group.key} style={{ gap: 12 }}>
-          <View style={styles.dayHead}>
+        <View key={group.key} style={{ gap: space.md }}>
+          <View style={styles.dayHeader}>
             <Text style={styles.dayLabel}>{dayLabel(group.date)}</Text>
             <View style={styles.dayCount}><Text style={styles.dayCountText}>{group.jobs.length}</Text></View>
-            <View style={styles.dayRule} />
           </View>
 
           {group.jobs.map((job) => {
             const isJobToday = isSameDay(new Date(job.scheduledAt), new Date());
             return (
-              <Card key={job.id} style={{ borderRightWidth: 4, borderRightColor: accentByStatus[job.status] ?? colors.border }}>
-                <View style={styles.timeRail}>
-                  <Text style={styles.time}>{format(new Date(job.scheduledAt), 'HH:mm')}</Text>
-                  <Text style={styles.timeLabel}>התחלה</Text>
-                </View>
+              <Card key={job.id} style={{ borderRightWidth: 5, borderRightColor: accentByStatus[job.status] ?? colors.border }}>
                 <View style={styles.jobBody}>
-                  <View style={styles.jobTitleRow}>
-                    <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
+                  {/* time + status row */}
+                  <View style={styles.topRow}>
+                    <View style={styles.timeBlock}>
+                      <Text style={styles.time}>{format(new Date(job.scheduledAt), 'HH:mm')}</Text>
+                      <Text style={styles.timeLabel}>שעת התחלה</Text>
+                    </View>
                     <JobStatusBadge status={job.status} />
                   </View>
 
+                  <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
+
                   <View style={styles.routeRow}>
-                    <Ionicons name="location-outline" size={14} color={colors.brandStrong} />
+                    <Ionicons name="location-outline" size={15} color={colors.primary} />
                     <Text style={styles.routeText} numberOfLines={1}>{job.fromLocation} ← {job.toLocation}</Text>
                   </View>
 
                   <View style={styles.metaRow}>
-                    <Ionicons name="time-outline" size={13} color={colors.mutedForeground} />
-                    <Text style={styles.metaText}>זמן נסיעה משוער · {formatHoursLabel(durationMins(job.scheduledAt, job.estimatedEndAt))}</Text>
+                    <Ionicons name="time-outline" size={14} color={colors.mutedForeground} />
+                    <Text style={styles.metaText}>נסיעה · {formatHoursLabel(durationMins(job.scheduledAt, job.estimatedEndAt))}</Text>
                   </View>
 
                   {(job.craneCapacityTons != null || job.loadType) && (
                     <View style={styles.tags}>
                       {job.craneCapacityTons != null && (
-                        <View style={[styles.tag, { backgroundColor: colors.brandSoft }]}>
-                          <Ionicons name="barbell-outline" size={13} color={colors.brandStrong} />
-                          <Text style={[styles.tagText, { color: colors.brandStrong }]}>{job.craneCapacityTons} טון</Text>
+                        <View style={[styles.tag, { backgroundColor: colors.primarySoft }]}>
+                          <Ionicons name="barbell-outline" size={14} color={colors.primary} />
+                          <Text style={[styles.tagText, { color: colors.primary }]}>{job.craneCapacityTons} טון</Text>
                         </View>
                       )}
                       {job.loadType && (
                         <View style={[styles.tag, { backgroundColor: colors.muted }]}>
-                          <Ionicons name="cube-outline" size={13} color={colors.mutedForeground} />
-                          <Text style={[styles.tagText, { color: colors.mutedForeground }]}>{loadTypeLabel(job.loadType)}</Text>
+                          <Ionicons name="cube-outline" size={14} color={colors.slate700} />
+                          <Text style={[styles.tagText, { color: colors.slate700 }]}>{loadTypeLabel(job.loadType)}</Text>
                         </View>
                       )}
                     </View>
                   )}
 
-                  <View style={styles.footerRow}>
-                    <Text style={styles.price}>
-                      {formatPrice(job.netPriceCents)} <Text style={styles.priceUnit}>נטו</Text>
-                    </Text>
-                    <View style={styles.actions}>
-                      {!!job.business?.phone && (
-                        <Button
-                          title="התקשר"
-                          variant="outline"
-                          size="sm"
-                          onPress={() => Linking.openURL(`tel:${job.business!.phone}`)}
-                          icon={<Ionicons name="call-outline" size={14} color={colors.foreground} />}
-                        />
-                      )}
-                      {job.status === 'ACCEPTED' && (
-                        <Button
-                          title="התחל"
-                          size="sm"
-                          disabled={!isJobToday}
-                          onPress={() => startMutation.mutate(job.id)}
-                          icon={<Ionicons name="play" size={14} color={colors.white} />}
-                        />
-                      )}
-                      {job.status === 'ACCEPTED' && (
-                        <Button
-                          title="בטל"
-                          variant="outline"
-                          size="sm"
-                          disabled={isJobToday}
-                          onPress={() => confirmCancel(job)}
-                          icon={<Ionicons name="close" size={14} color={colors.foreground} />}
-                        />
-                      )}
-                    </View>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.price}>{formatPrice(job.netPriceCents)}</Text>
+                    <Text style={styles.priceUnit}>תשלום נטו</Text>
+                  </View>
+
+                  {/* Actions */}
+                  {job.status === 'ACCEPTED' && (
+                    <Button
+                      title="התחל עבודה"
+                      size="lg"
+                      disabled={!isJobToday}
+                      onPress={() => startMutation.mutate(job.id)}
+                      icon={<Ionicons name="play" size={18} color={colors.white} />}
+                    />
+                  )}
+                  <View style={styles.secondaryActions}>
+                    {!!job.business?.phone && (
+                      <Button
+                        title="התקשר"
+                        variant="secondary"
+                        size="md"
+                        style={{ flex: 1 }}
+                        onPress={() => Linking.openURL(`tel:${job.business!.phone}`)}
+                        icon={<Ionicons name="call-outline" size={16} color={colors.brandStrong} />}
+                      />
+                    )}
+                    {job.status === 'ACCEPTED' && (
+                      <Button
+                        title="בטל"
+                        variant="destructive"
+                        size="md"
+                        style={{ flex: 1 }}
+                        disabled={isJobToday}
+                        onPress={() => confirmCancel(job)}
+                        icon={<Ionicons name="close" size={16} color={colors.destructive} />}
+                      />
+                    )}
                   </View>
 
                   {isJobToday && job.status === 'ACCEPTED' && (
@@ -194,30 +199,33 @@ export default function ScheduleScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: 16, paddingBottom: 40, gap: 22 },
-  h1: { fontSize: 20, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  dayHead: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
-  dayLabel: { fontSize: 14, fontWeight: '700', color: colors.foreground, writingDirection: 'rtl' },
-  dayCount: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  dayCountText: { fontSize: 11, fontWeight: '700', color: colors.mutedForeground },
-  dayRule: { flex: 1, height: 1, backgroundColor: colors.border },
-  timeRail: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 10 },
-  time: { fontSize: 18, fontWeight: '800', color: colors.foreground },
-  timeLabel: { fontSize: 11, color: colors.mutedForeground, writingDirection: 'rtl' },
-  jobBody: { padding: 16, gap: 10 },
-  jobTitleRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  jobTitle: { fontSize: 15, fontWeight: '700', color: colors.foreground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
+  screen: { padding: space.lg, paddingBottom: 40, gap: space.xl },
+  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  dayHeader: {
+    flexDirection: 'row-reverse', alignItems: 'center', gap: space.sm,
+    backgroundColor: colors.primarySoft, alignSelf: 'flex-end',
+    paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill,
+  },
+  dayLabel: { fontSize: 14, fontWeight: '800', color: colors.primaryStrong, writingDirection: 'rtl' },
+  dayCount: { backgroundColor: colors.card, borderRadius: 999, minWidth: 22, alignItems: 'center', paddingHorizontal: 7, paddingVertical: 1 },
+  dayCountText: { fontSize: 12, fontWeight: '800', color: colors.primary },
+  jobBody: { padding: space.lg, gap: space.md },
+  topRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
+  timeBlock: { flexDirection: 'row-reverse', alignItems: 'baseline', gap: 6 },
+  time: { fontSize: 28, fontWeight: '900', color: colors.foreground },
+  timeLabel: { fontSize: 12, color: colors.mutedForeground, writingDirection: 'rtl' },
+  jobTitle: { fontSize: 17, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
   routeRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
-  routeText: { fontSize: 14, color: colors.mutedForeground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
+  routeText: { fontSize: 15, color: colors.foreground, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
   metaRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
-  metaText: { fontSize: 12, color: colors.mutedForeground, writingDirection: 'rtl' },
-  tags: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
-  tag: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 8 },
-  tagText: { fontSize: 12, fontWeight: '700', writingDirection: 'rtl' },
-  footerRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 2 },
-  price: { fontSize: 15, fontWeight: '800', color: colors.foreground },
-  priceUnit: { fontSize: 12, fontWeight: '400', color: colors.mutedForeground },
-  actions: { flexDirection: 'row-reverse', gap: 8, flexShrink: 1 },
-  hint: { fontSize: 11, color: colors.mutedForeground, writingDirection: 'rtl', textAlign: 'right' },
+  metaText: { fontSize: 13, color: colors.mutedForeground, writingDirection: 'rtl' },
+  tags: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 7 },
+  tag: { flexDirection: 'row-reverse', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: radius.md },
+  tagText: { fontSize: 13, fontWeight: '700', writingDirection: 'rtl' },
+  priceRow: { flexDirection: 'row-reverse', alignItems: 'baseline', gap: 7 },
+  price: { fontSize: 22, fontWeight: '900', color: colors.money },
+  priceUnit: { fontSize: 13, color: colors.mutedForeground, writingDirection: 'rtl' },
+  secondaryActions: { flexDirection: 'row-reverse', gap: space.sm },
+  hint: { fontSize: 12, color: colors.mutedForeground, writingDirection: 'rtl', textAlign: 'right' },
 });

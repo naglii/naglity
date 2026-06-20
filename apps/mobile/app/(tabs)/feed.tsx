@@ -11,6 +11,7 @@ import { JobCard } from '@/components/JobCard';
 import { Chip, EmptyState, Skeleton } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { colors } from '@/theme/colors';
+import { radius, space } from '@/theme/tokens';
 
 const FEED_KEY = ['driver-feed'];
 const bySchedule = (a: Job, b: Job) =>
@@ -102,7 +103,7 @@ export default function FeedScreen() {
   if (isLoading) {
     return (
       <View style={styles.screen}>
-        {[0, 1, 2].map((i) => <Skeleton key={i} height={210} style={{ marginBottom: 12 }} />)}
+        {[0, 1, 2].map((i) => <Skeleton key={i} height={260} style={{ marginBottom: space.md }} />)}
       </View>
     );
   }
@@ -112,30 +113,30 @@ export default function FeedScreen() {
       {needsPayout && (
         <Pressable style={styles.payoutBanner} onPress={() => router.push('/(tabs)/payouts')}>
           <View style={styles.payoutIcon}>
-            <Ionicons name="business-outline" size={18} color={colors.warning} />
+            <Ionicons name="business" size={20} color={colors.pending} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.payoutTitle}>הגדר אמצעי לקבלת תשלום</Text>
-            <Text style={styles.payoutSub}>חובה להגדיר חשבון לקבלת כספים כדי לקבל עבודות</Text>
+            <Text style={styles.payoutSub}>חובה כדי שתוכל לקבל עבודות</Text>
           </View>
-          <Ionicons name="arrow-back" size={16} color={colors.warning} />
+          <Ionicons name="arrow-back" size={18} color={colors.pending} />
         </Pressable>
       )}
 
       <View style={styles.headerRow}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.h1}>עבודות זמינות</Text>
           <Text style={styles.sub}>בחר עבודה וקבל אותה בלחיצה אחת</Text>
         </View>
         <View style={styles.countPill}>
-          <View style={[styles.dot, { backgroundColor: colors.success }]} />
-          <Text style={styles.countText}>{filtered.length} פתוחות</Text>
+          <View style={styles.countDot} />
+          <Text style={styles.countText}>{filtered.length}</Text>
         </View>
       </View>
 
       {/* Search */}
       <View style={styles.searchWrap}>
-        <Ionicons name="search" size={16} color={colors.mutedForeground} />
+        <Ionicons name="search" size={18} color={colors.mutedForeground} />
         <TextInput
           style={styles.searchInput}
           placeholder="חיפוש לפי אזור או כותרת"
@@ -160,17 +161,18 @@ export default function FeedScreen() {
 
       {jobs.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="cube-outline" size={28} color={colors.brandStrong} />}
+          icon={<Ionicons name="cube-outline" size={34} color={colors.primary} />}
           title="אין עבודות פתוחות כרגע"
           subtitle="עבודות חדשות יופיעו כאן בזמן אמת"
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="search" size={26} color={colors.brandStrong} />}
+          icon={<Ionicons name="search" size={30} color={colors.primary} />}
           title="אין עבודות שתואמות את הסינון"
+          subtitle="נסה לשנות את מסנני הקיבולת או החיפוש"
         />
       ) : (
-        <View style={{ gap: 12, marginTop: 8 }}>
+        <View style={{ gap: space.md, marginTop: space.xs }}>
           {filtered.map((job) => (
             <JobCard
               key={job.id}
@@ -188,26 +190,24 @@ export default function FeedScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: 16, paddingBottom: 40, gap: 10 },
+  screen: { padding: space.lg, paddingBottom: 40, gap: space.md },
   payoutBanner: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 12,
-    backgroundColor: colors.warningSoft, borderRadius: 14, padding: 14,
-    borderWidth: 1, borderColor: colors.warning,
+    flexDirection: 'row-reverse', alignItems: 'center', gap: space.md,
+    backgroundColor: colors.pendingSoft, borderRadius: radius.xl, padding: space.lg,
   },
-  payoutIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  payoutTitle: { fontSize: 14, fontWeight: '700', color: colors.warning, textAlign: 'right', writingDirection: 'rtl' },
-  payoutSub: { fontSize: 12, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  headerRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-  h1: { fontSize: 20, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  countPill: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, backgroundColor: colors.successSoft, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999 },
-  countText: { fontSize: 13, fontWeight: '700', color: colors.success },
-  dot: { width: 8, height: 8, borderRadius: 999 },
+  payoutIcon: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  payoutTitle: { fontSize: 15, fontWeight: '800', color: colors.pending, textAlign: 'right', writingDirection: 'rtl' },
+  payoutSub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  headerRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: space.md, marginTop: space.xs },
+  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  countPill: { flexDirection: 'row-reverse', alignItems: 'center', gap: 7, backgroundColor: colors.moneySoft, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill },
+  countDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: colors.money },
+  countText: { fontSize: 15, fontWeight: '800', color: colors.money },
   searchWrap: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 8,
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
-    borderRadius: 12, paddingHorizontal: 12, height: 42,
+    flexDirection: 'row-reverse', alignItems: 'center', gap: space.sm,
+    backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: space.lg, height: 52,
   },
-  searchInput: { flex: 1, fontSize: 14, color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  chipRow: { flexDirection: 'row-reverse', gap: 8, paddingVertical: 2 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  chipRow: { flexDirection: 'row-reverse', gap: space.sm, paddingVertical: 2 },
 });

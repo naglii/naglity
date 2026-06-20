@@ -7,6 +7,7 @@ import { he } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
 import { EmptyState, Skeleton } from '@/components/ui';
 import { colors } from '@/theme/colors';
+import { radius, shadow, space } from '@/theme/tokens';
 import type { Notification } from '@/types/api';
 
 /** Where tapping a notification should take the driver (driver-relevant types only). */
@@ -40,8 +41,9 @@ export default function NotificationsScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <EmptyState
-          icon={<Ionicons name="notifications-outline" size={26} color={colors.brandStrong} />}
+          icon={<Ionicons name="notifications-outline" size={32} color={colors.primary} />}
           title="אין התראות"
+          subtitle="עדכונים על עבודות והצעות יופיעו כאן"
         />
       </View>
     );
@@ -82,17 +84,18 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: 16, paddingBottom: 40 },
-  markRow: { alignItems: 'flex-start', paddingVertical: 8 },
-  markText: { fontSize: 13, color: colors.brand, fontWeight: '600', writingDirection: 'rtl' },
-  list: { gap: 10 },
+  screen: { padding: space.lg, paddingBottom: 40 },
+  markRow: { alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 4, marginBottom: 4 },
+  markText: { fontSize: 14, color: colors.primary, fontWeight: '700', writingDirection: 'rtl' },
+  list: { gap: space.md },
   item: {
-    flexDirection: 'row-reverse', alignItems: 'flex-start', gap: 10,
-    backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14,
+    flexDirection: 'row-reverse', alignItems: 'flex-start', gap: space.md,
+    backgroundColor: colors.card, borderRadius: radius.xl, padding: space.lg,
+    ...shadow.card,
   },
-  itemUnread: { backgroundColor: '#F0F7FF' },
-  unreadDot: { width: 8, height: 8, borderRadius: 999, marginTop: 6 },
-  itemTitle: { fontSize: 14, fontWeight: '700', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  itemBody: { fontSize: 13, color: colors.mutedForeground, marginTop: 2, textAlign: 'right', writingDirection: 'rtl' },
-  itemTime: { fontSize: 11, color: colors.mutedForeground, marginTop: 6, textAlign: 'right', writingDirection: 'rtl' },
+  itemUnread: { backgroundColor: colors.primarySoft },
+  unreadDot: { width: 9, height: 9, borderRadius: 999, marginTop: 6 },
+  itemTitle: { fontSize: 15, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  itemBody: { fontSize: 14, color: colors.mutedForeground, marginTop: 3, textAlign: 'right', writingDirection: 'rtl', lineHeight: 20 },
+  itemTime: { fontSize: 12, color: colors.mutedForeground, marginTop: 8, textAlign: 'right', writingDirection: 'rtl' },
 });

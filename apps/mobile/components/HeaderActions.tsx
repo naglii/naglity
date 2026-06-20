@@ -14,30 +14,32 @@ export function HeaderActions() {
   return (
     <View style={styles.row}>
       <Pressable
-        style={styles.btn}
+        style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}
         onPress={() => router.push('/(tabs)/notifications')}
-        hitSlop={8}
+        hitSlop={6}
       >
-        <Ionicons name="notifications-outline" size={22} color={colors.foreground} />
+        <Ionicons name="notifications-outline" size={23} color={colors.foreground} />
         {unreadCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
           </View>
         )}
       </Pressable>
-      <Pressable style={styles.btn} onPress={signOut} hitSlop={8}>
-        <Ionicons name="log-out-outline" size={22} color={colors.mutedForeground} />
+      <Pressable style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]} onPress={signOut} hitSlop={6}>
+        <Ionicons name="log-out-outline" size={23} color={colors.mutedForeground} />
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, paddingHorizontal: 12 },
-  btn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, paddingHorizontal: 8 },
+  btn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  btnPressed: { backgroundColor: colors.muted },
   badge: {
-    position: 'absolute', top: 2, left: 2, minWidth: 16, height: 16, borderRadius: 999,
-    backgroundColor: colors.destructive, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
+    position: 'absolute', top: 6, left: 6, minWidth: 18, height: 18, borderRadius: 999,
+    backgroundColor: colors.destructive, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
+    borderWidth: 2, borderColor: colors.card,
   },
   badgeText: { color: colors.white, fontSize: 10, fontWeight: '800' },
 });
