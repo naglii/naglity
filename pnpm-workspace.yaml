@@ -1,14 +1,19 @@
 packages:
   - 'apps/*'
 
-# React Native (mobile) pulls jest 29's test-runner packages into the workspace,
-# which collide with the API's jest 30 unit runner (jest-runtime@30 + jest-mock@29
-# → "clearMocksOnScope is not a function"). These are test-only deps, unused by
-# Metro/runtime, so pin them to jest 30 workspace-wide.
+# Workspace-wide dependency pins to avoid duplicate-version conflicts introduced
+# by the mobile (React Native / Expo) workspace.
 overrides:
+  # RN pulls jest 29's test-runner packages, which collide with the API's jest 30
+  # unit runner (jest-runtime@30 + jest-mock@29 → "clearMocksOnScope is not a
+  # function"). Test-only deps, unused by Metro/runtime → pin to jest 30.
   jest-mock: 30.4.1
   jest-environment-node: 30.4.1
   '@jest/environment': 30.4.1
+  # Expo SDK 54 wants @types/react ~19.1 while web uses 19.2; two copies make
+  # React's Ref types "unrelated" and break the web `next build` type-check.
+  # Pin one version (web's) across the workspace.
+  '@types/react': 19.2.15
 
 allowBuilds:
   '@nestjs/core': true
