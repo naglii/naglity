@@ -16,6 +16,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => req?.cookies?.['access_token'] ?? null,
+        // Mobile clients (React Native) have no cookie jar — accept a Bearer token too.
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
       secretOrKey: process.env['JWT_SECRET'] ?? 'secret',

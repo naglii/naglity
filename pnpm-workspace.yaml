@@ -1,6 +1,15 @@
 packages:
   - 'apps/*'
 
+# React Native (mobile) pulls jest 29's test-runner packages into the workspace,
+# which collide with the API's jest 30 unit runner (jest-runtime@30 + jest-mock@29
+# → "clearMocksOnScope is not a function"). These are test-only deps, unused by
+# Metro/runtime, so pin them to jest 30 workspace-wide.
+overrides:
+  jest-mock: 30.4.1
+  jest-environment-node: 30.4.1
+  '@jest/environment': 30.4.1
+
 allowBuilds:
   '@nestjs/core': true
   '@prisma/engines': true
