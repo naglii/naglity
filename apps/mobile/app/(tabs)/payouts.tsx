@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import api from '@/lib/api';
 import type { DriverPayout, Job, PayoutAccountStatus } from '@/types/api';
 import { formatPrice } from '@/lib/utils';
-import { Button, Card, EmptyState } from '@/components/ui';
+import { Button, Card, EmptyState, ScreenHeader } from '@/components/ui';
 import { ReceiptSheet } from '@/components/ReceiptSheet';
 import { toast } from '@/components/Toast';
 import { colors } from '@/theme/colors';
@@ -14,6 +15,7 @@ import { radius, space } from '@/theme/tokens';
 
 export default function PayoutsScreen() {
   const qc = useQueryClient();
+  const insets = useSafeAreaInsets();
   const [receiptJobId, setReceiptJobId] = useState<string | null>(null);
 
   const { data: account } = useQuery<PayoutAccountStatus>({
@@ -56,11 +58,8 @@ export default function PayoutsScreen() {
   const succeeded = payouts.filter((p) => p.status === 'SUCCEEDED').length;
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
-      <View>
-        <Text style={styles.h1}>תשלומים</Text>
-        <Text style={styles.sub}>אמצעי קבלת תשלום והתשלומים שקיבלת</Text>
-      </View>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={[styles.screen, { paddingBottom: insets.bottom + 96 }]}>
+      <ScreenHeader title="תשלומים" subtitle="אמצעי קבלת תשלום והתשלומים שקיבלת" />
 
       {/* payout account */}
       <Card style={{ padding: 20 }}>
@@ -157,8 +156,6 @@ export default function PayoutsScreen() {
 
 const styles = StyleSheet.create({
   screen: { padding: space.lg, paddingBottom: 40, gap: space.lg },
-  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
   iconChip: { width: 48, height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   iconChipLg: { width: 64, height: 64, borderRadius: radius.lg },
   accountActive: { flexDirection: 'row', alignItems: 'center', gap: space.md },

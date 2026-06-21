@@ -1,4 +1,5 @@
 import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, isBefore, isSameDay, isToday, isTomorrow, startOfDay } from 'date-fns';
@@ -8,7 +9,7 @@ import type { Job } from '@/types/api';
 import { durationMins, formatHoursLabel, formatPrice } from '@/lib/utils';
 import { loadTypeLabel } from '@/lib/jobAttributes';
 import { JobStatusBadge } from '@/components/JobStatusBadge';
-import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
+import { Button, Card, EmptyState, ScreenHeader, Skeleton } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
@@ -26,6 +27,7 @@ function dayLabel(d: Date): string {
 
 export default function ScheduleScreen() {
   const qc = useQueryClient();
+  const insets = useSafeAreaInsets();
 
   const { data: jobs, isLoading } = useQuery<Job[]>({
     queryKey: ['driver-jobs'],
@@ -90,11 +92,8 @@ export default function ScheduleScreen() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
-      <View>
-        <Text style={styles.h1}>לוח הזמנים שלי</Text>
-        <Text style={styles.sub}>{active.length} עבודות פעילות</Text>
-      </View>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={[styles.screen, { paddingBottom: insets.bottom + 96 }]}>
+      <ScreenHeader title="לוח הזמנים שלי" subtitle={`${active.length} עבודות פעילות`} />
 
       {groups.map((group) => (
         <View key={group.key} style={{ gap: space.md }}>
@@ -200,8 +199,6 @@ export default function ScheduleScreen() {
 
 const styles = StyleSheet.create({
   screen: { padding: space.lg, paddingBottom: 40, gap: space.xl },
-  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
   dayHeader: {
     flexDirection: 'row', alignItems: 'center', gap: space.sm,
     backgroundColor: colors.primarySoft, alignSelf: 'flex-start',

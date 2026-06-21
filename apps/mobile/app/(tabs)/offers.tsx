@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { format, startOfMonth } from 'date-fns';
@@ -8,13 +9,14 @@ import api from '@/lib/api';
 import type { JobOffer } from '@/types/api';
 import { formatPrice, netCents } from '@/lib/utils';
 import { OFFER_STATUS_CONFIG } from '@/theme/jobStatus';
-import { Card, Chip, EmptyState, Skeleton } from '@/components/ui';
+import { Card, Chip, EmptyState, ScreenHeader, Skeleton } from '@/components/ui';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 
 const monthKey = (iso: string) => format(startOfMonth(new Date(iso)), 'yyyy-MM');
 
 export default function OffersScreen() {
+  const insets = useSafeAreaInsets();
   const [month, setMonth] = useState('all');
 
   const { data: offers = [], isLoading } = useQuery<JobOffer[]>({
@@ -60,16 +62,16 @@ export default function OffersScreen() {
   const pending = withDate.filter((o) => o.status === 'PENDING').length;
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.h1}>ההצעות שלי</Text>
-          <Text style={styles.sub}>{filtered.length} הצעות · לפי תאריך העבודה</Text>
-        </View>
-        <View style={styles.pendingPill}>
-          <Text style={styles.pendingText}>{pending} ממתינות</Text>
-        </View>
-      </View>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={[styles.screen, { paddingBottom: insets.bottom + 96 }]}>
+      <ScreenHeader
+        title="ההצעות שלי"
+        subtitle={`${filtered.length} הצעות · לפי תאריך העבודה`}
+        accessory={
+          <View style={styles.pendingPill}>
+            <Text style={styles.pendingText}>{pending} ממתינות</Text>
+          </View>
+        }
+      />
 
       {months.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
@@ -136,9 +138,6 @@ export default function OffersScreen() {
 
 const styles = StyleSheet.create({
   screen: { padding: space.lg, paddingBottom: 40, gap: space.md },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  h1: { fontSize: 24, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  sub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
   pendingPill: { backgroundColor: colors.pendingSoft, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill },
   pendingText: { fontSize: 13, fontWeight: '800', color: colors.pending },
   chipRow: { flexDirection: 'row', gap: space.sm, paddingVertical: 2 },

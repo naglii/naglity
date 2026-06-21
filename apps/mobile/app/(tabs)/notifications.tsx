@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { formatDistanceToNow } from 'date-fns';
@@ -24,6 +25,7 @@ function targetFor(n: Notification): '/(tabs)/feed' | '/(tabs)/schedule' | null 
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { notifications, unreadCount, markAllRead, isLoading } = useNotifications();
 
   // Mark everything read when leaving the screen (mirrors the web "close marks read").
@@ -50,7 +52,7 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={[styles.screen, { paddingBottom: insets.bottom + 96 }]}>
       {unreadCount > 0 && (
         <Pressable style={styles.markRow} onPress={markAllRead}>
           <Text style={styles.markText}>סמן הכל כנקרא</Text>

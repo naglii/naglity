@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { format, startOfMonth } from 'date-fns';
@@ -9,7 +10,7 @@ import { durationMins, formatHoursLabel, formatPrice, isInMonth } from '@/lib/ut
 import { StatHero, HeroPill } from '@/components/StatHero';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { JobStatusBadge } from '@/components/JobStatusBadge';
-import { Card, Chip, Skeleton } from '@/components/ui';
+import { Card, Chip, ScreenHeader, Skeleton } from '@/components/ui';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 
@@ -17,6 +18,7 @@ const sum = (jobs: Job[], pick: (j: Job) => number) => jobs.reduce((t, j) => t +
 type Filter = 'all' | 'PAID' | 'COMPLETED' | 'upcoming';
 
 export default function StatsScreen() {
+  const insets = useSafeAreaInsets();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [filter, setFilter] = useState<Filter>('all');
 
@@ -57,9 +59,9 @@ export default function StatsScreen() {
   ];
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
-      <View style={styles.headerRow}>
-        <Text style={styles.h1}>סטטיסטיקות</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={[styles.screen, { paddingBottom: insets.bottom + 96 }]}>
+      <ScreenHeader title="סטטיסטיקות" />
+      <View style={styles.monthRow}>
         <MonthNavigator month={month} onChange={setMonth} />
       </View>
 
@@ -153,8 +155,7 @@ function StatTile({ title, value, icon, tone }: { title: string; value: string; 
 
 const styles = StyleSheet.create({
   screen: { padding: space.lg, paddingBottom: 40, gap: space.lg },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
-  h1: { fontSize: 26, fontWeight: '900', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  monthRow: { alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, justifyContent: 'space-between' },
   tile: { width: '48%', padding: space.lg, gap: space.sm, alignItems: 'flex-end' },
   tileIcon: { width: 48, height: 48, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },

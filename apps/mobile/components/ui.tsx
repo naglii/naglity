@@ -162,6 +162,27 @@ export function BottomSheet({
   );
 }
 
+/* ── ScreenHeader ── Main page title, perfectly centered on screen.
+   Optional `accessory` (pill/badge) is overlaid at the start edge so it never
+   shifts the title off-center. For tall controls, render them on their own row. */
+export function ScreenHeader({
+  title,
+  subtitle,
+  accessory,
+}: {
+  title: string;
+  subtitle?: string;
+  accessory?: ReactNode;
+}) {
+  return (
+    <View style={styles.screenHeader}>
+      <Text style={styles.screenHeaderTitle}>{title}</Text>
+      {subtitle ? <Text style={styles.screenHeaderSub}>{subtitle}</Text> : null}
+      {accessory ? <View style={styles.screenHeaderAccessory}>{accessory}</View> : null}
+    </View>
+  );
+}
+
 export const text: Record<string, TextStyle> = {
   h1: { fontSize: 22, fontWeight: '800', color: colors.foreground, writingDirection: 'rtl' },
   sub: { fontSize: 14, color: colors.mutedForeground, writingDirection: 'rtl' },
@@ -196,6 +217,10 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 14, fontWeight: '700', writingDirection: 'rtl' },
   dot: { width: 8, height: 8, borderRadius: 999 },
   skeleton: { backgroundColor: '#E8ECF2', borderRadius: radius.xl, width: '100%' },
+  screenHeader: { marginTop: space.xs, alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+  screenHeaderTitle: { fontSize: 26, fontWeight: '900', color: colors.foreground, textAlign: 'center', writingDirection: 'rtl' },
+  screenHeaderSub: { fontSize: 14, color: colors.mutedForeground, textAlign: 'center', writingDirection: 'rtl', marginTop: 2 },
+  screenHeaderAccessory: { position: 'absolute', start: 0, top: 0, bottom: 0, justifyContent: 'center' },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80, paddingHorizontal: 24, gap: 8 },
   emptyIcon: {
     width: 80,

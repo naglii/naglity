@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '@/lib/api';
 import { initSocket } from '@/lib/socket';
+import { playNewJobChime } from '@/lib/sound';
 import type { Job, JobOffer, Notification, PayoutAccountStatus } from '@/types/api';
 import { JobCard } from '@/components/JobCard';
-import { Chip, EmptyState, Skeleton } from '@/components/ui';
+import { Button, Chip, EmptyState, ScreenHeader, Skeleton } from '@/components/ui';
 import { toast } from '@/components/Toast';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
@@ -19,9 +21,26 @@ const bySchedule = (a: Job, b: Job) =>
 export default function FeedScreen() {
   const qc = useQueryClient();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'date' | 'price'>('date');
+  // Ids of jobs that just arrived — drives the per-card pulse/flash animation.
+  const [justArrivedIds, setJustArrivedIds] = useState<Set<string>>(() => new Set());
+
+  // Fire the audio + visual cue for a freshly-arrived job, then clear the flag
+  // so later re-renders don't re-animate the card.
+  const markArrived = useCallback((id: string) => {
+    setJustArrivedIds((prev) => new Set(prev).add(id));
+    playNewJobChime();
+    setTimeout(() => {
+      setJustArrivedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 4000);
+  }, []);
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: FEED_KEY,
@@ -54,8 +73,12 @@ export default function FeedScreen() {
 
   useEffect(() => {
     const socket = initSocket();
-    const onNew = ({ job }: { job: Job }) =>
-      qc.setQueryData<Job[]>(FEED_KEY, (old = []) => [...old, job].sort(bySchedule));
+    const onNew = ({ job }: { job: Job }) => {
+      qc.setQueryData<Job[]>(FEED_KEY, (old = []) =>
+        old.some((j) => j.id === job.id) ? old : [...old, job].sort(bySchedule),
+      );
+      markArrived(job.id);
+    };
     const onAccepted = ({ jobId }: { jobId: string }) =>
       qc.setQueryData<Job[]>(FEED_KEY, (old = []) => old.filter((j) => j.id !== jobId));
     socket.on('job:new', onNew);
@@ -64,7 +87,7 @@ export default function FeedScreen() {
       socket.off('job:new', onNew);
       socket.off('job:accepted', onAccepted);
     };
-  }, [qc]);
+  }, [qc, markArrived]);
 
   const handleAccept = async (jobId: string) => {
     qc.setQueryData<Job[]>(FEED_KEY, (old = []) => old.filter((j) => j.id !== jobId));
@@ -77,6 +100,35 @@ export default function FeedScreen() {
       qc.invalidateQueries({ queryKey: FEED_KEY });
     }
   };
+
+  // DEV-only: synthesize an incoming job through the same path as the socket
+  // 'job:new' event, so the chime + card animation can be tested with no backend.
+  const triggerMockJob = useCallback(() => {
+    const now = new Date();
+    const mock: Job = {
+      id: `mock-${Date.now()}`,
+      businessId: 'mock-biz',
+      driverId: null,
+      status: 'OPEN',
+      title: 'הרמת חומרי בניין',
+      description: 'משטח לבנים ושקי מלט לקומה 3',
+      grossPriceCents: 45000,
+      netPriceCents: 38000,
+      scheduledAt: new Date(now.getTime() + 2 * 3600_000).toISOString(),
+      estimatedEndAt: new Date(now.getTime() + 3 * 3600_000).toISOString(),
+      fromLocation: 'תל אביב',
+      toLocation: 'רמת גן',
+      craneCapacityTons: 15,
+      liftHeightMeters: 24,
+      pricingMode: 'LOCATION',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      business: { id: 'mock-biz', name: 'קבלן בדיקה' },
+      driver: null,
+    };
+    qc.setQueryData<Job[]>(FEED_KEY, (old = []) => [...old, mock].sort(bySchedule));
+    markArrived(mock.id);
+  }, [qc, markArrived]);
 
   const filtered = useMemo(() => {
     let list = jobs;
@@ -103,7 +155,10 @@ export default function FeedScreen() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.screen}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={[styles.screen, { paddingBottom: insets.bottom + 96 }]}
+    >
       {needsPayout && (
         <Pressable style={styles.payoutBanner} onPress={() => router.push('/(tabs)/payouts')}>
           <View style={styles.payoutIcon}>
@@ -117,13 +172,15 @@ export default function FeedScreen() {
         </Pressable>
       )}
 
-      <View style={styles.headerRow}>
-        <Text style={styles.h1}>עבודות זמינות</Text>
-        <View style={styles.countPill}>
-          <View style={styles.countDot} />
-          <Text style={styles.countText}>{filtered.length}</Text>
-        </View>
-      </View>
+      <ScreenHeader
+        title="עבודות זמינות"
+        accessory={
+          <View style={styles.countPill}>
+            <View style={styles.countDot} />
+            <Text style={styles.countText}>{filtered.length}</Text>
+          </View>
+        }
+      />
 
       {/* Search */}
       <View style={styles.searchWrap}>
@@ -142,6 +199,16 @@ export default function FeedScreen() {
         <Chip label="הקרוב ביותר" active={sort === 'date'} onPress={() => setSort('date')} />
         <Chip label="תשלום גבוה" active={sort === 'price'} onPress={() => setSort('price')} />
       </View>
+
+      {/* DEV-only: trigger a mock incoming job to test the chime + card animation. */}
+      {__DEV__ && (
+        <Button
+          title="עבודה חדשה (בדיקה)"
+          variant="outline"
+          onPress={triggerMockJob}
+          icon={<Ionicons name="notifications" size={18} color={colors.foreground} />}
+        />
+      )}
 
       {jobs.length === 0 ? (
         <EmptyState
@@ -164,6 +231,7 @@ export default function FeedScreen() {
               onAccept={handleAccept}
               invited={invitedIds.has(job.id)}
               offered={offeredIds.has(job.id)}
+              highlight={justArrivedIds.has(job.id)}
               onOffered={() => qc.invalidateQueries({ queryKey: ['my-offers'] })}
             />
           ))}
@@ -182,8 +250,6 @@ const styles = StyleSheet.create({
   payoutIcon: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   payoutTitle: { fontSize: 15, fontWeight: '800', color: colors.pending, textAlign: 'right', writingDirection: 'rtl' },
   payoutSub: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginTop: space.xs },
-  h1: { flex: 1, fontSize: 26, fontWeight: '900', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
   countPill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: colors.moneySoft, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill },
   countDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: colors.money },
   countText: { fontSize: 15, fontWeight: '800', color: colors.money },

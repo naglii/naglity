@@ -1,7 +1,7 @@
 // Mirrors apps/web/components/jobs/JobCard.tsx — adapted to RN. Visual revamp only;
 // all logic (accept/offer flow, props, state) is unchanged.
-import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Easing, I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { differenceInMinutes, format, formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
@@ -19,10 +19,30 @@ interface Props {
   invited?: boolean;
   offered?: boolean;
   onOffered: () => void;
+  /** When true, the card pulses + flashes on mount to flag a just-arrived job. */
+  highlight?: boolean;
 }
 
-export function JobCard({ job, onAccept, invited, offered, onOffered }: Props) {
+export function JobCard({ job, onAccept, invited, offered, onOffered, highlight }: Props) {
   const [offerOpen, setOfferOpen] = useState(false);
+  // Attention animation for newly-arrived jobs (drivers in noisy environments).
+  const scale = useRef(new Animated.Value(1)).current;
+  const flash = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!highlight) return;
+    scale.setValue(1);
+    flash.setValue(1);
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.03, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 180, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1.03, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 180, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]),
+      Animated.timing(flash, { toValue: 0, duration: 1400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+  }, [highlight, scale, flash]);
   // UI-only: progressive disclosure of secondary details (Wolt-style clean default).
   const [expanded, setExpanded] = useState(false);
   const scheduled = new Date(job.scheduledAt);
@@ -51,13 +71,13 @@ export function JobCard({ job, onAccept, invited, offered, onOffered }: Props) {
   };
 
   return (
+    <Animated.View style={{ transform: [{ scale }] }}>
     <Card style={invited ? styles.invited : undefined}>
+      <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flash }]} />
       <View style={styles.body}>
-        {/* Header */}
+        {/* Header — RTL: text right-aligned on the right, avatar on the left.
+            Source order maps right→left under I18nManager.forceRTL(true). */}
         <View style={styles.headerRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{bizInitial}</Text>
-          </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.title} numberOfLines={1}>{job.title}</Text>
             <Text style={styles.biz} numberOfLines={1}>
@@ -70,6 +90,9 @@ export function JobCard({ job, onAccept, invited, offered, onOffered }: Props) {
               <Text style={styles.newText}>חדש</Text>
             </View>
           )}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{bizInitial}</Text>
+          </View>
         </View>
 
         {/* When — date (muted) + time (bold) */}
@@ -161,6 +184,7 @@ export function JobCard({ job, onAccept, invited, offered, onOffered }: Props) {
         onSubmitted={onOffered}
       />
     </Card>
+    </Animated.View>
   );
 }
 
@@ -175,15 +199,20 @@ function Tag({ bg, fg, icon, text }: { bg: string; fg: string; icon: any; text: 
 
 const styles = StyleSheet.create({
   invited: { borderWidth: 2, borderColor: colors.pending },
+  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.primarySoft },
   body: { padding: space.xl, gap: space.md },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  // Explicit direction so the avatar is always on the LEFT and the text container on the RIGHT,
+  // even when Expo Go ignores forceRTL on an LTR OS (isRTL === false).
+  headerRow: { flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: space.md },
   avatar: {
     width: 48, height: 48, borderRadius: radius.lg, backgroundColor: colors.primary,
     alignItems: 'center', justifyContent: 'center',
   },
   avatarText: { color: colors.white, fontWeight: '800', fontSize: 18 },
-  title: { fontSize: 17, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
-  biz: { fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+  // width:'100%' forces the text box to span the full container so the physical
+  // textAlign:'right' always hugs the right edge — independent of I18nManager.isRTL.
+  title: { width: '100%', fontSize: 17, fontWeight: '800', color: colors.foreground, textAlign: 'right', writingDirection: 'rtl' },
+  biz: { width: '100%', fontSize: 13, color: colors.mutedForeground, textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
   newBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: colors.moneySoft, paddingVertical: 4, paddingHorizontal: 9, borderRadius: radius.pill,
