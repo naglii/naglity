@@ -10,6 +10,15 @@ const futureDay = () => ({
   scheduledAt: new Date(Date.now() + 3 * DAY),
   estimatedEndAt: new Date(Date.now() + 3 * DAY + 2 * 60 * 60 * 1000),
 });
+// A job scheduled for TODAY at noon. Anchored to a fixed mid-day point so it is
+// always the same calendar day as `new Date()` — unlike `now + 1h`, which rolls
+// into tomorrow when the suite runs in the last hour of the day (e.g. CI in UTC),
+// breaking the same-day start/cancel rules.
+const today = () => {
+  const noon = new Date();
+  noon.setHours(12, 0, 0, 0);
+  return { scheduledAt: noon, estimatedEndAt: new Date(noon.getTime() + 2 * 60 * 60 * 1000) };
+};
 
 describe('Job cancel & start (e2e)', () => {
   let app: INestApplication;
@@ -44,8 +53,8 @@ describe('Job cancel & start (e2e)', () => {
   });
 
   it('forbids cancelling on the scheduled day (400)', async () => {
-    // arrange — default seed schedules ~1h from now (today)
-    const { job, driverClient } = await seedAcceptedJob(app, prisma);
+    // arrange — scheduled for today
+    const { job, driverClient } = await seedAcceptedJob(app, prisma, today());
 
     // act
     const res = await driverClient.post(`/api/jobs/${job.id}/cancel`);
@@ -71,7 +80,7 @@ describe('Job cancel & start (e2e)', () => {
 
   it('rejects cancelling a job that is no longer ACCEPTED (409)', async () => {
     // arrange — accept (today) then start so it becomes IN_PROGRESS
-    const { job, driverClient } = await seedAcceptedJob(app, prisma);
+    const { job, driverClient } = await seedAcceptedJob(app, prisma, today());
     await driverClient.post(`/api/jobs/${job.id}/start`).expect(201);
 
     // act
@@ -85,7 +94,7 @@ describe('Job cancel & start (e2e)', () => {
 
   it('lets the assigned driver start an accepted job scheduled today (IN_PROGRESS)', async () => {
     // arrange
-    const { job, driverClient } = await seedAcceptedJob(app, prisma);
+    const { job, driverClient } = await seedAcceptedJob(app, prisma, today());
 
     // act
     const res = await driverClient.post(`/api/jobs/${job.id}/start`);
@@ -111,7 +120,7 @@ describe('Job cancel & start (e2e)', () => {
 
   it('rejects starting a job that is not ACCEPTED (409)', async () => {
     // arrange — start once (IN_PROGRESS) then start again
-    const { job, driverClient } = await seedAcceptedJob(app, prisma);
+    const { job, driverClient } = await seedAcceptedJob(app, prisma, today());
     await driverClient.post(`/api/jobs/${job.id}/start`).expect(201);
 
     // act
