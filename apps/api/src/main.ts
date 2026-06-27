@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
+import { corsOrigins } from './common/cors.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,7 +13,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({
-    origin: process.env['FRONTEND_URL'] ?? 'http://localhost:3000',
+    origin: corsOrigins(),
     credentials: true,
   });
   app.useWebSocketAdapter(new IoAdapter(app));

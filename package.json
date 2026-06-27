@@ -6,15 +6,9 @@
     "dev": "pnpm --parallel --filter api --filter web run dev",
     "dev:api": "pnpm --filter api run start:dev",
     "dev:web": "pnpm --filter web run dev",
+    "dev:mobile": "pnpm --filter mobile run start",
     "build": "pnpm --recursive run build",
     "build:api": "pnpm --filter api run build",
     "build:web": "pnpm --filter web run build"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.2.2",
-      "onFail": "download"
-    }
   }
 }
