@@ -1,7 +1,7 @@
 // Mirrors apps/web/components/jobs/JobCard.tsx — adapted to RN. Visual revamp only;
 // all logic (accept/offer flow, props, state) is unchanged.
-import { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Easing, I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Animated, Easing, I18nManager, Pressable, StyleSheet, Text, View, useAnimatedValue } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { differenceInMinutes, format, formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
@@ -26,8 +26,8 @@ interface Props {
 export function JobCard({ job, onAccept, invited, offered, onOffered, highlight }: Props) {
   const [offerOpen, setOfferOpen] = useState(false);
   // Attention animation for newly-arrived jobs (drivers in noisy environments).
-  const scale = useRef(new Animated.Value(1)).current;
-  const flash = useRef(new Animated.Value(0)).current;
+  const scale = useAnimatedValue(1);
+  const flash = useAnimatedValue(0);
 
   useEffect(() => {
     if (!highlight) return;

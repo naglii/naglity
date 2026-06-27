@@ -1,7 +1,7 @@
 // Minimal toast system — the RN analogue of the web app's `sonner` toasts.
 // Usage: import { toast } from '@/components/Toast'; toast.success('...') / toast.error('...').
 import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, View, useAnimatedValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
 
@@ -23,7 +23,7 @@ export const toast = {
 
 export function ToastHost() {
   const [msg, setMsg] = useState<ToastMsg | null>(null);
-  const opacity = useRef(new Animated.Value(0)).current;
+  const opacity = useAnimatedValue(0);
   const insets = useSafeAreaInsets();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
