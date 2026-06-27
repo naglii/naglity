@@ -4,11 +4,10 @@
 import axios from 'axios';
 import { router } from 'expo-router';
 import { clearAuth, getTokenSync } from './auth';
-
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
+import { API_URL } from './env';
 
 const api = axios.create({
-  baseURL: `${BASE_URL}/api`,
+  baseURL: `${API_URL}/api`,
 });
 
 // Attach the bearer token (read synchronously from the in-memory mirror).

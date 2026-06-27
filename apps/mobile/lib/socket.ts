@@ -2,8 +2,7 @@
 // The gateway authenticates from handshake.auth.token, so we pass the bearer token there.
 import { io, type Socket } from 'socket.io-client';
 import { getTokenSync } from './auth';
-
-const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL ?? 'http://localhost:3001';
+import { SOCKET_URL } from './env';
 
 let _socket: Socket | null = null;
 
